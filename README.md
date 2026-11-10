@@ -6,6 +6,7 @@ the Dashboard. Every other page shows "Coming soon".
 
 - Product plan (reference): [`docs/product-plan.md`](docs/product-plan.md)
 - Architecture: [`docs/architecture.md`](docs/architecture.md)
+- Deploying (DigitalOcean App Platform): [`docs/deploy.md`](docs/deploy.md)
 
 ## Setup
 

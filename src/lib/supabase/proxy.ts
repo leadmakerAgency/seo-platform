@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
-import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/env"
+import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/env"
 import type { Database } from "./database.types"
 
 /** Routes that work without a session. Everything else requires sign-in. */
@@ -20,7 +20,7 @@ function matches(pathname: string, paths: string[]) {
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request })
 
-  const supabase = createServerClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  const supabase = createServerClient<Database>(getSupabaseUrl(), getSupabasePublishableKey(), {
     cookies: {
       getAll() {
         return request.cookies.getAll()

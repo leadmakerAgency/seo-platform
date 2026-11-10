@@ -43,4 +43,7 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   except for the theme). Numbers get `tabular-nums`. Every list needs a real empty state.
 - **Filters in the URL:** list pages keep filters in search params (see
   `src/features/dashboard/search-params.ts`) so views can be linked.
+- **Env vars:** read them only through the getters in `src/lib/env.ts`, never at module top
+  level. `NEXT_PUBLIC_*` values are baked in at build time; `next.config.ts` fails the build if
+  one is missing. Hosting notes: `docs/deploy.md`.
 - The `cn` helper comes from the `cn` package (shadcn's), re-exported by `src/lib/utils.ts`.

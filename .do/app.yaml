@@ -1,0 +1,31 @@
+# DigitalOcean App Platform spec for the SEO Platform.
+# Use it from the dashboard (App > Settings > App Spec > Edit) or with
+# `doctl apps update <app-id> --spec .do/app.yaml`. See docs/deploy.md.
+name: seo-platform
+region: nyc # closest to the Supabase project (us-east-1)
+services:
+  - name: seo-platform
+    github:
+      repo: leadmakerAgency/seo-platform
+      branch: main
+      deploy_on_push: true
+    environment_slug: node-js
+    build_command: npm run build
+    run_command: npm start
+    http_port: 8080 # App Platform sets PORT=8080; `next start` listens on PORT
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-1gb
+    health_check:
+      http_path: /login
+    envs:
+      # NEXT_PUBLIC_* values are baked into the build, so they need BUILD time too.
+      # Both are public by design (they ship to the browser; RLS protects the data).
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        value: https://wervcffooayfcqikrplj.supabase.co
+        scope: RUN_AND_BUILD_TIME
+      - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        value: sb_publishable_2X6ovkS3sR9ssaukaja2Gw_hBrR75-x
+        scope: RUN_AND_BUILD_TIME
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+        scope: RUN_AND_BUILD_TIME
