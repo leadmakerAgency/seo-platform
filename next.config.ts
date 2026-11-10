@@ -3,7 +3,8 @@ import { PHASE_PRODUCTION_BUILD } from "next/constants"
 
 /**
  * NEXT_PUBLIC_* values are baked into the JavaScript at build time, so they
- * must exist when `next build` runs, not only when the server starts.
+ * must exist when `next build` runs, not only when the server starts. In
+ * production they come from the committed .env.production (host env vars win).
  * Fail the build straight away with instructions instead of crashing later
  * with a stack trace (or shipping a browser bundle without them).
  */
@@ -15,10 +16,11 @@ function assertBuildEnv() {
   throw new Error(
     [
       `Missing build-time environment variables: ${missing.join(", ")}.`,
+      "They normally come from the committed .env.production file. Check that it exists",
+      "in the deployed commit and isn't excluded by .gitignore.",
       "Locally: copy .env.example to .env.local and fill it in.",
-      "DigitalOcean App Platform: open the app > Settings > the web component >",
-      'Environment Variables, add each one with scope "Build and Run Time"',
-      "(not Run Time only), save, then redeploy. See docs/deploy.md.",
+      'On a host you can also set them as environment variables with scope "Build and Run Time".',
+      "See docs/deploy.md.",
     ].join("\n"),
   )
 }

@@ -33,6 +33,8 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+# Public NEXT_PUBLIC_* values only (see the file header). Secrets go in .env.local or the host.
+!.env.production
 
 # vercel
 .vercel

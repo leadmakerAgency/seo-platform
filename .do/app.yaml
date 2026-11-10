@@ -18,8 +18,8 @@ services:
     health_check:
       http_path: /login
     envs:
+      # Optional: .env.production already provides these. Values here override it.
       # NEXT_PUBLIC_* values are baked into the build, so they need BUILD time too.
-      # Both are public by design (they ship to the browser; RLS protects the data).
       - key: NEXT_PUBLIC_SUPABASE_URL
         value: https://wervcffooayfcqikrplj.supabase.co
         scope: RUN_AND_BUILD_TIME

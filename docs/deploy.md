@@ -3,29 +3,30 @@
 The app is a standard Next.js server: `npm run build`, then `npm start` (listens on `PORT`,
 which App Platform sets to 8080). Node is pinned to 26.x (LTS) in `package.json`.
 
-## 1. Environment variables (the usual cause of failed builds)
+## 1. Environment variables
 
-`NEXT_PUBLIC_*` values are baked into the JavaScript **at build time**, so App Platform must
-provide them to the build, not only to the running app. `.env.local` is not in git, so the
-host has to supply them.
+`NEXT_PUBLIC_*` values are baked into the JavaScript **at build time**, so they must exist when
+`next build` runs, not only when the app starts.
 
-In the dashboard: **App → Settings → the `seo-platform` component → Environment Variables →
-Edit**, then add:
+**Nothing to set in DigitalOcean for these.** The public Supabase values live in the committed
+`.env.production`, which Next.js reads during `npm run build` and `npm start`. They are public by
+design: they ship to every visitor's browser, and row level security protects the data.
 
-| Key                                    | Value                                                                  | Scope                         |
-| -------------------------------------- | ---------------------------------------------------------------------- | ----------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`             | `https://wervcffooayfcqikrplj.supabase.co`                             | Build and Run Time            |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | the `sb_publishable_…` key from Supabase → Project Settings → API keys | Build and Run Time            |
-| `NEXT_TELEMETRY_DISABLED`              | `1`                                                                    | Build and Run Time (optional) |
+Overriding them is optional: App → Settings → the component → Environment Variables. A
+variable set there wins over `.env.production`, but it must use scope **Build and Run Time**,
+and changing it needs **Force Rebuild and Deploy**, not just a restart.
 
-Save, then **Actions → Force Rebuild and Deploy**. Changing these later always needs a rebuild,
-not just a restart.
+| Key                                                                    | Where it comes from                                               | Secret? |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------- | ------- |
+| `NEXT_PUBLIC_SUPABASE_URL`                                             | `.env.production`                                                 | No      |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`                                 | `.env.production`                                                 | No      |
+| Future secrets (for example a Supabase `service_role` key, API tokens) | DigitalOcean env vars, type **Encrypted**, never a committed file | Yes     |
 
-If they're missing, the build stops in the first second with "Missing build-time environment
-variables" and these same instructions (the check is in `next.config.ts`).
+If the values are missing anyway, the build stops in the first second with "Missing build-time
+environment variables" (the check is in `next.config.ts`).
 
-Alternative: paste `.do/app.yaml` into **Settings → App Spec → Edit**. It sets the build and
-run commands, port, health check and these variables in one go.
+`.do/app.yaml` is an optional app spec (Settings → App Spec → Edit) with the build and run
+commands, port and health check.
 
 ## 2. Component settings
 
@@ -58,9 +59,9 @@ Then, once the first admin exists: Authentication → Sign In / Providers → Em
 
 ## Troubleshooting
 
-| Symptom                                                                    | Cause                                                | Fix                                        |
-| -------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------ |
-| Build fails: "Missing build-time environment variables"                    | Variables not set, or set with scope "Run Time" only | Section 1, then rebuild                    |
-| Build passes but sign-in does nothing or the browser shows Supabase errors | Variables were added after the last build            | Force Rebuild and Deploy                   |
-| Confirmation email opens `localhost`                                       | Supabase Site URL still points at localhost          | Section 3                                  |
-| Health check fails                                                         | Port mismatch                                        | HTTP port 8080 and run command `npm start` |
+| Symptom                                                                    | Cause                                                       | Fix                                                     |
+| -------------------------------------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------- |
+| Build fails: "Missing build-time environment variables"                    | `.env.production` missing from the deployed commit          | Commit it (check `.gitignore` keeps `!.env.production`) |
+| Build passes but sign-in does nothing or the browser shows Supabase errors | Wrong values, or an override was added after the last build | Fix the values, then Force Rebuild and Deploy           |
+| Confirmation email opens `localhost`                                       | Supabase Site URL still points at localhost                 | Section 3                                               |
+| Health check fails                                                         | Port mismatch                                               | HTTP port 8080 and run command `npm start`              |

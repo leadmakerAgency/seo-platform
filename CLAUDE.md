@@ -45,5 +45,7 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   `src/features/dashboard/search-params.ts`) so views can be linked.
 - **Env vars:** read them only through the getters in `src/lib/env.ts`, never at module top
   level. `NEXT_PUBLIC_*` values are baked in at build time; `next.config.ts` fails the build if
-  one is missing. Hosting notes: `docs/deploy.md`.
+  one is missing. Production gets the public values from the committed `.env.production`;
+  never put secrets there (secrets go in `.env.local` or the host's encrypted env vars).
+  Hosting notes: `docs/deploy.md`.
 - The `cn` helper comes from the `cn` package (shadcn's), re-exported by `src/lib/utils.ts`.
