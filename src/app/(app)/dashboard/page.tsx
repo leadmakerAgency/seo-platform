@@ -1,0 +1,171 @@
+import { Plus } from "lucide-react"
+import type { Metadata } from "next"
+import { Suspense } from "react"
+
+import { AccessGuard } from "@/components/layout/access-guard"
+import { FindClientButton } from "@/components/layout/find-client-button"
+import { PageHeader, Section } from "@/components/layout/page-header"
+import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { AddClientDialog } from "@/features/clients/components/add-client-dialog"
+import { getTeamMembers } from "@/features/clients/queries"
+import { AttentionList } from "@/features/dashboard/components/attention-list"
+import { ClientsView } from "@/features/dashboard/components/clients-view"
+import { HealthTiles } from "@/features/dashboard/components/health-tiles"
+import { getClientsPage, getHealthCounts, getOpenAlerts } from "@/features/dashboard/queries"
+import { parseDashboardParams } from "@/features/dashboard/search-params"
+import { getCurrentMember } from "@/lib/auth"
+import { findAgencyItem } from "@/lib/navigation"
+import { can } from "@/lib/roles"
+
+export const metadata: Metadata = { title: "Dashboard" }
+
+type SearchParams = PageProps<"/dashboard">["searchParams"]
+
+/**
+ * The static frame (title, section headings) renders instantly; each data
+ * section streams in behind its own <Suspense> with a matching skeleton.
+ */
+export default function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
+  return (
+    <div className="flex flex-col gap-10">
+      <Suspense fallback={null}>
+        <AccessGuard item={findAgencyItem("dashboard")!} />
+      </Suspense>
+
+      <PageHeader
+        title="Dashboard"
+        description="Every SEO client on one page. Start with what needs attention, then find any client in the list."
+        actions={
+          <Suspense fallback={<HeaderActionsSkeleton />}>
+            <HeaderActions />
+          </Suspense>
+        }
+      />
+
+      <Section
+        title="Client health"
+        description="Click a box to show only those clients in the list."
+      >
+        <Suspense fallback={<TilesSkeleton />}>
+          <HealthSection searchParams={searchParams} />
+        </Suspense>
+      </Section>
+
+      <Section title="Needs attention" description="The most urgent problems across all clients.">
+        <Suspense fallback={<ListSkeleton rows={2} />}>
+          <AttentionSection />
+        </Suspense>
+      </Section>
+
+      <Section
+        id="clients"
+        title="Client list"
+        description="Search, filter and sort to find any client."
+      >
+        <Suspense fallback={<TableSkeleton />}>
+          <ClientListSection searchParams={searchParams} />
+        </Suspense>
+      </Section>
+    </div>
+  )
+}
+
+async function HeaderActions() {
+  const member = await getCurrentMember()
+  const canCreate = can(member.role, "clients.create")
+  const owners = canCreate ? await getTeamMembers() : []
+  return (
+    <>
+      <FindClientButton />
+      {canCreate && <AddClientDialog owners={owners} defaultOwnerId={member.id} />}
+    </>
+  )
+}
+
+async function HealthSection({ searchParams }: { searchParams: SearchParams }) {
+  const [counts, params] = await Promise.all([
+    getHealthCounts(),
+    searchParams.then(parseDashboardParams),
+  ])
+  return <HealthTiles counts={counts} params={params} />
+}
+
+async function AttentionSection() {
+  const { alerts } = await getOpenAlerts(5)
+  return <AttentionList alerts={alerts} now={new Date()} />
+}
+
+async function ClientListSection({ searchParams }: { searchParams: SearchParams }) {
+  const [member, params] = await Promise.all([
+    getCurrentMember(),
+    searchParams.then(parseDashboardParams),
+  ])
+  const { rows, total } = await getClientsPage(params, member.id)
+  const canCreate = can(member.role, "clients.create")
+  const owners = canCreate && total === 0 ? await getTeamMembers() : []
+
+  return (
+    <ClientsView
+      rows={rows}
+      total={total}
+      params={params}
+      emptyAction={
+        canCreate ? (
+          <AddClientDialog
+            owners={owners}
+            defaultOwnerId={member.id}
+            trigger={
+              <Button>
+                <Plus />
+                Add your first client
+              </Button>
+            }
+          />
+        ) : undefined
+      }
+    />
+  )
+}
+
+function HeaderActionsSkeleton() {
+  return (
+    <>
+      <Skeleton className="h-9 w-[132px]" />
+      <Skeleton className="h-9 w-[112px]" />
+    </>
+  )
+}
+
+function TilesSkeleton() {
+  return (
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {Array.from({ length: 4 }, (_, i) => (
+        <Skeleton key={i} className="h-[88px] rounded-lg" />
+      ))}
+    </div>
+  )
+}
+
+function ListSkeleton({ rows }: { rows: number }) {
+  return (
+    <div className="flex flex-col gap-px overflow-hidden rounded-lg border">
+      {Array.from({ length: rows }, (_, i) => (
+        <Skeleton key={i} className="h-14 rounded-none" />
+      ))}
+    </div>
+  )
+}
+
+function TableSkeleton() {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex gap-2">
+        <Skeleton className="h-9 w-[320px]" />
+        <Skeleton className="h-9 w-[170px]" />
+        <Skeleton className="h-9 w-[180px]" />
+      </div>
+      <ListSkeleton rows={6} />
+    </div>
+  )
+}
