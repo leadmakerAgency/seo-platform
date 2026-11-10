@@ -18,6 +18,7 @@ import { Kbd } from "@/components/ui/kbd"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { AGENCY_NAV, clientHref, findClientSection } from "@/lib/navigation"
+import { NotificationsBell } from "./notifications-bell"
 import { useShell } from "./shell-context"
 
 type Crumb = { label: string; href?: string }
@@ -71,6 +72,7 @@ export function SiteHeader() {
       >
         <Search />
       </Button>
+      <NotificationsBell />
     </header>
   )
 }

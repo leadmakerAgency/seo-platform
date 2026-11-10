@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/sidebar"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getCurrentMember } from "@/lib/auth"
-import { ROLE_LABELS } from "@/lib/roles"
+import { can, ROLE_LABELS } from "@/lib/roles"
+import { getTaskCounts } from "@/features/tasks/queries"
 
 /**
  * The signed-in app shell. The frame renders immediately; the sidebar's
@@ -42,8 +43,10 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
 
 async function SidebarWithMember() {
   const member = await getCurrentMember()
+  const taskAttention = can(member.role, "tasks.work") ? (await getTaskCounts(true)).myAttention : 0
   return (
     <AppSidebar
+      taskAttention={taskAttention}
       member={{
         displayName: member.displayName,
         email: member.email,

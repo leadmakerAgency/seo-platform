@@ -18,8 +18,8 @@ export type CurrentMember = {
 
 /**
  * The signed-in team member, read once per request (Data Access Layer).
- * Redirects to /login without a session and to /no-access for users who
- * aren't active team members yet. Reads cookies: call it inside <Suspense>.
+ * Redirects to /login without a session, to /welcome for invited members who
+ * haven't set a password yet, and to /no-access for disabled accounts. Reads cookies: call it inside <Suspense>.
  */
 export const getCurrentMember = cache(async (): Promise<CurrentMember> => {
   const supabase = await createSupabaseServerClient()
@@ -33,7 +33,8 @@ export const getCurrentMember = cache(async (): Promise<CurrentMember> => {
     .eq("id", userId)
     .maybeSingle()
 
-  // RLS hides the team from anyone who isn't an active member.
+  // Invited people finish setting up their account first; disabled ones are out.
+  if (member?.status === "invited") redirect("/welcome")
   if (!member || member.status !== "active") redirect("/no-access")
 
   const displayName = member.full_name || member.email.split("@")[0]

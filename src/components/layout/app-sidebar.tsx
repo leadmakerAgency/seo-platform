@@ -26,7 +26,14 @@ import type { AppRole } from "@/lib/roles"
 import { NavUser, type NavUserProps } from "./nav-user"
 import { useShell } from "./shell-context"
 
-export function AppSidebar({ member }: { member: NavUserProps & { role: AppRole } }) {
+export function AppSidebar({
+  member,
+  taskAttention = 0,
+}: {
+  member: NavUserProps & { role: AppRole }
+  /** Your open tasks that are overdue or due today (red badge on Tasks). */
+  taskAttention?: number
+}) {
   const pathname = usePathname()
   const { currentClient, setSwitcherOpen } = useShell()
 
@@ -56,6 +63,7 @@ export function AppSidebar({ member }: { member: NavUserProps & { role: AppRole 
                   item={item}
                   href={item.href}
                   active={pathname === item.href || pathname.startsWith(`${item.href}/`)}
+                  count={item.id === "tasks" ? taskAttention : undefined}
                 />
               ))}
             </SidebarMenu>
@@ -126,7 +134,17 @@ export function AppSidebar({ member }: { member: NavUserProps & { role: AppRole 
   )
 }
 
-function NavLink({ item, href, active }: { item: NavItem; href: string; active: boolean }) {
+function NavLink({
+  item,
+  href,
+  active,
+  count,
+}: {
+  item: NavItem
+  href: string
+  active: boolean
+  count?: number
+}) {
   const Icon = item.icon
   return (
     <SidebarMenuItem>
@@ -143,6 +161,14 @@ function NavLink({ item, href, active }: { item: NavItem; href: string; active: 
           </span>
         </Link>
       </SidebarMenuButton>
+      {!item.comingSoon && count !== undefined && count > 0 && (
+        <SidebarMenuBadge
+          className="bg-danger text-[11px] font-semibold text-white tabular-nums peer-hover/menu-button:text-white"
+          aria-label={`${count} overdue or due today`}
+        >
+          {count > 99 ? "99+" : count}
+        </SidebarMenuBadge>
+      )}
       {item.comingSoon && (
         <SidebarMenuBadge className="text-[10px] font-normal text-muted-foreground">
           Soon

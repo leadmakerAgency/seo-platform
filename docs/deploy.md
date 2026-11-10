@@ -22,6 +22,12 @@ and changing it needs **Force Rebuild and Deploy**, not just a restart.
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`                                 | `.env.production`                                                 | No      |
 | Future secrets (for example a Supabase `service_role` key, API tokens) | DigitalOcean env vars, type **Encrypted**, never a committed file | Yes     |
 
+**One secret to add: `SUPABASE_SECRET_KEY`.** The Team page uses it to invite and remove people.
+Copy the secret key from Supabase → Project Settings → API keys (`sb_secret_…`), then in
+DigitalOcean add `SUPABASE_SECRET_KEY` with type **Encrypted** and scope **Run Time**, and
+redeploy. Locally it goes in `.env.local`. Without it the app works, but the Team page shows a
+notice and invites are turned off.
+
 If the values are missing anyway, the build stops in the first second with "Missing build-time
 environment variables" (the check is in `next.config.ts`).
 

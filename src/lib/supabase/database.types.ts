@@ -24,6 +24,7 @@ export type Database = {
           created_at: string
           id: number
           meta: Json
+          task_id: string | null
         }
         Insert: {
           action: string
@@ -32,6 +33,7 @@ export type Database = {
           created_at?: string
           id?: never
           meta?: Json
+          task_id?: string | null
         }
         Update: {
           action?: string
@@ -40,6 +42,7 @@ export type Database = {
           created_at?: string
           id?: never
           meta?: Json
+          task_id?: string | null
         }
         Relationships: [
           {
@@ -54,6 +57,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_log_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "task_list"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_log_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -180,6 +197,253 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["notification_kind"]
+          read_at: string | null
+          recipient_id: string
+          task_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          kind: Database["public"]["Enums"]["notification_kind"]
+          read_at?: string | null
+          recipient_id: string
+          task_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["notification_kind"]
+          read_at?: string | null
+          recipient_id?: string
+          task_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "task_list"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_clients: {
+        Row: {
+          client_id: string
+          created_at: string
+          done_at: string | null
+          done_by: string | null
+          task_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          done_at?: string | null
+          done_by?: string | null
+          task_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          done_at?: string | null
+          done_by?: string | null
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_clients_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_clients_done_by_fkey"
+            columns: ["done_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_clients_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "task_list"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_clients_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_comments: {
+        Row: {
+          author_id: string | null
+          body: string
+          created_at: string
+          id: string
+          mentions: string[]
+          task_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          mentions?: string[]
+          task_id: string
+        }
+        Update: {
+          author_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          mentions?: string[]
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "task_list"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          assignee_id: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_on: string | null
+          id: string
+          number: number
+          previous_task_id: string | null
+          priority: Database["public"]["Enums"]["task_priority"]
+          repeat: Database["public"]["Enums"]["task_repeat"]
+          status: Database["public"]["Enums"]["task_status"]
+          steps: string[]
+          title: string
+          type: Database["public"]["Enums"]["task_type"]
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_on?: string | null
+          id?: string
+          number?: never
+          previous_task_id?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          repeat?: Database["public"]["Enums"]["task_repeat"]
+          status?: Database["public"]["Enums"]["task_status"]
+          steps?: string[]
+          title: string
+          type?: Database["public"]["Enums"]["task_type"]
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_on?: string | null
+          id?: string
+          number?: never
+          previous_task_id?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          repeat?: Database["public"]["Enums"]["task_repeat"]
+          status?: Database["public"]["Enums"]["task_status"]
+          steps?: string[]
+          title?: string
+          type?: Database["public"]["Enums"]["task_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_previous_task_id_fkey"
+            columns: ["previous_task_id"]
+            isOneToOne: true
+            referencedRelation: "task_list"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_previous_task_id_fkey"
+            columns: ["previous_task_id"]
+            isOneToOne: true
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_members: {
         Row: {
           created_at: string
@@ -209,7 +473,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      task_list: {
+        Row: {
+          assignee_id: string | null
+          assignee_name: string | null
+          client_preview: string[] | null
+          client_search: string | null
+          clients_done: number | null
+          clients_total: number | null
+          completed_at: string | null
+          created_at: string | null
+          due_on: string | null
+          id: string | null
+          number: number | null
+          priority: Database["public"]["Enums"]["task_priority"] | null
+          repeat: Database["public"]["Enums"]["task_repeat"] | null
+          status: Database["public"]["Enums"]["task_status"] | null
+          title: string | null
+          type: Database["public"]["Enums"]["task_type"] | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       client_health_counts: {
@@ -220,6 +513,19 @@ export type Database = {
         }[]
       }
       setup_required: { Args: never; Returns: boolean }
+      task_counts: {
+        Args: { p_mine?: boolean }
+        Returns: {
+          done: number
+          due_this_week: number
+          due_today: number
+          mine_open: number
+          my_attention: number
+          overdue: number
+          team_open: number
+          waiting: number
+        }[]
+      }
     }
     Enums: {
       alert_severity: "needs_look" | "action_needed"
@@ -227,6 +533,19 @@ export type Database = {
       client_health: "on_track" | "needs_look" | "action_needed"
       client_stage: "onboarding" | "active" | "paused" | "churned"
       member_status: "active" | "invited" | "disabled"
+      notification_kind: "task_assigned" | "task_mentioned" | "task_commented"
+      task_priority: "low" | "normal" | "high"
+      task_repeat: "none" | "weekdays" | "weekly" | "monthly"
+      task_status: "todo" | "in_progress" | "waiting_on_client" | "done"
+      task_type:
+        | "backlinks"
+        | "google_profile"
+        | "content"
+        | "reviews"
+        | "connections"
+        | "reports"
+        | "client_follow_up"
+        | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -359,6 +678,20 @@ export const Constants = {
       client_health: ["on_track", "needs_look", "action_needed"],
       client_stage: ["onboarding", "active", "paused", "churned"],
       member_status: ["active", "invited", "disabled"],
+      notification_kind: ["task_assigned", "task_mentioned", "task_commented"],
+      task_priority: ["low", "normal", "high"],
+      task_repeat: ["none", "weekdays", "weekly", "monthly"],
+      task_status: ["todo", "in_progress", "waiting_on_client", "done"],
+      task_type: [
+        "backlinks",
+        "google_profile",
+        "content",
+        "reviews",
+        "connections",
+        "reports",
+        "client_follow_up",
+        "other",
+      ],
     },
   },
 } as const

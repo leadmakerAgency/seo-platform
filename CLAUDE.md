@@ -48,4 +48,10 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   one is missing. Production gets the public values from the committed `.env.production`;
   never put secrets there (secrets go in `.env.local` or the host's encrypted env vars).
   Hosting notes: `docs/deploy.md`.
+- **Service role:** `src/lib/supabase/admin.ts` bypasses RLS. Use it only inside actions that
+  already called `requirePermission(...)` (team invites, activation, removal).
+- **Dates:** due dates are plain `YYYY-MM-DD`; "today" is America/Phoenix (`src/lib/dates.ts`,
+  `private.agency_today()` in SQL). Don't compute dates with `new Date()` in render outside Suspense.
+- **Tasks:** status follows the client ticks in the database (triggers); don't set it from the app
+  when ticking. RLS + guard triggers restrict VAs/writers to their own tasks.
 - The `cn` helper comes from the `cn` package (shadcn's), re-exported by `src/lib/utils.ts`.

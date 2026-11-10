@@ -50,7 +50,7 @@ export const AGENCY_NAV: AgencyNavItem[] = [
     href: "/tasks",
     icon: ListChecks,
     roles: ["admin", "manager", "va", "writer"],
-    comingSoon: true,
+    comingSoon: false,
     summary:
       "All manual work in one list. One task can cover many clients, ticked off one client at a time.",
   },
@@ -60,7 +60,7 @@ export const AGENCY_NAV: AgencyNavItem[] = [
     href: "/team",
     icon: Users,
     roles: ["admin"],
-    comingSoon: true,
+    comingSoon: false,
     summary: "Invite team members, set their roles and see the activity log.",
   },
 ]
@@ -83,7 +83,7 @@ export const CLIENT_SECTIONS: ClientSection[] = [
     title: "Client tasks",
     icon: ListChecks,
     roles: ["admin", "manager", "va", "writer"],
-    comingSoon: true,
+    comingSoon: false,
     summary: "Every task that includes this client, including tasks shared with other clients.",
   },
   {

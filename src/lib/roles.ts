@@ -1,6 +1,9 @@
 import type { Database } from "@/lib/supabase/database.types"
 
 export type AppRole = Database["public"]["Enums"]["app_role"]
+export type MemberStatus = Database["public"]["Enums"]["member_status"]
+
+export const ROLES: AppRole[] = ["admin", "manager", "va", "writer", "viewer"]
 
 export const ROLE_LABELS: Record<AppRole, string> = {
   admin: "Admin",
@@ -8,6 +11,20 @@ export const ROLE_LABELS: Record<AppRole, string> = {
   va: "VA",
   writer: "Writer",
   viewer: "Read only",
+}
+
+export const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
+  admin: "Everything, including the team, roles and client deletion.",
+  manager: "Runs a book of clients. Creates and assigns tasks, edits clients.",
+  va: "Works through assigned tasks. Only sees the clients in their tasks.",
+  writer: "Writes and edits articles. Only sees the clients in their tasks.",
+  viewer: "Can look at clients and reports. Can't change anything.",
+}
+
+export const STATUS_LABELS: Record<MemberStatus, string> = {
+  active: "Active",
+  invited: "Invited",
+  disabled: "Disabled",
 }
 
 /**
@@ -18,10 +35,24 @@ const PERMISSIONS = {
   "clients.create": ["admin", "manager"],
   "clients.update": ["admin", "manager"],
   "clients.delete": ["admin"],
+  "clients.see_all": ["admin", "manager", "viewer"],
+  "tasks.manage": ["admin", "manager"],
+  "tasks.work": ["admin", "manager", "va", "writer"],
   "team.manage": ["admin"],
 } as const satisfies Record<string, readonly AppRole[]>
 
 export type Permission = keyof typeof PERMISSIONS
+
+/** Plain-language labels for the Team page's permission matrix. */
+export const PERMISSION_LABELS: Record<Permission, string> = {
+  "clients.see_all": "See every client (others see only clients in their tasks)",
+  "clients.create": "Add clients",
+  "clients.update": "Edit clients",
+  "clients.delete": "Delete clients",
+  "tasks.manage": "Create, assign and delete tasks",
+  "tasks.work": "Work on their tasks and tick clients off",
+  "team.manage": "Invite people and change roles",
+}
 
 export function can(role: AppRole, permission: Permission): boolean {
   return (PERMISSIONS[permission] as readonly AppRole[]).includes(role)

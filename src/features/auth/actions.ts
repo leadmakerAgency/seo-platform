@@ -1,8 +1,8 @@
 "use server"
 
-import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
+import { requestOrigin } from "@/lib/origin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { safeNextPath, setupSchema, signInSchema, type AuthFormState } from "./schemas"
 
@@ -60,10 +60,7 @@ export async function createFirstAdmin(
     return { values, error: "Setup is already done. Sign in instead." }
   }
 
-  const requestHeaders = await headers()
-  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host")
-  const protocol = requestHeaders.get("x-forwarded-proto") ?? "http"
-  const origin = `${protocol}://${host}`
+  const origin = await requestOrigin()
 
   const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
