@@ -31,6 +31,19 @@ export default function config(phase: string): NextConfig {
   return {
     cacheComponents: true,
     partialPrefetching: true,
+    // The client portal's token is in the URL: never leak it to other sites.
+    async headers() {
+      return [
+        {
+          source: "/c/:path*",
+          headers: [
+            { key: "Referrer-Policy", value: "no-referrer" },
+            { key: "X-Robots-Tag", value: "noindex, nofollow" },
+            { key: "Cache-Control", value: "private, no-store" },
+          ],
+        },
+      ]
+    },
     turbopack: {
       rules: {
         "*.css": {

@@ -2,6 +2,7 @@ import {
   ChartNoAxesColumn,
   FileText,
   House,
+  Inbox,
   LayoutDashboard,
   Link2,
   ListChecks,
@@ -85,6 +86,16 @@ export const CLIENT_SECTIONS: ClientSection[] = [
     roles: ["admin", "manager", "va", "writer"],
     comingSoon: false,
     summary: "Every task that includes this client, including tasks shared with other clients.",
+  },
+  {
+    id: "client-requests",
+    segment: "requests",
+    title: "Client requests",
+    icon: Inbox,
+    roles: ALL,
+    comingSoon: false,
+    summary:
+      "Codes, files, approvals and answers we need from the client, sent through their link.",
   },
   {
     id: "rankings",

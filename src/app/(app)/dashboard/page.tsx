@@ -9,13 +9,15 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AddClientDialog } from "@/features/clients/components/add-client-dialog"
 import { getTeamMembers } from "@/features/clients/queries"
-import { AttentionList } from "@/features/dashboard/components/attention-list"
+import { AttentionList, type AttentionItem } from "@/features/dashboard/components/attention-list"
 import { ClientsView } from "@/features/dashboard/components/clients-view"
 import { HealthTiles } from "@/features/dashboard/components/health-tiles"
 import { getClientsPage, getHealthCounts, getOpenAlerts } from "@/features/dashboard/queries"
 import { parseDashboardParams } from "@/features/dashboard/search-params"
+import { getRequestAttention } from "@/features/requests/queries"
 import { getCurrentMember } from "@/lib/auth"
-import { findAgencyItem } from "@/lib/navigation"
+import { agencyToday, formatDay } from "@/lib/dates"
+import { clientHref, findAgencyItem } from "@/lib/navigation"
 import { can } from "@/lib/roles"
 
 export const metadata: Metadata = { title: "Dashboard" }
@@ -52,7 +54,10 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
         </Suspense>
       </Section>
 
-      <Section title="Needs attention" description="The most urgent problems across all clients.">
+      <Section
+        title="Needs attention"
+        description="The most urgent problems across all clients, including overdue client requests."
+      >
         <Suspense fallback={<ListSkeleton rows={2} />}>
           <AttentionSection />
         </Suspense>
@@ -92,8 +97,39 @@ async function HealthSection({ searchParams }: { searchParams: SearchParams }) {
 }
 
 async function AttentionSection() {
-  const { alerts } = await getOpenAlerts(5)
-  return <AttentionList alerts={alerts} now={new Date()} />
+  const [member, { alerts }, requests] = await Promise.all([
+    getCurrentMember(),
+    getOpenAlerts(5),
+    getRequestAttention(),
+  ])
+  const today = agencyToday()
+  const items: AttentionItem[] = requests.overdue.slice(0, 5).map((o) => {
+    const days = Math.round((Date.parse(today) - Date.parse(o.oldestDue)) / 86_400_000)
+    return {
+      key: `requests-overdue-${o.client.slug}`,
+      urgent: true,
+      client: o.client,
+      title:
+        o.count === 1 ? "1 client request is overdue" : `${o.count} client requests are overdue`,
+      detail: `The oldest was due ${formatDay(o.oldestDue)}, ${days === 1 ? "1 day" : `${days} days`} ago.`,
+      href: `${clientHref(o.client.slug, "requests")}?show=overdue`,
+      actionLabel: "Open requests",
+    }
+  })
+  if (requests.answered > 0) {
+    items.push({
+      key: "requests-answered",
+      urgent: false,
+      client: null,
+      title:
+        requests.answered === 1
+          ? "1 client answer is waiting for review"
+          : `${requests.answered} client answers are waiting for review`,
+      href: can(member.role, "tasks.manage") ? "/tasks/requests?show=answered" : null,
+      actionLabel: "Review",
+    })
+  }
+  return <AttentionList alerts={alerts} items={items} now={new Date()} />
 }
 
 async function ClientListSection({ searchParams }: { searchParams: SearchParams }) {

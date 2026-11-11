@@ -53,7 +53,8 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
-import { describeActivity } from "@/features/team/activity"
+import { TaskRequestsBlock } from "@/features/requests/components/task-requests-block"
+import { actorLabel, describeActivity } from "@/features/team/activity"
 import { formatRelative, initials } from "@/lib/format"
 import { clientHref } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
@@ -463,6 +464,16 @@ function TaskPanel({
           )}
         </Block>
 
+        <TaskRequestsBlock
+          task={{ id: task.id, number: task.number, title: task.title }}
+          requests={task.requests}
+          clients={clients.map((c) => ({ id: c.id, name: c.name }))}
+          canAsk={canTick && task.status !== "done"}
+          members={members}
+          currentMemberId={currentMemberId}
+          today={today}
+        />
+
         <Block title="Comments">
           <div className="flex flex-col gap-4">
             {task.comments.length === 0 && (
@@ -517,7 +528,7 @@ function TaskPanel({
             <ol className="mt-2 flex flex-col gap-2 border-l pl-4">
               {task.history.map((h) => (
                 <li key={h.id} className="text-sm">
-                  <span className="font-medium">{h.actorName ?? "System"}</span>{" "}
+                  <span className="font-medium">{actorLabel(h)}</span>{" "}
                   <span className="text-muted-foreground">{describeActivity(h)}</span>
                   <span className="ml-2 text-xs text-muted-foreground">
                     {formatRelative(h.createdAt, new Date())}

@@ -9,6 +9,7 @@ import { TaskSheetSkeleton } from "@/features/tasks/components/task-sheet"
 import { TaskSheetLoader } from "@/features/tasks/components/task-sheet-loader"
 import { TaskTiles } from "@/features/tasks/components/task-tiles"
 import { TasksView } from "@/features/tasks/components/tasks-view"
+import { countActiveRequests } from "@/features/requests/queries"
 import {
   getAssignableMembers,
   getClientOptions,
@@ -61,10 +62,11 @@ async function TasksContent({ searchParams }: { searchParams: SearchParams }) {
   const canSeeTeam = can(member.role, "tasks.manage")
   const params = parseTaskParams(await searchParams, canSeeTeam)
 
-  const [counts, page, members] = await Promise.all([
+  const [counts, page, members, requests] = await Promise.all([
     getTaskCounts(!canSeeTeam || params.view === "mine"),
     getTasksPage(params, member.id),
     canSeeTeam ? getAssignableMembers() : Promise.resolve([]),
+    canSeeTeam ? countActiveRequests() : Promise.resolve(null),
   ])
   const closeHref = tasksHref(params, { task: undefined, page: params.page })
 
@@ -90,6 +92,7 @@ async function TasksContent({ searchParams }: { searchParams: SearchParams }) {
           today={agencyToday()}
           canSeeTeam={canSeeTeam}
           members={members}
+          requestCount={requests ? requests.open + requests.answered : undefined}
           emptyAction={
             canSeeTeam ? (
               <Suspense fallback={null}>

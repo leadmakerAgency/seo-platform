@@ -2,7 +2,7 @@ import { History } from "lucide-react"
 
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { formatRelative } from "@/lib/format"
-import { describeActivity } from "../activity"
+import { actorLabel, describeActivity } from "../activity"
 import type { ActivityEntry } from "../queries"
 
 export function ActivityFeed({ entries, now }: { entries: ActivityEntry[]; now: Date }) {
@@ -30,7 +30,7 @@ export function ActivityFeed({ entries, now }: { entries: ActivityEntry[]; now: 
           className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-4 py-3"
         >
           <p className="text-sm">
-            <span className="font-medium">{entry.actorName ?? "Someone"}</span>{" "}
+            <span className="font-medium">{actorLabel(entry, "Someone")}</span>{" "}
             <span className="text-muted-foreground">{describeActivity(entry)}</span>
           </p>
           <time

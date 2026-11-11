@@ -6,6 +6,15 @@ import type { ActivityEntry } from "./queries"
 const str = (v: unknown) => (typeof v === "string" ? v : "")
 const role = (v: unknown) => ROLE_LABELS[v as AppRole] ?? str(v)
 
+/** Who did it: client answers come through the portal, so they have no team actor. */
+export function actorLabel(
+  entry: { action: string; actorName: string | null; clientName?: string | null },
+  fallback = "System",
+) {
+  if (entry.actorName) return entry.actorName
+  return entry.action === "request.answered" ? (entry.clientName ?? "The client") : fallback
+}
+
 /** One plain sentence per activity_log row, without the actor ("invited Ana R. as a VA"). */
 type ActivityLike = Pick<ActivityEntry, "action" | "meta" | "clientName">
 
@@ -49,6 +58,18 @@ export function describeActivity(entry: ActivityLike): string {
       return `commented on T-${num(m.number)}`
     case "task.deleted":
       return `deleted T-${num(m.number)} “${str(m.title)}”`
+    case "request.created":
+      return `asked ${entry.clientName ?? "the client"} for “${str(m.title)}” (R-${num(m.number)})`
+    case "request.answered":
+      return `answered R-${num(m.number)} “${str(m.title)}”`
+    case "request.done":
+      return `marked R-${num(m.number)} “${str(m.title)}” done`
+    case "request.reopened":
+      return `asked ${entry.clientName ?? "the client"} again for R-${num(m.number)} “${str(m.title)}”`
+    case "request.cancelled":
+      return `cancelled R-${num(m.number)} “${str(m.title)}”`
+    case "request.updated":
+      return `updated R-${num(m.number)} “${str(m.title)}”`
     default:
       return entry.action.replace(/[._]/g, " ")
   }

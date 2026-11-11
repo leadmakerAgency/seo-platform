@@ -5,7 +5,8 @@ import { getSupabasePublishableKey, getSupabaseUrl } from "@/lib/env"
 import type { Database } from "./database.types"
 
 /** Routes that work without a session. Everything else requires sign-in. */
-const PUBLIC_PATHS = ["/login", "/setup", "/auth"]
+/** "/c/<token>" is the client portal: no sign-in, the token is the key. */
+const PUBLIC_PATHS = ["/login", "/setup", "/auth", "/c"]
 /** Routes a signed-in user has no reason to see. */
 const SIGNED_OUT_ONLY = ["/login", "/setup"]
 

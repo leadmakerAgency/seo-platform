@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 import type { ClientHealth } from "@/features/clients/constants"
 import type { TaskPriority, TaskRepeat, TaskStatus, TaskType } from "./constants"
 import { TASKS_PAGE_SIZE, type TaskParams } from "./search-params"
+import { getRequestsForTask, type TaskRequest } from "@/features/requests/queries"
 
 const nameOf = (m: { full_name: string; email: string } | null) =>
   m ? m.full_name || m.email.split("@")[0] : null
@@ -168,6 +169,7 @@ export type TaskDetail = {
   clients: TaskClient[]
   comments: TaskComment[]
   history: TaskHistoryEntry[]
+  requests: TaskRequest[]
 }
 
 /** Everything the task panel shows. Null if the task doesn't exist or isn't visible. */
@@ -188,7 +190,7 @@ export async function getTaskDetail(number: number): Promise<TaskDetail | null> 
   if (error) throw new Error(`Could not load the task: ${error.message}`)
   if (!t) return null
 
-  const [{ data: comments }, { data: history }] = await Promise.all([
+  const [{ data: comments }, { data: history }, requests] = await Promise.all([
     supabase
       .from("task_comments")
       .select(
@@ -204,6 +206,7 @@ export async function getTaskDetail(number: number): Promise<TaskDetail | null> 
       .eq("task_id", t.id)
       .order("created_at", { ascending: false })
       .limit(50),
+    getRequestsForTask(t.id),
   ])
 
   const clients: TaskClient[] = (t.task_clients ?? [])
@@ -251,6 +254,7 @@ export async function getTaskDetail(number: number): Promise<TaskDetail | null> 
       actorName: nameOf(h.actor),
       clientName: h.client?.name ?? null,
     })),
+    requests,
   }
 }
 
@@ -345,11 +349,12 @@ export async function getTasksForClient(clientId: string): Promise<ClientTaskRow
 
 export type NotificationItem = {
   id: string
-  kind: "task_assigned" | "task_mentioned" | "task_commented"
+  kind: "task_assigned" | "task_mentioned" | "task_commented" | "request_answered"
   readAt: string | null
   createdAt: string
   actorName: string | null
   task: { number: number; title: string; clients: number } | null
+  request: { number: number; title: string; client: { slug: string; name: string } | null } | null
 }
 
 export async function getNotifications(limit = 20): Promise<NotificationItem[]> {
@@ -357,7 +362,7 @@ export async function getNotifications(limit = 20): Promise<NotificationItem[]> 
   const { data, error } = await supabase
     .from("notifications")
     .select(
-      "id, kind, read_at, created_at, actor:team_members!notifications_actor_id_fkey(full_name, email), task:tasks(number, title, task_clients(count))",
+      "id, kind, read_at, created_at, actor:team_members!notifications_actor_id_fkey(full_name, email), task:tasks(number, title, task_clients(count)), request:client_requests(number, title, client:clients(slug, name))",
     )
     .order("created_at", { ascending: false })
     .limit(limit)
@@ -374,6 +379,9 @@ export async function getNotifications(limit = 20): Promise<NotificationItem[]> 
           title: n.task.title,
           clients: n.task.task_clients?.[0]?.count ?? 0,
         }
+      : null,
+    request: n.request
+      ? { number: n.request.number, title: n.request.title, client: n.request.client }
       : null,
   }))
 }

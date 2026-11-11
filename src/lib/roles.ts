@@ -38,6 +38,8 @@ const PERMISSIONS = {
   "clients.see_all": ["admin", "manager", "viewer"],
   "tasks.manage": ["admin", "manager"],
   "tasks.work": ["admin", "manager", "va", "writer"],
+  "requests.create": ["admin", "manager", "va", "writer"],
+  "requests.manage": ["admin", "manager"],
   "team.manage": ["admin"],
 } as const satisfies Record<string, readonly AppRole[]>
 
@@ -51,6 +53,8 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "clients.delete": "Delete clients",
   "tasks.manage": "Create, assign and delete tasks",
   "tasks.work": "Work on their tasks and tick clients off",
+  "requests.create": "Ask clients for codes, files and approvals (VAs: clients in their tasks)",
+  "requests.manage": "Turn on or replace a client's private link",
   "team.manage": "Invite people and change roles",
 }
 

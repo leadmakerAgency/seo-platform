@@ -54,4 +54,7 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   `private.agency_today()` in SQL). Don't compute dates with `new Date()` in render outside Suspense.
 - **Tasks:** status follows the client ticks in the database (triggers); don't set it from the app
   when ticking. RLS + guard triggers restrict VAs/writers to their own tasks.
+- **Client requests:** status changes, task sync and notifications run in triggers. The portal
+  (`/c/<token>`) uses only the token-checked `portal_*` database functions through the
+  session-less client in `src/lib/supabase/public.ts`; never give the portal the service role.
 - The `cn` helper comes from the `cn` package (shadcn's), re-exported by `src/lib/utils.ts`.

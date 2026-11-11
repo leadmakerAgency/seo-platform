@@ -10,17 +10,31 @@ import { markNotificationsRead } from "@/features/tasks/actions"
 import { taskNumber } from "@/features/tasks/constants"
 import type { NotificationItem } from "@/features/tasks/queries"
 import { formatRelative } from "@/lib/format"
+import { clientHref } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 
 function describe(n: NotificationItem) {
   const who = n.actorName ?? "Someone"
   const task = n.task
+  if (n.kind === "request_answered") {
+    const r = n.request
+    if (!r) return "A client answered a request"
+    const on = task ? ` on ${taskNumber(task.number)}` : ""
+    return `${r.client?.name ?? "A client"} answered “${r.title}”${on}`
+  }
   if (!task) return `${who} sent you a notification`
   const clients =
     task.clients > 0 ? ` (${task.clients} ${task.clients === 1 ? "client" : "clients"})` : ""
   if (n.kind === "task_assigned") return `${who} assigned you “${task.title}”${clients}`
   if (n.kind === "task_mentioned") return `${who} mentioned you on ${taskNumber(task.number)}`
   return `${who} commented on ${taskNumber(task.number)} “${task.title}”`
+}
+
+function hrefFor(n: NotificationItem) {
+  if (n.request?.client) {
+    return `${clientHref(n.request.client.slug, "requests")}?request=${n.request.number}`
+  }
+  return n.task ? `/tasks?task=${n.task.number}` : "/tasks"
 }
 
 /** Header bell: latest notifications, refreshed on focus and every minute. */
@@ -88,14 +102,14 @@ export function NotificationsBell() {
         <div className="border-b px-4 py-3 text-sm font-semibold">Notifications</div>
         {items.length === 0 ? (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-            Nothing yet. Assignments and @mentions show up here.
+            Nothing yet. Assignments, @mentions and client answers show up here.
           </p>
         ) : (
           <ul className="max-h-[420px] overflow-y-auto">
             {items.map((n) => (
               <li key={n.id} className="border-b last:border-b-0">
                 <Link
-                  href={n.task ? `/tasks?task=${n.task.number}` : "/tasks"}
+                  href={hrefFor(n)}
                   onClick={() => onOpenChange(false)}
                   className="flex gap-3 px-4 py-3 text-sm hover:bg-muted"
                 >

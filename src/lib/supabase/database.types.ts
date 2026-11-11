@@ -24,6 +24,7 @@ export type Database = {
           created_at: string
           id: number
           meta: Json
+          request_id: string | null
           task_id: string | null
         }
         Insert: {
@@ -33,6 +34,7 @@ export type Database = {
           created_at?: string
           id?: never
           meta?: Json
+          request_id?: string | null
           task_id?: string | null
         }
         Update: {
@@ -42,6 +44,7 @@ export type Database = {
           created_at?: string
           id?: never
           meta?: Json
+          request_id?: string | null
           task_id?: string | null
         }
         Relationships: [
@@ -57,6 +60,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_log_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "client_requests"
             referencedColumns: ["id"]
           },
           {
@@ -115,6 +125,217 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_portal_links: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          last_opened_at: string | null
+          token: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          last_opened_at?: string | null
+          token: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          last_opened_at?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_portal_links_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_portal_links_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_request_files: {
+        Row: {
+          client_id: string
+          created_at: string
+          file_name: string
+          id: string
+          mime_type: string | null
+          request_id: string
+          size_bytes: number | null
+          storage_path: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          file_name: string
+          id?: string
+          mime_type?: string | null
+          request_id: string
+          size_bytes?: number | null
+          storage_path: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          file_name?: string
+          id?: string
+          mime_type?: string | null
+          request_id?: string
+          size_bytes?: number | null
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_request_files_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_request_files_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "client_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_requests: {
+        Row: {
+          ask_again_note: string | null
+          auto_complete: boolean
+          client_id: string
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          created_by: string | null
+          decision: Database["public"]["Enums"]["request_decision"] | null
+          due_on: string | null
+          id: string
+          instructions: string | null
+          internal_note: string | null
+          kind: Database["public"]["Enums"]["request_kind"]
+          number: number
+          options: Json
+          owner_id: string | null
+          reopen_count: number
+          responded_at: string | null
+          responder_name: string | null
+          response_text: string | null
+          status: Database["public"]["Enums"]["request_status"]
+          task_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          ask_again_note?: string | null
+          auto_complete?: boolean
+          client_id: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          decision?: Database["public"]["Enums"]["request_decision"] | null
+          due_on?: string | null
+          id?: string
+          instructions?: string | null
+          internal_note?: string | null
+          kind: Database["public"]["Enums"]["request_kind"]
+          number?: never
+          options?: Json
+          owner_id?: string | null
+          reopen_count?: number
+          responded_at?: string | null
+          responder_name?: string | null
+          response_text?: string | null
+          status?: Database["public"]["Enums"]["request_status"]
+          task_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          ask_again_note?: string | null
+          auto_complete?: boolean
+          client_id?: string
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          decision?: Database["public"]["Enums"]["request_decision"] | null
+          due_on?: string | null
+          id?: string
+          instructions?: string | null
+          internal_note?: string | null
+          kind?: Database["public"]["Enums"]["request_kind"]
+          number?: never
+          options?: Json
+          owner_id?: string | null
+          reopen_count?: number
+          responded_at?: string | null
+          responder_name?: string | null
+          response_text?: string | null
+          status?: Database["public"]["Enums"]["request_status"]
+          task_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_requests_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_requests_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_requests_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_requests_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_requests_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "task_list"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_requests_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -205,6 +426,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["notification_kind"]
           read_at: string | null
           recipient_id: string
+          request_id: string | null
           task_id: string | null
         }
         Insert: {
@@ -214,6 +436,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["notification_kind"]
           read_at?: string | null
           recipient_id: string
+          request_id?: string | null
           task_id?: string | null
         }
         Update: {
@@ -223,6 +446,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["notification_kind"]
           read_at?: string | null
           recipient_id?: string
+          request_id?: string | null
           task_id?: string | null
         }
         Relationships: [
@@ -238,6 +462,13 @@ export type Database = {
             columns: ["recipient_id"]
             isOneToOne: false
             referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "client_requests"
             referencedColumns: ["id"]
           },
           {
@@ -512,6 +743,32 @@ export type Database = {
           total: number
         }[]
       }
+      portal_attach_file: {
+        Args: {
+          p_mime: string
+          p_name: string
+          p_path: string
+          p_request_id: string
+          p_size: number
+          p_token: string
+        }
+        Returns: string
+      }
+      portal_get: { Args: { p_token: string }; Returns: Json }
+      portal_remove_file: {
+        Args: { p_file_id: string; p_token: string }
+        Returns: undefined
+      }
+      portal_respond: {
+        Args: {
+          p_decision: Database["public"]["Enums"]["request_decision"]
+          p_name: string
+          p_request_id: string
+          p_text: string
+          p_token: string
+        }
+        Returns: Database["public"]["Enums"]["request_status"]
+      }
       setup_required: { Args: never; Returns: boolean }
       task_counts: {
         Args: { p_mine?: boolean }
@@ -533,7 +790,14 @@ export type Database = {
       client_health: "on_track" | "needs_look" | "action_needed"
       client_stage: "onboarding" | "active" | "paused" | "churned"
       member_status: "active" | "invited" | "disabled"
-      notification_kind: "task_assigned" | "task_mentioned" | "task_commented"
+      notification_kind:
+        | "task_assigned"
+        | "task_mentioned"
+        | "task_commented"
+        | "request_answered"
+      request_decision: "approved" | "changes_requested"
+      request_kind: "question" | "code" | "files" | "approval" | "action"
+      request_status: "open" | "answered" | "done" | "cancelled"
       task_priority: "low" | "normal" | "high"
       task_repeat: "none" | "weekdays" | "weekly" | "monthly"
       task_status: "todo" | "in_progress" | "waiting_on_client" | "done"
@@ -678,7 +942,15 @@ export const Constants = {
       client_health: ["on_track", "needs_look", "action_needed"],
       client_stage: ["onboarding", "active", "paused", "churned"],
       member_status: ["active", "invited", "disabled"],
-      notification_kind: ["task_assigned", "task_mentioned", "task_commented"],
+      notification_kind: [
+        "task_assigned",
+        "task_mentioned",
+        "task_commented",
+        "request_answered",
+      ],
+      request_decision: ["approved", "changes_requested"],
+      request_kind: ["question", "code", "files", "approval", "action"],
+      request_status: ["open", "answered", "done", "cancelled"],
       task_priority: ["low", "normal", "high"],
       task_repeat: ["none", "weekdays", "weekly", "monthly"],
       task_status: ["todo", "in_progress", "waiting_on_client", "done"],

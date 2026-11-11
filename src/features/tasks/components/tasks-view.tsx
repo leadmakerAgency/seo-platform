@@ -56,6 +56,7 @@ import {
   TaskMeta,
   TaskStatusBadge,
 } from "./task-bits"
+import { TabLink } from "./tasks-tabs-nav"
 
 const ALL = "all"
 
@@ -140,6 +141,7 @@ export function TasksView({
   canSeeTeam,
   members,
   emptyAction,
+  requestCount,
 }: {
   rows: TaskRow[]
   total: number
@@ -149,6 +151,8 @@ export function TasksView({
   canSeeTeam: boolean
   members: MemberOption[]
   emptyAction?: ReactNode
+  /** Open + answered client requests; shows the Client requests tab (managers). */
+  requestCount?: number
 }) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -211,6 +215,14 @@ export function TasksView({
             </button>
           )
         })}
+        {requestCount !== undefined && (
+          <TabLink
+            href="/tasks/requests"
+            label="Client requests"
+            count={requestCount}
+            active={false}
+          />
+        )}
       </div>
 
       <Toolbar params={params} onChange={go} canSeeTeam={canSeeTeam} members={members} />

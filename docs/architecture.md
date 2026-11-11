@@ -28,7 +28,10 @@ Browser ──> src/proxy.ts ──> app routes (thin) ──> features/<module>
 | `/tasks`                                 | Task list (tabs, tiles, filters), task panel (`?task=1051`), create/edit, comments  | Built       |
 | `/team`                                  | Members, invite links, roles, access, permission matrix, activity log (admin only)  | Built       |
 | `/welcome`                               | Invited members set their name and password                                         | Built       |
+| `/tasks/requests`                        | Client requests across all clients: the chase list (admins, managers)               | Built       |
 | `/clients/[clientSlug]/tasks`            | Tasks that include one client, tick per client                                      | Built       |
+| `/clients/[clientSlug]/requests`         | Things we need from the client, their private link, request panel (`?request=101`)  | Built       |
+| `/c/[token]`                             | The client portal: public, no sign-in, the token is the key (noindex, no-referrer)  | Built       |
 | `/clients/[clientSlug]` and `/[section]` | Overview, rankings, AI visibility, backlinks, content, reviews, connections, report | Coming soon |
 | `/api/clients/search?q=`                 | Client search for the Ctrl/Cmd+K switcher                                           | Built       |
 | `/api/notifications`                     | Latest notifications for the header bell                                            | Built       |
@@ -53,18 +56,34 @@ All page definitions (title, icon, roles, coming-soon flag, summary) are in `src
 - `task_comments` (with `mentions`) and `notifications` (assigned, mentioned, commented; written
   by triggers only).
 - `task_list` view and `task_counts()` feed the Tasks page; both run with the caller's RLS.
+- `client_requests`: things we need from a client (question, code, files, approval, action).
+  `number` is shown as R-101. Status open → answered → done (or cancelled; "Ask again" goes back
+  to open). Triggers: answered with `auto_complete` goes straight to done; the owner and the task
+  assignee are notified when the client answers; a linked task is Waiting on client while it has
+  open requests and goes back to In progress when the last one is answered or cancelled.
+- `client_request_files` and the private storage bucket `client-uploads` (images and PDF, 10 MB,
+  path `<request_id>/<uuid>-<name>`). The team reads them through 10-minute signed URLs.
+- `client_portal_links`: one private link per client (`/c/<token>`, 32 random bytes). A new
+  token turns the old link off.
+- `portal_get`, `portal_respond`, `portal_attach_file`, `portal_remove_file`: the only things the
+  portal can call (anon role). Each checks the token first and only touches that client's
+  requests; they never return internal notes, team emails or tasks. The Supabase security
+  advisor flags them as "callable by anon": that is intended.
 - `client_health_counts()` gives the dashboard tile counts; `setup_required()` (anon only) tells
   `/setup` whether an admin exists.
 
 ## Roles
 
-| Permission                               | Admin | Account manager | VA                          | Writer                      | Read only |
-| ---------------------------------------- | ----- | --------------- | --------------------------- | --------------------------- | --------- |
-| See clients                              | All   | All             | Only clients in their tasks | Only clients in their tasks | All       |
-| Add and edit clients                     | Yes   | Yes             | –                           | –                           | –         |
-| Create, assign, edit and delete tasks    | Yes   | Yes             | –                           | –                           | –         |
-| Tick clients off, change status, comment | Yes   | Yes             | Their own tasks             | Their own tasks             | –         |
-| Delete clients, manage the team          | Yes   | –               | –                           | –                           | –         |
+| Permission                               | Admin | Account manager | VA                                              | Writer                      | Read only |
+| ---------------------------------------- | ----- | --------------- | ----------------------------------------------- | --------------------------- | --------- |
+| See clients                              | All   | All             | Only clients in their tasks                     | Only clients in their tasks | All       |
+| Add and edit clients                     | Yes   | Yes             | –                                               | –                           | –         |
+| Create, assign, edit and delete tasks    | Yes   | Yes             | –                                               | –                           | –         |
+| Tick clients off, change status, comment | Yes   | Yes             | Their own tasks                                 | Their own tasks             | –         |
+| Ask clients for things (client requests) | Yes   | Yes             | Clients in their tasks                          | Clients in their tasks      | – (sees)  |
+| Mark done, ask again, cancel, edit       | Yes   | Yes             | Requests they own or created, or on their tasks | Same as VA                  | –         |
+| Turn on or replace a client's link       | Yes   | Yes             | – (can copy it)                                 | – (can copy it)             | –         |
+| Delete clients, manage the team          | Yes   | –               | –                                               | –                           | –         |
 
 Which pages each role sees is set per page in `navigation.ts`.
 
@@ -81,6 +100,15 @@ creates the auth user and returns a one-time link (`/auth/confirm?token_hash=…
 that the admin sends by hand; no email setup needed. The invitee lands on `/welcome`, sets a
 password and becomes active. The database always keeps one active admin, and admins can't change
 their own role or access.
+
+## Client portal
+
+Clients never sign in. Each client has one private link, `/c/<token>`, listed on their Client
+requests page. The page reads through `portal_get` with a session-less Supabase client
+(`src/lib/supabase/public.ts`), so it needs no server secret. Uploads go straight from the
+browser to `client-uploads` (a storage policy only allows open "files" requests with room left),
+then `portal_attach_file` records them. `/c` is a public path in the proxy, and the route sends
+`Referrer-Policy: no-referrer` and `X-Robots-Tag: noindex` (`next.config.ts`).
 
 ## Next widgets for the Dashboard (when their modules exist)
 
