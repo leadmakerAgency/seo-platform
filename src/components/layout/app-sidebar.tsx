@@ -112,12 +112,40 @@ export function AppSidebar({
               </SidebarMenuItem>
             </SidebarMenu>
 
-            {currentClient && (
+            {currentClient ? (
               <SidebarMenu>
                 {clientItems.map((item) => {
                   const href = clientHref(currentClient.slug, item.segment)
                   return (
                     <NavLink key={item.id} item={item} href={href} active={pathname === href} />
+                  )
+                })}
+              </SidebarMenu>
+            ) : (
+              // No client chosen yet: show which pages exist, and let a click
+              // open the picker instead of hiding the whole section.
+              <SidebarMenu aria-label="Client pages (choose a client first)">
+                <p className="px-2 pt-1 pb-0.5 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+                  Choose a client to open these pages.
+                </p>
+                {clientItems.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <SidebarMenuItem key={item.id}>
+                      <SidebarMenuButton
+                        tooltip={`${item.title}: choose a client first`}
+                        onClick={() => setSwitcherOpen(true)}
+                        className="text-muted-foreground"
+                      >
+                        <Icon />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                      {item.comingSoon && (
+                        <SidebarMenuBadge className="text-[10px] font-normal text-muted-foreground">
+                          Soon
+                        </SidebarMenuBadge>
+                      )}
+                    </SidebarMenuItem>
                   )
                 })}
               </SidebarMenu>
