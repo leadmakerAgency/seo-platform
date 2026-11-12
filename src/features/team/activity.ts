@@ -1,4 +1,5 @@
 import { PLATFORM_META, type SocialPlatform } from "@/features/connections/constants"
+import { STEPS } from "@/features/onboarding/constants"
 import { STATUS_META, type TaskStatus } from "@/features/tasks/constants"
 import { formatDay } from "@/lib/dates"
 import { ROLE_LABELS, type AppRole } from "@/lib/roles"
@@ -61,6 +62,32 @@ export function describeActivity(entry: ActivityLike): string {
       return `commented on T-${num(m.number)}`
     case "task.deleted":
       return `deleted T-${num(m.number)} “${str(m.title)}”`
+    case "onboarding.link_created":
+      return "created the onboarding link"
+    case "onboarding.link_revoked":
+      return "turned off the onboarding link"
+    case "onboarding.opened":
+      return "opened the onboarding link"
+    case "onboarding.step_done":
+      return `finished the “${STEPS.find((s) => s.key === str(m.step))?.label ?? str(m.step)}” step`
+    case "onboarding.submitted":
+      return "sent their onboarding to LeadMaker"
+    case "onboarding.applied": {
+      const n = Array.isArray(m.fields) ? m.fields.length : 0
+      return `applied ${n} onboarding ${n === 1 ? "field" : "fields"} to the profile`
+    }
+    case "onboarding.reviewed":
+      return m.activated
+        ? "marked onboarding reviewed and moved the client to Active"
+        : "marked onboarding reviewed"
+    case "onboarding.reopened":
+      return "reopened onboarding so the client can edit again"
+    case "vault.viewed":
+      return `revealed the ${str(m.site) || "stored"} login`
+    case "vault.added":
+      return `added a ${str(m.site) || "new"} login`
+    case "vault.removed":
+      return `removed the ${str(m.site) || "stored"} login`
     case "connection.connected":
       return `connected ${platform(m.platform)}${str(m.name) ? ` “${str(m.name)}”` : ""}`
     case "connection.needs_reconnect":

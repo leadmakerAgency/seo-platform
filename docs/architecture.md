@@ -20,25 +20,28 @@ Browser ──> src/proxy.ts ──> app routes (thin) ──> features/<module>
 
 ## Routes
 
-| Route                                    | What                                                                                 | Status      |
-| ---------------------------------------- | ------------------------------------------------------------------------------------ | ----------- |
-| `/login`, `/setup`, `/no-access`         | Sign in, one-time first-admin setup, waiting for access                              | Built       |
-| `/auth/confirm`                          | Email confirmation callback (PKCE `code` or `token_hash`)                            | Built       |
-| `/dashboard`                             | Health tiles, Needs attention, client list, Add client                               | Built       |
-| `/tasks`                                 | Task list (tabs, tiles, filters), task panel (`?task=1051`), create/edit, comments   | Built       |
-| `/team`                                  | Members, invite links, roles, access, permission matrix, activity log (admin only)   | Built       |
-| `/welcome`                               | Invited members set their name and password                                          | Built       |
-| `/tasks/requests`                        | Client requests across all clients: the chase list (admins, managers)                | Built       |
-| `/clients/[clientSlug]/tasks`            | Tasks that include one client, tick per client                                       | Built       |
-| `/clients/[clientSlug]/requests`         | Things we need from the client, their private link, request panel (`?request=101`)   | Built       |
-| `/clients/[clientSlug]/connections`      | Client Google Business Profile and social accounts through Zernio (admins, managers) | Built       |
-| `/integrations/zernio/callback`          | Where Zernio's hosted sign-in returns; checks the attempt, syncs, redirects          | Built       |
-| `/api/webhooks/zernio`                   | Zernio webhooks (HMAC-signed, no session)                                            | Built       |
-| `/api/cron/zernio-sync`                  | Hourly Zernio health sync, called by pg_cron with a Vault token (no session)         | Built       |
-| `/c/[token]`                             | The client portal: public, no sign-in, the token is the key (noindex, no-referrer)   | Built       |
-| `/clients/[clientSlug]` and `/[section]` | Overview, rankings, AI visibility, backlinks, content, reviews, connections, report  | Coming soon |
-| `/api/clients/search?q=`                 | Client search for the Ctrl/Cmd+K switcher                                            | Built       |
-| `/api/notifications`                     | Latest notifications for the header bell                                             | Built       |
+| Route                                    | What                                                                                                  | Status      |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------- | ----------- |
+| `/login`, `/setup`, `/no-access`         | Sign in, one-time first-admin setup, waiting for access                                               | Built       |
+| `/auth/confirm`                          | Email confirmation callback (PKCE `code` or `token_hash`)                                             | Built       |
+| `/dashboard`                             | Health tiles, Needs attention, client list, Add client                                                | Built       |
+| `/tasks`                                 | Task list (tabs, tiles, filters), task panel (`?task=1051`), create/edit, comments                    | Built       |
+| `/team`                                  | Members, invite links, roles, access, permission matrix, activity log (admin only)                    | Built       |
+| `/welcome`                               | Invited members set their name and password                                                           | Built       |
+| `/tasks/requests`                        | Client requests across all clients: the chase list (admins, managers)                                 | Built       |
+| `/clients/[clientSlug]/tasks`            | Tasks that include one client, tick per client                                                        | Built       |
+| `/clients/[clientSlug]/requests`         | Things we need from the client, their private link, request panel (`?request=101`)                    | Built       |
+| `/clients/[clientSlug]/onboarding`       | Onboarding link, live progress, review & apply details, logins vault (admins, managers; viewers read) | Built       |
+| `/onboard/[slug-token]`                  | The client onboarding wizard: public, no sign-in, autosaves (also `connect.<domain>/<slug-token>`)    | Built       |
+| `/onboard/done`                          | Where Zernio returns the client after an onboarding sign-in (one-time key, not the token)             | Built       |
+| `/clients/[clientSlug]/connections`      | Client Google Business Profile and social accounts through Zernio (admins, managers)                  | Built       |
+| `/integrations/zernio/callback`          | Where Zernio's hosted sign-in returns; checks the attempt, syncs, redirects                           | Built       |
+| `/api/webhooks/zernio`                   | Zernio webhooks (HMAC-signed, no session)                                                             | Built       |
+| `/api/cron/zernio-sync`                  | Hourly Zernio health sync, called by pg_cron with a Vault token (no session)                          | Built       |
+| `/c/[token]`                             | The client portal: public, no sign-in, the token is the key (noindex, no-referrer)                    | Built       |
+| `/clients/[clientSlug]` and `/[section]` | Overview, rankings, AI visibility, backlinks, content, reviews, connections, report                   | Coming soon |
+| `/api/clients/search?q=`                 | Client search for the Ctrl/Cmd+K switcher                                                             | Built       |
+| `/api/notifications`                     | Latest notifications for the header bell                                                              | Built       |
 
 All page definitions (title, icon, roles, coming-soon flag, summary) are in `src/lib/navigation.ts`.
 
@@ -127,6 +130,26 @@ id). Zernio is the source of truth; our tables mirror it.
   nothing. Browser query parameters are never trusted.
 - Secrets: `ZERNIO_API_KEY`, `ZERNIO_WEBHOOK_SECRET` (server only, `src/lib/env.server.ts`).
   The webhook and cron routes skip the session check in the proxy and verify their own secret.
+
+## Client onboarding
+
+A new client gets one private link (`onboarding_links`, one active per client, 22-character
+token, 30 days, revocable). The wizard (`/onboard/<slug>-<token>`; on `ONBOARDING_HOST` the proxy
+serves only these routes) saves every answer immediately through token-checked `onboarding_*`
+security-definer functions (anon), which validate input, throttle writes per link and recompute the
+step statuses in `client_onboarding`.
+
+- Answers: `onboarding_business_details` (as submitted), `onboarding_google_access`,
+  `onboarding_website`, `onboarding_social_choices`. The approved profile is
+  `client_business_profiles`, written only by **Apply to profile** (`apply_onboarding_profile`).
+- Accounts: the wizard starts Zernio's hosted sign-in with the service client after the token
+  check; the return URL carries a separate one-time key (hash on `social_connect_attempts`), never
+  the token. Connections land in `social_accounts` like any other.
+- Logins: `client_logins` stores only a Supabase Vault secret id. `reveal_client_login` checks the
+  role (VAs and writers only for clients in their tasks) and logs `vault.viewed`; deleting a row
+  deletes its secret.
+- Submitting notifies the owner and raises a Needs attention alert; **Mark reviewed** locks the
+  answers and can move the client to Active.
 
 ## Client portal
 

@@ -42,6 +42,16 @@ export default function config(phase: string): NextConfig {
             { key: "Cache-Control", value: "private, no-store" },
           ],
         },
+        {
+          // The client onboarding wizard (app-domain form; the connect host gets
+          // the same headers in the proxy).
+          source: "/onboard/:path*",
+          headers: [
+            { key: "Referrer-Policy", value: "no-referrer" },
+            { key: "X-Robots-Tag", value: "noindex, nofollow" },
+            { key: "Cache-Control", value: "private, no-store" },
+          ],
+        },
       ]
     },
     turbopack: {

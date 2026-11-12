@@ -14,13 +14,13 @@ import {
   deleteAccount,
   deleteProfile,
   getConnectUrl,
-  getOrCreateProfile,
   listWebhooks,
   saveWebhook,
   testWebhook,
   ZernioError,
 } from "@/lib/zernio/client"
 import { isSocialPlatform, PLATFORM_META, type SocialPlatform } from "./constants"
+import { ensureZernioProfile } from "./profile"
 import { isLocalOrigin } from "./queries"
 import { syncClient, type Db } from "./sync"
 
@@ -50,31 +50,6 @@ function zernioMessage(error: unknown) {
   if (error.status === 0 || error.status >= 500)
     return "Zernio isn't responding. Try again in a minute."
   return error.message
-}
-
-/** The client's Zernio profile id: from our table, or created (or found) at Zernio. */
-async function ensureProfile(supabase: Db, client: { id: string; name: string }, memberId: string) {
-  const { data: existing } = await supabase
-    .from("zernio_profiles")
-    .select("zernio_profile_id")
-    .eq("client_id", client.id)
-    .maybeSingle()
-  if (existing) return existing.zernio_profile_id
-
-  const profileId = await getOrCreateProfile(client.id, client.name)
-  await supabase
-    .from("zernio_profiles")
-    .upsert(
-      { client_id: client.id, zernio_profile_id: profileId, created_by: memberId },
-      { onConflict: "client_id", ignoreDuplicates: true },
-    )
-  const { data: saved } = await supabase
-    .from("zernio_profiles")
-    .select("zernio_profile_id")
-    .eq("client_id", client.id)
-    .maybeSingle()
-  if (!saved) throw new Error("Couldn't save the client's Zernio profile.")
-  return saved.zernio_profile_id
 }
 
 async function loadClient(supabase: Db, clientId: string) {
@@ -120,7 +95,7 @@ export async function startConnect(
 
   let attemptId: string | null = null
   try {
-    const profileId = await ensureProfile(supabase, client, g.member.id)
+    const profileId = await ensureZernioProfile(supabase, client, g.member.id)
     const { data: attempt, error } = await supabase
       .from("social_connect_attempts")
       .insert({
@@ -186,7 +161,7 @@ export async function createClientLink(
   }
 
   try {
-    const profileId = await ensureProfile(supabase, client, g.member.id)
+    const profileId = await ensureZernioProfile(supabase, client, g.member.id)
     const invite = await createInvite({
       platform,
       profileId,

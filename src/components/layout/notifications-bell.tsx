@@ -17,6 +17,12 @@ import { cn } from "@/lib/utils"
 function describe(n: NotificationItem) {
   const who = n.actorName ?? "Someone"
   const task = n.task
+  if (n.kind === "onboarding_opened") {
+    return `${n.client?.name ?? "A client"} opened their onboarding link`
+  }
+  if (n.kind === "onboarding_submitted") {
+    return `${n.client?.name ?? "A client"} finished onboarding. Review the details`
+  }
   if (n.kind === "connection_lost") {
     const s = n.socialAccount
     if (!s) return "A client account needs reconnecting"
@@ -38,6 +44,9 @@ function describe(n: NotificationItem) {
 }
 
 function hrefFor(n: NotificationItem) {
+  if ((n.kind === "onboarding_opened" || n.kind === "onboarding_submitted") && n.client) {
+    return clientHref(n.client.slug, "onboarding")
+  }
   if (n.socialAccount?.client) return clientHref(n.socialAccount.client.slug, "connections")
   if (n.request?.client) {
     return `${clientHref(n.request.client.slug, "requests")}?request=${n.request.number}`

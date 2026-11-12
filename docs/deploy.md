@@ -36,6 +36,13 @@ After deploying, an admin opens any client's **Connections** page on the live si
 **Zernio setup** card, clicks **Register webhook**, **Send test** and **Turn on hourly checks**.
 Nothing else is set up by hand (the hourly job lives in Supabase pg_cron; its token is in Vault).
 
+**Client onboarding link (optional settings).** Links work straight away on the app domain
+(`https://<app>/onboard/<client>-<code>`). For the subdomain later: add `connect.leadmaker.agency`
+under the app's Settings → Domains in DigitalOcean (CNAME at your DNS provider), then set
+`ONBOARDING_HOST=connect.leadmaker.agency` and `ONBOARDING_BASE_URL=https://connect.leadmaker.agency`
+and redeploy. On that host only the onboarding pages answer. Optional: `GOOGLE_REPORTING_EMAIL`
+(the reporting service account) and `AGENCY_ACCESS_EMAIL` (default `seo@leadmaker.agency`).
+
 If the values are missing anyway, the build stops in the first second with "Missing build-time
 environment variables" (the check is in `next.config.ts`).
 

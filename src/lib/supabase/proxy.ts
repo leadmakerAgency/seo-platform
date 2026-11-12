@@ -6,7 +6,8 @@ import type { Database } from "./database.types"
 
 /** Routes that work without a session. Everything else requires sign-in. */
 /** "/c/<token>" is the client portal: no sign-in, the token is the key. */
-const PUBLIC_PATHS = ["/login", "/setup", "/auth", "/c"]
+/** "/onboard/<slug>-<token>" is the client onboarding wizard, same idea. */
+const PUBLIC_PATHS = ["/login", "/setup", "/auth", "/c", "/onboard"]
 /** Server-to-server endpoints that verify their own signature or token. */
 const MACHINE_PATHS = ["/api/webhooks", "/api/cron"]
 /** Routes a signed-in user has no reason to see. */

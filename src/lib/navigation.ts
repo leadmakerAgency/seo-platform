@@ -1,5 +1,6 @@
 import {
   ChartNoAxesColumn,
+  ClipboardCheck,
   FileText,
   House,
   Inbox,
@@ -77,6 +78,16 @@ export const CLIENT_SECTIONS: ClientSection[] = [
     comingSoon: true,
     summary:
       "Who the client is, where they show up (website, map pack, AI answers) and this month's work.",
+  },
+  {
+    id: "onboarding",
+    segment: "onboarding",
+    title: "Onboarding",
+    icon: ClipboardCheck,
+    roles: ["admin", "manager", "viewer"],
+    comingSoon: false,
+    summary:
+      "The link a new client fills in: business details, Google and social accounts, reporting access, website and logins.",
   },
   {
     id: "client-tasks",

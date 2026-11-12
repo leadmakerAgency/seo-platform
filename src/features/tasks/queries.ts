@@ -3,6 +3,7 @@ import "server-only"
 import { addDays, agencyToday, endOfWeek } from "@/lib/dates"
 import { formatLocation } from "@/lib/format"
 import { ilikePattern } from "@/lib/search"
+import type { Database } from "@/lib/supabase/database.types"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import type { ClientHealth } from "@/features/clients/constants"
 import type { TaskPriority, TaskRepeat, TaskStatus, TaskType } from "./constants"
@@ -349,13 +350,13 @@ export async function getTasksForClient(clientId: string): Promise<ClientTaskRow
 
 export type NotificationItem = {
   id: string
-  kind:
-    "task_assigned" | "task_mentioned" | "task_commented" | "request_answered" | "connection_lost"
+  kind: Database["public"]["Enums"]["notification_kind"]
   readAt: string | null
   createdAt: string
   actorName: string | null
   task: { number: number; title: string; clients: number } | null
   request: { number: number; title: string; client: { slug: string; name: string } | null } | null
+  client: { slug: string; name: string } | null
   socialAccount: {
     platform: string
     name: string | null
@@ -368,7 +369,7 @@ export async function getNotifications(limit = 20): Promise<NotificationItem[]> 
   const { data, error } = await supabase
     .from("notifications")
     .select(
-      "id, kind, read_at, created_at, actor:team_members!notifications_actor_id_fkey(full_name, email), task:tasks(number, title, task_clients(count)), request:client_requests(number, title, client:clients(slug, name)), social_account:social_accounts(platform, display_name, location_name, client:clients(slug, name))",
+      "id, kind, read_at, created_at, actor:team_members!notifications_actor_id_fkey(full_name, email), task:tasks(number, title, task_clients(count)), request:client_requests(number, title, client:clients(slug, name)), social_account:social_accounts(platform, display_name, location_name, client:clients(slug, name)), client:clients(slug, name)",
     )
     .order("created_at", { ascending: false })
     .limit(limit)
@@ -389,6 +390,7 @@ export async function getNotifications(limit = 20): Promise<NotificationItem[]> 
     request: n.request
       ? { number: n.request.number, title: n.request.title, client: n.request.client }
       : null,
+    client: n.client,
     socialAccount: n.social_account
       ? {
           platform: n.social_account.platform,

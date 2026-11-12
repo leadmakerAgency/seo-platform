@@ -41,6 +41,8 @@ const PERMISSIONS = {
   "requests.create": ["admin", "manager", "va", "writer"],
   "requests.manage": ["admin", "manager"],
   "connections.manage": ["admin", "manager"],
+  "onboarding.manage": ["admin", "manager"],
+  "vault.reveal": ["admin", "manager", "va", "writer"],
   "integrations.manage": ["admin"],
   "team.manage": ["admin"],
 } as const satisfies Record<string, readonly AppRole[]>
@@ -58,6 +60,9 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "requests.create": "Ask clients for codes, files and approvals (VAs: clients in their tasks)",
   "requests.manage": "Turn on or replace a client's private link",
   "connections.manage": "Connect and disconnect a client's Google and social accounts",
+  "onboarding.manage": "Send onboarding links and apply what clients submit",
+  "vault.reveal":
+    "Open stored client logins (VAs and writers: clients in their tasks; every view is logged)",
   "integrations.manage": "Set up Zernio webhooks and hourly account checks",
   "team.manage": "Invite people and change roles",
 }

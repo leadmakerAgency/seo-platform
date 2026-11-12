@@ -62,4 +62,7 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   `src/features/connections/sync.ts`; status side effects (alerts, notifications, history) are
   triggers. Never trust Zernio callback query params. Deleting a client needs `offboardClient`
   first (restrict foreign key). Plan: `docs/plans/connections-zernio.md`.
+- **Onboarding:** the client side writes only through the `onboarding_*` functions (token checked,
+  validated, throttled); never add anon table policies. Passwords only ever go to Supabase Vault
+  (`client_logins.secret_id`); never select or log them. Plan: `docs/plans/onboarding.md`.
 - The `cn` helper comes from the `cn` package (shadcn's), re-exported by `src/lib/utils.ts`.
