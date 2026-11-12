@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -83,6 +83,18 @@ export function BusinessStep({
   const [v, setV] = useState<Values>(() => initial(business, clientName))
   const save = useAutosave<BusinessPatchInput>((patch) => saveBusiness(token, patch), onSteps)
   const err = save.errors
+
+  // Values we pre-filled (name from the client record, country) only count once
+  // they're saved, so save them as soon as the step opens.
+  const prefilled = useRef(false)
+  useEffect(() => {
+    if (prefilled.current || readOnly) return
+    prefilled.current = true
+    const patch: BusinessPatchInput = {}
+    if (!business?.business_name && clientName) patch.business_name = clientName
+    if (!business?.country_code) patch.country_code = "US"
+    if (Object.keys(patch).length) save.queue(patch)
+  }, [business, clientName, readOnly, save])
 
   /** Text fields: save shortly after typing stops, and at once on blur. */
   const text = (key: keyof Values) => ({
