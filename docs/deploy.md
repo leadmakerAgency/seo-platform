@@ -28,6 +28,14 @@ DigitalOcean add `SUPABASE_SECRET_KEY` with type **Encrypted** and scope **Run T
 redeploy. Locally it goes in `.env.local`. Without it the app works, but the Team page shows a
 notice and invites are turned off.
 
+**Zernio (Connections page): `ZERNIO_API_KEY` and `ZERNIO_WEBHOOK_SECRET`.** Same rule: type
+**Encrypted**, scope **Run Time**, and in `.env.local` locally. The API key comes from the Zernio
+dashboard (API keys); the webhook secret is any random string of 32+ characters
+(`openssl rand -hex 32`). Webhooks and the hourly check also need `SUPABASE_SECRET_KEY`.
+After deploying, an admin opens any client's **Connections** page on the live site and, in the
+**Zernio setup** card, clicks **Register webhook**, **Send test** and **Turn on hourly checks**.
+Nothing else is set up by hand (the hourly job lives in Supabase pg_cron; its token is in Vault).
+
 If the values are missing anyway, the build stops in the first second with "Missing build-time
 environment variables" (the check is in `next.config.ts`).
 

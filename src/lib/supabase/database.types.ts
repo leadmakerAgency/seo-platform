@@ -95,6 +95,7 @@ export type Database = {
           id: string
           resolved_at: string | null
           severity: Database["public"]["Enums"]["alert_severity"]
+          source_key: string | null
           title: string
         }
         Insert: {
@@ -106,6 +107,7 @@ export type Database = {
           id?: string
           resolved_at?: string | null
           severity: Database["public"]["Enums"]["alert_severity"]
+          source_key?: string | null
           title: string
         }
         Update: {
@@ -117,6 +119,7 @@ export type Database = {
           id?: string
           resolved_at?: string | null
           severity?: Database["public"]["Enums"]["alert_severity"]
+          source_key?: string | null
           title?: string
         }
         Relationships: [
@@ -427,6 +430,7 @@ export type Database = {
           read_at: string | null
           recipient_id: string
           request_id: string | null
+          social_account_id: string | null
           task_id: string | null
         }
         Insert: {
@@ -437,6 +441,7 @@ export type Database = {
           read_at?: string | null
           recipient_id: string
           request_id?: string | null
+          social_account_id?: string | null
           task_id?: string | null
         }
         Update: {
@@ -447,6 +452,7 @@ export type Database = {
           read_at?: string | null
           recipient_id?: string
           request_id?: string | null
+          social_account_id?: string | null
           task_id?: string | null
         }
         Relationships: [
@@ -472,6 +478,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "notifications_social_account_id_fkey"
+            columns: ["social_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "notifications_task_id_fkey"
             columns: ["task_id"]
             isOneToOne: false
@@ -483,6 +496,198 @@ export type Database = {
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_accounts: {
+        Row: {
+          avatar_url: string | null
+          can_fetch_analytics: boolean | null
+          can_post: boolean | null
+          client_id: string
+          connected_at: string
+          connected_by: string | null
+          created_at: string
+          disconnect_reason: string | null
+          display_name: string | null
+          id: string
+          issues: string[]
+          last_checked_at: string | null
+          location_id: string | null
+          location_name: string | null
+          platform: Database["public"]["Enums"]["social_platform"]
+          platform_user_id: string | null
+          profile_url: string | null
+          removal_grace_ends_at: string | null
+          removed_at: string | null
+          status: Database["public"]["Enums"]["social_account_status"]
+          token_expires_at: string | null
+          unhealthy_since: string | null
+          updated_at: string
+          username: string | null
+          zernio_account_id: string
+          zernio_profile_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          can_fetch_analytics?: boolean | null
+          can_post?: boolean | null
+          client_id: string
+          connected_at?: string
+          connected_by?: string | null
+          created_at?: string
+          disconnect_reason?: string | null
+          display_name?: string | null
+          id?: string
+          issues?: string[]
+          last_checked_at?: string | null
+          location_id?: string | null
+          location_name?: string | null
+          platform: Database["public"]["Enums"]["social_platform"]
+          platform_user_id?: string | null
+          profile_url?: string | null
+          removal_grace_ends_at?: string | null
+          removed_at?: string | null
+          status?: Database["public"]["Enums"]["social_account_status"]
+          token_expires_at?: string | null
+          unhealthy_since?: string | null
+          updated_at?: string
+          username?: string | null
+          zernio_account_id: string
+          zernio_profile_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          can_fetch_analytics?: boolean | null
+          can_post?: boolean | null
+          client_id?: string
+          connected_at?: string
+          connected_by?: string | null
+          created_at?: string
+          disconnect_reason?: string | null
+          display_name?: string | null
+          id?: string
+          issues?: string[]
+          last_checked_at?: string | null
+          location_id?: string | null
+          location_name?: string | null
+          platform?: Database["public"]["Enums"]["social_platform"]
+          platform_user_id?: string | null
+          profile_url?: string | null
+          removal_grace_ends_at?: string | null
+          removed_at?: string | null
+          status?: Database["public"]["Enums"]["social_account_status"]
+          token_expires_at?: string | null
+          unhealthy_since?: string | null
+          updated_at?: string
+          username?: string | null
+          zernio_account_id?: string
+          zernio_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_accounts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_accounts_client_id_zernio_profile_id_fkey"
+            columns: ["client_id", "zernio_profile_id"]
+            isOneToOne: false
+            referencedRelation: "zernio_profiles"
+            referencedColumns: ["client_id", "zernio_profile_id"]
+          },
+          {
+            foreignKeyName: "social_accounts_connected_by_fkey"
+            columns: ["connected_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      social_connect_attempts: {
+        Row: {
+          client_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          error_code: string | null
+          error_message: string | null
+          expires_at: string
+          id: string
+          invite_url: string | null
+          method: Database["public"]["Enums"]["connect_method"]
+          platform: Database["public"]["Enums"]["social_platform"]
+          reconnect_account_id: string | null
+          result_account_id: string | null
+          status: Database["public"]["Enums"]["connect_attempt_status"]
+          zernio_request_id: string | null
+        }
+        Insert: {
+          client_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          expires_at: string
+          id?: string
+          invite_url?: string | null
+          method: Database["public"]["Enums"]["connect_method"]
+          platform: Database["public"]["Enums"]["social_platform"]
+          reconnect_account_id?: string | null
+          result_account_id?: string | null
+          status?: Database["public"]["Enums"]["connect_attempt_status"]
+          zernio_request_id?: string | null
+        }
+        Update: {
+          client_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_code?: string | null
+          error_message?: string | null
+          expires_at?: string
+          id?: string
+          invite_url?: string | null
+          method?: Database["public"]["Enums"]["connect_method"]
+          platform?: Database["public"]["Enums"]["social_platform"]
+          reconnect_account_id?: string | null
+          result_account_id?: string | null
+          status?: Database["public"]["Enums"]["connect_attempt_status"]
+          zernio_request_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "social_connect_attempts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_connect_attempts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_connect_attempts_reconnect_account_id_fkey"
+            columns: ["reconnect_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "social_connect_attempts_result_account_id_fkey"
+            columns: ["result_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -702,6 +907,89 @@ export type Database = {
         }
         Relationships: []
       }
+      zernio_profiles: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          zernio_profile_id: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          zernio_profile_id: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          zernio_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zernio_profiles_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zernio_profiles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zernio_webhook_events: {
+        Row: {
+          attempts: number
+          client_id: string | null
+          event: string
+          id: string
+          last_error: string | null
+          payload: Json
+          processed_at: string | null
+          received_at: string
+          zernio_account_id: string | null
+          zernio_profile_id: string | null
+        }
+        Insert: {
+          attempts?: number
+          client_id?: string | null
+          event: string
+          id: string
+          last_error?: string | null
+          payload: Json
+          processed_at?: string | null
+          received_at?: string
+          zernio_account_id?: string | null
+          zernio_profile_id?: string | null
+        }
+        Update: {
+          attempts?: number
+          client_id?: string | null
+          event?: string
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          processed_at?: string | null
+          received_at?: string
+          zernio_account_id?: string | null
+          zernio_profile_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zernio_webhook_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       task_list: {
@@ -743,6 +1031,10 @@ export type Database = {
           total: number
         }[]
       }
+      configure_zernio_cron: {
+        Args: { p_base_url: string }
+        Returns: undefined
+      }
       portal_attach_file: {
         Args: {
           p_mime: string
@@ -783,21 +1075,45 @@ export type Database = {
           waiting: number
         }[]
       }
+      verify_zernio_cron_token: {
+        Args: { p_token: string }
+        Returns: boolean
+      }
+      zernio_cron_status: { Args: never; Returns: Json }
     }
     Enums: {
       alert_severity: "needs_look" | "action_needed"
       app_role: "admin" | "manager" | "va" | "writer" | "viewer"
       client_health: "on_track" | "needs_look" | "action_needed"
       client_stage: "onboarding" | "active" | "paused" | "churned"
+      connect_attempt_status:
+        | "pending"
+        | "connected"
+        | "failed"
+        | "expired"
+        | "cancelled"
+      connect_method: "oauth" | "invite"
       member_status: "active" | "invited" | "disabled"
       notification_kind:
         | "task_assigned"
         | "task_mentioned"
         | "task_commented"
         | "request_answered"
+        | "connection_lost"
       request_decision: "approved" | "changes_requested"
       request_kind: "question" | "code" | "files" | "approval" | "action"
       request_status: "open" | "answered" | "done" | "cancelled"
+      social_account_status: "connected" | "needs_reconnect" | "removed"
+      social_platform:
+        | "googlebusiness"
+        | "facebook"
+        | "instagram"
+        | "linkedin"
+        | "youtube"
+        | "twitter"
+        | "tiktok"
+        | "pinterest"
+        | "threads"
       task_priority: "low" | "normal" | "high"
       task_repeat: "none" | "weekdays" | "weekly" | "monthly"
       task_status: "todo" | "in_progress" | "waiting_on_client" | "done"
@@ -941,16 +1257,31 @@ export const Constants = {
       app_role: ["admin", "manager", "va", "writer", "viewer"],
       client_health: ["on_track", "needs_look", "action_needed"],
       client_stage: ["onboarding", "active", "paused", "churned"],
+      connect_attempt_status: ["pending", "connected", "failed", "expired", "cancelled"],
+      connect_method: ["oauth", "invite"],
       member_status: ["active", "invited", "disabled"],
       notification_kind: [
         "task_assigned",
         "task_mentioned",
         "task_commented",
         "request_answered",
+        "connection_lost",
       ],
       request_decision: ["approved", "changes_requested"],
       request_kind: ["question", "code", "files", "approval", "action"],
       request_status: ["open", "answered", "done", "cancelled"],
+      social_account_status: ["connected", "needs_reconnect", "removed"],
+      social_platform: [
+        "googlebusiness",
+        "facebook",
+        "instagram",
+        "linkedin",
+        "youtube",
+        "twitter",
+        "tiktok",
+        "pinterest",
+        "threads",
+      ],
       task_priority: ["low", "normal", "high"],
       task_repeat: ["none", "weekdays", "weekly", "monthly"],
       task_status: ["todo", "in_progress", "waiting_on_client", "done"],

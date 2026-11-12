@@ -20,21 +20,25 @@ Browser ──> src/proxy.ts ──> app routes (thin) ──> features/<module>
 
 ## Routes
 
-| Route                                    | What                                                                                | Status      |
-| ---------------------------------------- | ----------------------------------------------------------------------------------- | ----------- |
-| `/login`, `/setup`, `/no-access`         | Sign in, one-time first-admin setup, waiting for access                             | Built       |
-| `/auth/confirm`                          | Email confirmation callback (PKCE `code` or `token_hash`)                           | Built       |
-| `/dashboard`                             | Health tiles, Needs attention, client list, Add client                              | Built       |
-| `/tasks`                                 | Task list (tabs, tiles, filters), task panel (`?task=1051`), create/edit, comments  | Built       |
-| `/team`                                  | Members, invite links, roles, access, permission matrix, activity log (admin only)  | Built       |
-| `/welcome`                               | Invited members set their name and password                                         | Built       |
-| `/tasks/requests`                        | Client requests across all clients: the chase list (admins, managers)               | Built       |
-| `/clients/[clientSlug]/tasks`            | Tasks that include one client, tick per client                                      | Built       |
-| `/clients/[clientSlug]/requests`         | Things we need from the client, their private link, request panel (`?request=101`)  | Built       |
-| `/c/[token]`                             | The client portal: public, no sign-in, the token is the key (noindex, no-referrer)  | Built       |
-| `/clients/[clientSlug]` and `/[section]` | Overview, rankings, AI visibility, backlinks, content, reviews, connections, report | Coming soon |
-| `/api/clients/search?q=`                 | Client search for the Ctrl/Cmd+K switcher                                           | Built       |
-| `/api/notifications`                     | Latest notifications for the header bell                                            | Built       |
+| Route                                    | What                                                                                 | Status      |
+| ---------------------------------------- | ------------------------------------------------------------------------------------ | ----------- |
+| `/login`, `/setup`, `/no-access`         | Sign in, one-time first-admin setup, waiting for access                              | Built       |
+| `/auth/confirm`                          | Email confirmation callback (PKCE `code` or `token_hash`)                            | Built       |
+| `/dashboard`                             | Health tiles, Needs attention, client list, Add client                               | Built       |
+| `/tasks`                                 | Task list (tabs, tiles, filters), task panel (`?task=1051`), create/edit, comments   | Built       |
+| `/team`                                  | Members, invite links, roles, access, permission matrix, activity log (admin only)   | Built       |
+| `/welcome`                               | Invited members set their name and password                                          | Built       |
+| `/tasks/requests`                        | Client requests across all clients: the chase list (admins, managers)                | Built       |
+| `/clients/[clientSlug]/tasks`            | Tasks that include one client, tick per client                                       | Built       |
+| `/clients/[clientSlug]/requests`         | Things we need from the client, their private link, request panel (`?request=101`)   | Built       |
+| `/clients/[clientSlug]/connections`      | Client Google Business Profile and social accounts through Zernio (admins, managers) | Built       |
+| `/integrations/zernio/callback`          | Where Zernio's hosted sign-in returns; checks the attempt, syncs, redirects          | Built       |
+| `/api/webhooks/zernio`                   | Zernio webhooks (HMAC-signed, no session)                                            | Built       |
+| `/api/cron/zernio-sync`                  | Hourly Zernio health sync, called by pg_cron with a Vault token (no session)         | Built       |
+| `/c/[token]`                             | The client portal: public, no sign-in, the token is the key (noindex, no-referrer)   | Built       |
+| `/clients/[clientSlug]` and `/[section]` | Overview, rankings, AI visibility, backlinks, content, reviews, connections, report  | Coming soon |
+| `/api/clients/search?q=`                 | Client search for the Ctrl/Cmd+K switcher                                            | Built       |
+| `/api/notifications`                     | Latest notifications for the header bell                                             | Built       |
 
 All page definitions (title, icon, roles, coming-soon flag, summary) are in `src/lib/navigation.ts`.
 
@@ -100,6 +104,29 @@ creates the auth user and returns a one-time link (`/auth/confirm?token_hash=…
 that the admin sends by hand; no email setup needed. The invitee lands on `/welcome`, sets a
 password and becomes active. The database always keeps one active admin, and admins can't change
 their own role or access.
+
+## Connections (Zernio)
+
+Zernio owns the OAuth apps for Google Business Profile, Facebook, Instagram, LinkedIn, YouTube,
+X, TikTok, Pinterest and Threads. Each client gets one Zernio profile (`externalId` = our client
+id). Zernio is the source of truth; our tables mirror it.
+
+- `zernio_profiles`: one per client. References clients with `ON DELETE RESTRICT`: run
+  `offboardClient` (disconnects every account, deletes the Zernio profile) before deleting a
+  client, or Zernio keeps billing.
+- `social_accounts`: the mirror (no tokens). A composite foreign key to `zernio_profiles` keeps
+  an account on the right client; a trigger blocks moving it. Status `connected`,
+  `needs_reconnect` or `removed`. Status changes raise or resolve one alert per account
+  (`alerts.source_key`), notify the client's owner (or admins) with `connection_lost`, and write
+  `connection.*` history.
+- `social_connect_attempts`: every Connect click (`oauth`, 30 minutes) and client link (`invite`,
+  7 days). The callback only accepts a pending, unexpired attempt started by the same user.
+- `zernio_webhook_events`: deliveries keyed by Zernio's event id (dedupe), service role only.
+- `src/features/connections/sync.ts`: the one function every path ends in (callback, webhook,
+  hourly cron, Check now, stale page load). It reads Zernio and upserts; running it twice changes
+  nothing. Browser query parameters are never trusted.
+- Secrets: `ZERNIO_API_KEY`, `ZERNIO_WEBHOOK_SECRET` (server only, `src/lib/env.server.ts`).
+  The webhook and cron routes skip the session check in the proxy and verify their own secret.
 
 ## Client portal
 

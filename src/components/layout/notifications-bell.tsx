@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { PLATFORM_META, type SocialPlatform } from "@/features/connections/constants"
 import { markNotificationsRead } from "@/features/tasks/actions"
 import { taskNumber } from "@/features/tasks/constants"
 import type { NotificationItem } from "@/features/tasks/queries"
@@ -16,6 +17,12 @@ import { cn } from "@/lib/utils"
 function describe(n: NotificationItem) {
   const who = n.actorName ?? "Someone"
   const task = n.task
+  if (n.kind === "connection_lost") {
+    const s = n.socialAccount
+    if (!s) return "A client account needs reconnecting"
+    const label = PLATFORM_META[s.platform as SocialPlatform]?.label ?? "account"
+    return `${s.client?.name ?? "A client"}'s ${label} needs reconnecting`
+  }
   if (n.kind === "request_answered") {
     const r = n.request
     if (!r) return "A client answered a request"
@@ -31,6 +38,7 @@ function describe(n: NotificationItem) {
 }
 
 function hrefFor(n: NotificationItem) {
+  if (n.socialAccount?.client) return clientHref(n.socialAccount.client.slug, "connections")
   if (n.request?.client) {
     return `${clientHref(n.request.client.slug, "requests")}?request=${n.request.number}`
   }
@@ -102,7 +110,7 @@ export function NotificationsBell() {
         <div className="border-b px-4 py-3 text-sm font-semibold">Notifications</div>
         {items.length === 0 ? (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground">
-            Nothing yet. Assignments, @mentions and client answers show up here.
+            Nothing yet. Assignments, @mentions, client answers and broken connections show up here.
           </p>
         ) : (
           <ul className="max-h-[420px] overflow-y-auto">

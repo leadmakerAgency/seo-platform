@@ -151,9 +151,9 @@ export const CLIENT_SECTIONS: ClientSection[] = [
     title: "Connections",
     icon: Plug,
     roles: ["admin", "manager"],
-    comingSoon: true,
+    comingSoon: false,
     summary:
-      "The accounts this client connected: Google, socials through Zernio or Ayrshare, and the website plugin.",
+      "The client's Google Business Profile and social accounts, connected through Zernio, and whether each one still works.",
   },
   {
     id: "report",

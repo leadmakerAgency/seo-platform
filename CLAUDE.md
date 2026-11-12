@@ -57,4 +57,9 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
 - **Client requests:** status changes, task sync and notifications run in triggers. The portal
   (`/c/<token>`) uses only the token-checked `portal_*` database functions through the
   session-less client in `src/lib/supabase/public.ts`; never give the portal the service role.
+- **Zernio (Connections):** call Zernio only through `src/lib/zernio/client.ts` (server only).
+  Write `social_accounts` only through `syncClient`/`syncAll` in
+  `src/features/connections/sync.ts`; status side effects (alerts, notifications, history) are
+  triggers. Never trust Zernio callback query params. Deleting a client needs `offboardClient`
+  first (restrict foreign key). Plan: `docs/plans/connections-zernio.md`.
 - The `cn` helper comes from the `cn` package (shadcn's), re-exported by `src/lib/utils.ts`.

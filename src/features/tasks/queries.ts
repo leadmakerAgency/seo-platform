@@ -349,12 +349,18 @@ export async function getTasksForClient(clientId: string): Promise<ClientTaskRow
 
 export type NotificationItem = {
   id: string
-  kind: "task_assigned" | "task_mentioned" | "task_commented" | "request_answered"
+  kind:
+    "task_assigned" | "task_mentioned" | "task_commented" | "request_answered" | "connection_lost"
   readAt: string | null
   createdAt: string
   actorName: string | null
   task: { number: number; title: string; clients: number } | null
   request: { number: number; title: string; client: { slug: string; name: string } | null } | null
+  socialAccount: {
+    platform: string
+    name: string | null
+    client: { slug: string; name: string } | null
+  } | null
 }
 
 export async function getNotifications(limit = 20): Promise<NotificationItem[]> {
@@ -362,7 +368,7 @@ export async function getNotifications(limit = 20): Promise<NotificationItem[]> 
   const { data, error } = await supabase
     .from("notifications")
     .select(
-      "id, kind, read_at, created_at, actor:team_members!notifications_actor_id_fkey(full_name, email), task:tasks(number, title, task_clients(count)), request:client_requests(number, title, client:clients(slug, name))",
+      "id, kind, read_at, created_at, actor:team_members!notifications_actor_id_fkey(full_name, email), task:tasks(number, title, task_clients(count)), request:client_requests(number, title, client:clients(slug, name)), social_account:social_accounts(platform, display_name, location_name, client:clients(slug, name))",
     )
     .order("created_at", { ascending: false })
     .limit(limit)
@@ -382,6 +388,13 @@ export async function getNotifications(limit = 20): Promise<NotificationItem[]> 
       : null,
     request: n.request
       ? { number: n.request.number, title: n.request.title, client: n.request.client }
+      : null,
+    socialAccount: n.social_account
+      ? {
+          platform: n.social_account.platform,
+          name: n.social_account.location_name || n.social_account.display_name,
+          client: n.social_account.client,
+        }
       : null,
   }))
 }

@@ -7,6 +7,8 @@ import type { Database } from "./database.types"
 /** Routes that work without a session. Everything else requires sign-in. */
 /** "/c/<token>" is the client portal: no sign-in, the token is the key. */
 const PUBLIC_PATHS = ["/login", "/setup", "/auth", "/c"]
+/** Server-to-server endpoints that verify their own signature or token. */
+const MACHINE_PATHS = ["/api/webhooks", "/api/cron"]
 /** Routes a signed-in user has no reason to see. */
 const SIGNED_OUT_ONLY = ["/login", "/setup"]
 
@@ -41,6 +43,10 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims()
   const signedIn = Boolean(data?.claims?.sub)
   const { pathname, search } = request.nextUrl
+
+  // Webhooks and the cron sign their requests with their own secrets (checked
+  // in the route), and the callers can't sign in, so they skip the session check.
+  if (matches(pathname, MACHINE_PATHS)) return response
 
   // API routes answer with JSON, never a redirect to the login page, so callers
   // (like the Ctrl/Cmd+K switcher) get an error they can handle.

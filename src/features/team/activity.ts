@@ -1,3 +1,4 @@
+import { PLATFORM_META, type SocialPlatform } from "@/features/connections/constants"
 import { STATUS_META, type TaskStatus } from "@/features/tasks/constants"
 import { formatDay } from "@/lib/dates"
 import { ROLE_LABELS, type AppRole } from "@/lib/roles"
@@ -18,6 +19,8 @@ export function actorLabel(
 /** One plain sentence per activity_log row, without the actor ("invited Ana R. as a VA"). */
 type ActivityLike = Pick<ActivityEntry, "action" | "meta" | "clientName">
 
+const platform = (v: unknown) =>
+  PLATFORM_META[v as SocialPlatform]?.label ?? (str(v) || "an account")
 const statusLabel = (v: unknown) => STATUS_META[v as TaskStatus]?.label ?? str(v)
 const num = (v: unknown) => (typeof v === "number" || typeof v === "string" ? String(v) : "")
 
@@ -58,6 +61,16 @@ export function describeActivity(entry: ActivityLike): string {
       return `commented on T-${num(m.number)}`
     case "task.deleted":
       return `deleted T-${num(m.number)} “${str(m.title)}”`
+    case "connection.connected":
+      return `connected ${platform(m.platform)}${str(m.name) ? ` “${str(m.name)}”` : ""}`
+    case "connection.needs_reconnect":
+      return `noticed ${platform(m.platform)}${str(m.name) ? ` “${str(m.name)}”` : ""} needs reconnecting${str(m.reason) ? ` (${str(m.reason)})` : ""}`
+    case "connection.restored":
+      return `reconnected ${platform(m.platform)}${str(m.name) ? ` “${str(m.name)}”` : ""}`
+    case "connection.removed":
+      return `disconnected ${platform(m.platform)}${str(m.name) ? ` “${str(m.name)}”` : ""}`
+    case "connection.failed":
+      return `tried to connect ${platform(m.platform)}, but it didn't finish${str(m.error) ? ` (${str(m.error)})` : ""}`
     case "request.created":
       return `asked ${entry.clientName ?? "the client"} for “${str(m.title)}” (R-${num(m.number)})`
     case "request.answered":

@@ -40,6 +40,8 @@ const PERMISSIONS = {
   "tasks.work": ["admin", "manager", "va", "writer"],
   "requests.create": ["admin", "manager", "va", "writer"],
   "requests.manage": ["admin", "manager"],
+  "connections.manage": ["admin", "manager"],
+  "integrations.manage": ["admin"],
   "team.manage": ["admin"],
 } as const satisfies Record<string, readonly AppRole[]>
 
@@ -55,6 +57,8 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "tasks.work": "Work on their tasks and tick clients off",
   "requests.create": "Ask clients for codes, files and approvals (VAs: clients in their tasks)",
   "requests.manage": "Turn on or replace a client's private link",
+  "connections.manage": "Connect and disconnect a client's Google and social accounts",
+  "integrations.manage": "Set up Zernio webhooks and hourly account checks",
   "team.manage": "Invite people and change roles",
 }
 
