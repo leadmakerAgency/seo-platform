@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "LeadMaker SEO Platform",
-    template: "%s · LeadMaker SEO",
+    default: "Shockwave SEO Platform",
+    template: "%s · Shockwave",
   },
   description: "Every SEO client, keyword, article and backlink in one place.",
   robots: { index: false, follow: false },

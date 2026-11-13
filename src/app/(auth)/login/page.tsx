@@ -11,7 +11,7 @@ export default function LoginPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1.5">
         <h1 className="text-xl font-semibold tracking-tight">Sign in</h1>
-        <p className="text-sm text-muted-foreground">Use your LeadMaker team account.</p>
+        <p className="text-sm text-muted-foreground">Sign in to Shockwave with your LeadMaker team account.</p>
       </div>
       <Suspense fallback={<Skeleton className="h-[188px] w-full" />}>
         <LoginForm />

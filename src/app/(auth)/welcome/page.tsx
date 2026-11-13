@@ -37,7 +37,7 @@ async function Welcome() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1.5">
-        <h1 className="text-xl font-semibold tracking-tight">Welcome to LeadMaker</h1>
+        <h1 className="text-xl font-semibold tracking-tight">Welcome to Shockwave</h1>
         <p className="text-sm text-muted-foreground">
           You&apos;ve been added as {ROLE_LABELS[member.role]}. Set a password to finish.
         </p>

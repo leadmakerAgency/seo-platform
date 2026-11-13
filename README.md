@@ -1,4 +1,4 @@
-# LeadMaker SEO Platform
+# Shockwave SEO Platform
 
 Internal agency app for managing SEO clients: rankings, AI visibility, content, backlinks,
 reviews and monthly reports in one place. This is the base: auth with roles, the app shell and

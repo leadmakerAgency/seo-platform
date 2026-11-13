@@ -1,8 +1,12 @@
 @AGENTS.md
 
-# LeadMaker SEO Platform
+# Shockwave SEO Platform
 
 Internal agency app: every SEO client, keyword, article, backlink and review in one place.
+**Branding:** the team app is **Shockwave** (lightning mark: `src/components/brand/`, icons:
+`src/app/icon.png`, `apple-icon.png`). Anything clients see (onboarding link, client requests page,
+messages sent to clients, the brand name Zernio shows) stays **LeadMaker**, the agency they hired,
+with the "LM" tile icon (`src/app/onboard/icon.png`, `src/app/(portal)/c/icon.png`).
 What we are building (frozen reference, do not edit): `docs/product-plan.md`.
 How the code is organised: `docs/architecture.md`.
 
