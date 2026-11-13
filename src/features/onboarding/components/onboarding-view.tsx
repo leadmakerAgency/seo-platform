@@ -9,6 +9,8 @@ import {
   History,
   Link2,
   Loader2,
+  Lock,
+  LockOpen,
   MessageSquareText,
   RefreshCw,
   TriangleAlert,
@@ -76,7 +78,8 @@ export function OnboardingView(props: Props) {
   const now = new Date(nowIso)
   const router = useRouter()
   const status = o.progress?.status ?? "not_started"
-  const live = o.link?.status === "active" && status !== "reviewed"
+  // Accounts can still be connected after review, so keep watching while the link works.
+  const live = o.link?.status === "active"
 
   // Watch answers arrive while the client is filling the form.
   useEffect(() => {
@@ -266,6 +269,28 @@ function LinkCard({
   const [confirm, setConfirm] = useState<"new" | "off" | null>(null)
   const [copied, setCopied] = useState<"link" | "message" | null>(null)
   const active = link?.status === "active" && Date.parse(link.expiresAt) > now.getTime()
+  // A reviewed onboarding is locked: a new link would only let the client look.
+  const locked = overview.progress?.status === "reviewed"
+  const [unlock, setUnlock] = useState(true)
+  const create = (success: string) =>
+    run(() => createOnboardingLink(clientId, { reopen: locked && unlock }), success)
+
+  const unlockChoice = locked && canManage && (
+    <label className="flex items-start gap-2 text-sm">
+      <Checkbox
+        className="mt-0.5"
+        checked={unlock}
+        onCheckedChange={(c) => setUnlock(c === true)}
+      />
+      <span>
+        Let the client change their answers
+        <span className="block text-muted-foreground">
+          The onboarding was reviewed, so their answers are locked. Untick to send a link they can
+          only look at (they can still connect accounts).
+        </span>
+      </span>
+    </label>
+  )
 
   function run(action: () => Promise<{ ok: boolean; error?: string }>, success: string) {
     startTransition(async () => {
@@ -301,34 +326,43 @@ function LinkCard({
 
   if (!active) {
     return (
-      <div className="flex flex-col gap-3 rounded-lg border border-dashed p-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex gap-3">
-          <Link2 className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
-          <div className="flex flex-col gap-0.5">
-            <p className="text-sm font-medium">
-              {link
-                ? link.status === "revoked"
-                  ? "The last link was turned off"
-                  : "The last link expired"
-                : "No onboarding link yet"}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {canManage
-                ? `Create a private link for ${clientName}. They fill in their details and connect their accounts; nothing to sign in to.`
-                : "An admin or account manager can create the onboarding link."}
-            </p>
+      <div className="flex flex-col gap-4 rounded-lg border border-dashed p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex gap-3">
+            <Link2 className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+            <div className="flex flex-col gap-0.5">
+              <p className="text-sm font-medium">
+                {link
+                  ? link.status === "revoked"
+                    ? "The last link was turned off"
+                    : "The last link expired"
+                  : "No onboarding link yet"}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {canManage
+                  ? `Create a private link for ${clientName}. They fill in their details and connect their accounts; nothing to sign in to.`
+                  : "An admin or account manager can create the onboarding link."}
+              </p>
+            </div>
           </div>
+          {canManage && (
+            <Button
+              className="shrink-0"
+              disabled={pending}
+              onClick={() =>
+                create(
+                  locked && unlock
+                    ? "Link created. The client can change their answers again."
+                    : "Onboarding link created",
+                )
+              }
+            >
+              {pending && <Loader2 className="animate-spin" />}
+              {link ? "Create a new link" : "Create onboarding link"}
+            </Button>
+          )}
         </div>
-        {canManage && (
-          <Button
-            className="shrink-0"
-            disabled={pending}
-            onClick={() => run(() => createOnboardingLink(clientId), "Onboarding link created")}
-          >
-            {pending && <Loader2 className="animate-spin" />}
-            {link ? "Create a new link" : "Create onboarding link"}
-          </Button>
-        )}
+        {unlockChoice}
       </div>
     )
   }
@@ -408,6 +442,32 @@ function LinkCard({
         )}
       </div>
 
+      {locked && (
+        <div className="flex flex-col gap-3 rounded-md border border-warning/30 bg-warning-soft px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex items-start gap-2 text-sm">
+            <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <span>
+              The client&apos;s answers are locked because this onboarding was reviewed. With this
+              link they can look at their answers and connect accounts, but not change anything.
+            </span>
+          </p>
+          {canManage && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0 bg-background"
+              disabled={pending}
+              onClick={() =>
+                run(() => reopenOnboarding(clientId), "Unlocked. The client can edit again.")
+              }
+            >
+              <LockOpen />
+              Let the client edit again
+            </Button>
+          )}
+        </div>
+      )}
+
       <AlertDialog open={confirm !== null} onOpenChange={(o) => !o && setConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -420,14 +480,16 @@ function LinkCard({
               {confirm === "new" ? " Send them the new link." : ""}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {confirm === "new" && unlockChoice}
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() =>
                 confirm === "new"
-                  ? run(
-                      () => createOnboardingLink(clientId),
-                      "New link created. The old one is off.",
+                  ? create(
+                      locked && unlock
+                        ? "New link created and the answers unlocked. The old link is off."
+                        : "New link created. The old one is off.",
                     )
                   : run(() => revokeOnboardingLink(link.id), "Link turned off")
               }

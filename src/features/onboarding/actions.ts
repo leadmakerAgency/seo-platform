@@ -42,8 +42,14 @@ function dbError(error: { code?: string; message?: string } | null, fallback: st
   return fallback
 }
 
-/** A new onboarding link. Any previous active link stops working at the same moment. */
-export async function createOnboardingLink(clientId: string): Promise<ActionResult> {
+/**
+ * A new onboarding link. Any previous active link stops working at the same moment.
+ * `reopen` also unlocks a reviewed onboarding, so the client can change their answers.
+ */
+export async function createOnboardingLink(
+  clientId: string,
+  options: { reopen?: boolean } = {},
+): Promise<ActionResult> {
   const g = await guard("onboarding.manage")
   if ("error" in g) return { ok: false, error: g.error }
   if (!isUuid(clientId)) return { ok: false, error: "Unknown client." }
@@ -61,6 +67,19 @@ export async function createOnboardingLink(clientId: string): Promise<ActionResu
       .from("onboarding_links")
       .insert({ client_id: clientId, token: newToken(), created_by: g.member.id })
     if (!error) {
+      if (options.reopen === true) {
+        const { error: reopenError } = await supabase.rpc("onboarding_reopen", {
+          p_client_id: clientId,
+        })
+        if (reopenError) {
+          refresh()
+          return {
+            ok: false,
+            error:
+              "The link was created, but the answers are still locked. Use “Let the client edit again”.",
+          }
+        }
+      }
       refresh()
       return { ok: true }
     }

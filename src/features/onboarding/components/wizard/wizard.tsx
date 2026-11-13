@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, ArrowRight, Check, CircleCheck, Loader2, PartyPopper } from "lucide-react"
+import { ArrowLeft, ArrowRight, Check, CircleCheck, Loader2, Lock, PartyPopper } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -86,8 +86,18 @@ export function OnboardingWizard({
 
   function go(next: View) {
     setView(next)
+    // Keep the address in step with the page, so a reload or a shared link opens the same step.
+    // (A shallow history update: no server round trip.)
+    window.history.replaceState(null, "", `${pathname}?step=${next}`)
     top.current?.scrollIntoView({ behavior: "smooth", block: "start" })
   }
+
+  // Locked steps: every field, select and choice inside is disabled the same way.
+  const lockable = (children: React.ReactNode) => (
+    <fieldset disabled={readOnly} className="m-0 min-w-0 border-0 p-0">
+      {children}
+    </fieldset>
+  )
 
   return (
     <div ref={top} className="flex scroll-mt-4 flex-col gap-8">
@@ -138,10 +148,15 @@ export function OnboardingWizard({
       </nav>
 
       {readOnly && (
-        <p className="rounded-xl border border-success/30 bg-success-soft px-4 py-3 text-[15px]">
-          Your onboarding is complete and your LeadMaker team is using these details. If something
-          needs to change, tell {data.contact ?? "your account manager"}.
-        </p>
+        <div className="flex gap-3 rounded-xl border border-success/30 bg-success-soft px-4 py-3 text-[15px]">
+          <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <p>
+            Your onboarding is complete. Your LeadMaker team has checked these answers and is using
+            them, so they&apos;re locked and can only be viewed here. You can still connect
+            accounts on the <strong className="font-medium">Accounts</strong> step. If anything
+            else needs to change, tell {data.contact ?? "your account manager"}.
+          </p>
+        </div>
       )}
 
       <section className="flex flex-col gap-6">
@@ -154,15 +169,16 @@ export function OnboardingWizard({
           </div>
         )}
 
-        {view === "business" && (
-          <BusinessStep
-            token={data.token}
-            clientName={data.client.name}
-            business={data.business}
-            readOnly={readOnly}
-            onSteps={setSteps}
-          />
-        )}
+        {view === "business" &&
+          lockable(
+            <BusinessStep
+              token={data.token}
+              clientName={data.client.name}
+              business={data.business}
+              readOnly={readOnly}
+              onSteps={setSteps}
+            />,
+          )}
         {view === "social" && (
           <SocialStep
             token={data.token}
@@ -172,34 +188,37 @@ export function OnboardingWizard({
             onSteps={setSteps}
           />
         )}
-        {view === "google" && (
-          <GoogleStep
-            token={data.token}
-            google={data.google}
-            reportingEmail={reportingEmail}
-            readOnly={readOnly}
-            onSteps={setSteps}
-          />
-        )}
-        {view === "website" && (
-          <WebsiteStep
-            token={data.token}
-            website={data.website}
-            agencyEmail={agencyEmail}
-            readOnly={readOnly}
-            onSteps={setSteps}
-            onGoToLogins={() => toast.info("Add the website login on the “Logins” step.")}
-          />
-        )}
-        {view === "logins" && (
-          <LoginsStep
-            token={data.token}
-            logins={data.logins}
-            skipped={data.onboarding.logins_skipped}
-            readOnly={readOnly}
-            onSteps={setSteps}
-          />
-        )}
+        {view === "google" &&
+          lockable(
+            <GoogleStep
+              token={data.token}
+              google={data.google}
+              reportingEmail={reportingEmail}
+              readOnly={readOnly}
+              onSteps={setSteps}
+            />,
+          )}
+        {view === "website" &&
+          lockable(
+            <WebsiteStep
+              token={data.token}
+              website={data.website}
+              agencyEmail={agencyEmail}
+              readOnly={readOnly}
+              onSteps={setSteps}
+              onGoToLogins={() => toast.info("Add the website login on the “Logins” step.")}
+            />,
+          )}
+        {view === "logins" &&
+          lockable(
+            <LoginsStep
+              token={data.token}
+              logins={data.logins}
+              skipped={data.onboarding.logins_skipped}
+              readOnly={readOnly}
+              onSteps={setSteps}
+            />,
+          )}
         {view === "review" && (
           <ReviewStep
             token={data.token}

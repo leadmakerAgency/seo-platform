@@ -46,7 +46,7 @@ export function Field({
 
 export const inputClass = "h-11 text-base"
 export const selectClass =
-  "h-11 w-full rounded-md border border-input bg-background px-3 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+  "h-11 w-full rounded-md border border-input bg-background px-3 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-60"
 
 export function SaveIndicator({ state, message }: { state: SaveState; message: string | null }) {
   if (state === "idle") return null
@@ -260,8 +260,9 @@ export function ChoiceButtons<T extends string>({
           aria-checked={value === o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "min-h-11 rounded-md border px-3.5 py-2 text-left text-[15px] transition-colors hover:bg-muted",
-            value === o.value && "border-primary bg-brand-soft text-primary hover:bg-brand-soft",
+            "min-h-11 rounded-md border px-3.5 py-2 text-left text-[15px] transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent",
+            value === o.value &&
+              "border-primary bg-brand-soft text-primary hover:bg-brand-soft disabled:hover:bg-brand-soft",
           )}
         >
           {o.label}
