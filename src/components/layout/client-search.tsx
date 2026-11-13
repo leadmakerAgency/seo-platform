@@ -51,12 +51,15 @@ export function ClientSearchShortcut() {
 }
 
 const subscribeNothing = () => () => {}
-/** "⌘K" on Apple devices, "Ctrl K" elsewhere (server render assumes ⌘K). */
+/**
+ * "⌘K" on Apple devices, "Ctrl K" elsewhere. Empty until the browser has
+ * loaded, so Windows never shows a flash of the Mac key.
+ */
 function useShortcutLabel() {
   return useSyncExternalStore(
     subscribeNothing,
     () => (/Mac|iPhone|iPad/i.test(navigator.userAgent) ? "⌘K" : "Ctrl K"),
-    () => "⌘K",
+    () => "",
   )
 }
 
@@ -164,7 +167,10 @@ export function ClientSearch() {
       {/* Collapsed (icon) sidebar: one button that expands it and focuses the search. */}
       <SidebarMenu className="hidden group-data-[collapsible=icon]:flex">
         <SidebarMenuItem>
-          <SidebarMenuButton tooltip={`Search clients (${shortcut})`} onClick={openSearch}>
+          <SidebarMenuButton
+            tooltip={shortcut ? `Search clients (${shortcut})` : "Search clients"}
+            onClick={openSearch}
+          >
             <Search />
             <span>Search clients</span>
           </SidebarMenuButton>
@@ -240,9 +246,11 @@ export function ClientSearch() {
               <X className="size-3.5" />
             </button>
           ) : (
-            <kbd className="pointer-events-none hidden shrink-0 rounded border bg-muted px-1.5 font-sans text-[10px] font-medium text-muted-foreground md:inline-block">
-              {shortcut}
-            </kbd>
+            shortcut && (
+              <kbd className="pointer-events-none hidden shrink-0 rounded border bg-muted px-1.5 font-sans text-[10px] font-medium text-muted-foreground md:inline-block">
+                {shortcut}
+              </kbd>
+            )
           )}
         </div>
 
@@ -258,9 +266,7 @@ export function ClientSearch() {
               </p>
             ) : !loading && results.length === 0 ? (
               <p className="px-2 py-3 text-center text-xs text-muted-foreground">
-                {key
-                  ? `No clients match “${key}”.`
-                  : "No clients yet. Add one from the Dashboard."}
+                {key ? `No clients match “${key}”.` : "No clients yet. Add one from the Dashboard."}
               </p>
             ) : (
               <CommandPrimitive.Group
@@ -308,7 +314,7 @@ export function ClientSearch() {
         <Link
           href={clientHref(currentClient.slug)}
           aria-label={`${currentClient.name}: open the overview`}
-          className="flex items-center gap-2.5 rounded-md border border-sidebar-border bg-sidebar-accent/60 px-2.5 py-2 outline-none hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring group-data-[collapsible=icon]:hidden"
+          className="flex items-center gap-2.5 rounded-md border border-sidebar-border bg-sidebar-accent/60 px-2.5 py-2 outline-none group-data-[collapsible=icon]:hidden hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ClientInitials name={currentClient.name} />
           <span className="flex min-w-0 flex-1 flex-col leading-tight">
