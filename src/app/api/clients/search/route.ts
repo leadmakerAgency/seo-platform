@@ -5,7 +5,7 @@ import { formatLocation } from "@/lib/format"
 import { ilikePattern } from "@/lib/search"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
-/** GET /api/clients/search?q= — used by the Ctrl/Cmd+K client switcher. RLS applies. */
+/** GET /api/clients/search?q= — used by the client search in the sidebar. RLS applies. */
 export async function GET(request: NextRequest) {
   const supabase = await createSupabaseServerClient()
   const { data: auth } = await supabase.auth.getClaims()

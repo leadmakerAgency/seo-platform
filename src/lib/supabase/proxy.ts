@@ -50,7 +50,7 @@ export async function updateSession(request: NextRequest) {
   if (matches(pathname, MACHINE_PATHS)) return response
 
   // API routes answer with JSON, never a redirect to the login page, so callers
-  // (like the Ctrl/Cmd+K switcher) get an error they can handle.
+  // (like the sidebar client search) get an error they can handle.
   if (!signedIn && matches(pathname, ["/api"])) {
     const unauthorized = NextResponse.json({ error: "Not signed in" }, { status: 401 })
     response.cookies.getAll().forEach((cookie) => unauthorized.cookies.set(cookie))

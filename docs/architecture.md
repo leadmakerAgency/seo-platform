@@ -40,7 +40,7 @@ Browser ──> src/proxy.ts ──> app routes (thin) ──> features/<module>
 | `/api/cron/zernio-sync`                  | Hourly Zernio health sync, called by pg_cron with a Vault token (no session)                          | Built       |
 | `/c/[token]`                             | The client portal: public, no sign-in, the token is the key (noindex, no-referrer)                    | Built       |
 | `/clients/[clientSlug]` and `/[section]` | Overview, rankings, AI visibility, backlinks, content, reviews, connections, report                   | Coming soon |
-| `/api/clients/search?q=`                 | Client search for the Ctrl/Cmd+K switcher                                                             | Built       |
+| `/api/clients/search?q=`                 | Client search in the sidebar (Ctrl/Cmd+K focuses it)                                                  | Built       |
 | `/api/notifications`                     | Latest notifications for the header bell                                                              | Built       |
 
 All page definitions (title, icon, roles, coming-soon flag, summary) are in `src/lib/navigation.ts`.

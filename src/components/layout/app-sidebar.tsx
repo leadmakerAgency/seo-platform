@@ -1,11 +1,9 @@
 "use client"
 
-import { ChevronsUpDown } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
 import { Logo } from "@/components/brand/logo"
-import { Kbd } from "@/components/ui/kbd"
 import {
   Sidebar,
   SidebarContent,
@@ -20,9 +18,9 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { HealthDot } from "@/features/clients/components/health-badge"
 import { AGENCY_NAV, CLIENT_SECTIONS, canAccess, clientHref, type NavItem } from "@/lib/navigation"
 import type { AppRole } from "@/lib/roles"
+import { ClientSearch, useOpenClientSearch } from "./client-search"
 import { NavUser, type NavUserProps } from "./nav-user"
 import { useShell } from "./shell-context"
 
@@ -35,7 +33,8 @@ export function AppSidebar({
   taskAttention?: number
 }) {
   const pathname = usePathname()
-  const { currentClient, setSwitcherOpen } = useShell()
+  const { currentClient } = useShell()
+  const openSearch = useOpenClientSearch()
 
   const agencyItems = AGENCY_NAV.filter((item) => canAccess(item, member.role))
   const clientItems = CLIENT_SECTIONS.filter((item) => canAccess(item, member.role))
@@ -72,45 +71,8 @@ export function AppSidebar({
 
         <SidebarGroup>
           <SidebarGroupLabel>Client</SidebarGroupLabel>
-          <SidebarGroupContent className="flex flex-col gap-1">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  size="lg"
-                  tooltip="Switch client"
-                  onClick={() => setSwitcherOpen(true)}
-                  className="border border-sidebar-border"
-                >
-                  {currentClient ? (
-                    <>
-                      <span className="grid size-6 shrink-0 place-items-center rounded-md bg-muted text-[10px] font-semibold">
-                        {currentClient.name.slice(0, 2).toUpperCase()}
-                      </span>
-                      <span className="flex min-w-0 flex-1 flex-col leading-tight">
-                        <span className="flex items-center gap-1.5 truncate text-[13px] font-medium">
-                          <HealthDot health={currentClient.health} />
-                          <span className="truncate">{currentClient.name}</span>
-                        </span>
-                        <span className="truncate text-xs text-muted-foreground">
-                          {currentClient.location}
-                        </span>
-                      </span>
-                    </>
-                  ) : (
-                    <span className="flex min-w-0 flex-1 flex-col leading-tight">
-                      <span className="truncate text-[13px] font-medium">Choose a client</span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        Search by name or city
-                      </span>
-                    </span>
-                  )}
-                  <span className="ml-auto flex items-center gap-1 text-muted-foreground">
-                    <Kbd className="hidden md:inline-flex">⌘K</Kbd>
-                    <ChevronsUpDown className="size-4" />
-                  </span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
+          <SidebarGroupContent className="flex flex-col gap-1.5">
+            <ClientSearch />
 
             {currentClient ? (
               <SidebarMenu>
@@ -123,7 +85,7 @@ export function AppSidebar({
               </SidebarMenu>
             ) : (
               // No client chosen yet: show which pages exist, and let a click
-              // open the picker instead of hiding the whole section.
+              // focus the client search instead of hiding the whole section.
               <SidebarMenu aria-label="Client pages (choose a client first)">
                 <p className="px-2 pt-1 pb-0.5 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
                   Choose a client to open these pages.
@@ -134,7 +96,7 @@ export function AppSidebar({
                     <SidebarMenuItem key={item.id}>
                       <SidebarMenuButton
                         tooltip={`${item.title}: choose a client first`}
-                        onClick={() => setSwitcherOpen(true)}
+                        onClick={openSearch}
                         className="text-muted-foreground"
                       >
                         <Icon />

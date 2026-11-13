@@ -2,7 +2,6 @@ import { Suspense } from "react"
 
 import { Logo } from "@/components/brand/logo"
 import { AppSidebar } from "@/components/layout/app-sidebar"
-import { ClientSwitcher } from "@/components/layout/client-switcher"
 import { ShellProvider } from "@/components/layout/shell-context"
 import { SiteHeader } from "@/components/layout/site-header"
 import {
@@ -35,7 +34,6 @@ export default function AppLayout({ children }: LayoutProps<"/">) {
             <div className="mx-auto w-full max-w-[1280px]">{children}</div>
           </div>
         </SidebarInset>
-        <ClientSwitcher />
       </SidebarProvider>
     </ShellProvider>
   )

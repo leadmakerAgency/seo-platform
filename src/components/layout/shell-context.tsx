@@ -16,31 +16,24 @@ type ShellState = {
   /** The client the user is working on; drives the client nav in the sidebar. */
   currentClient: CurrentClient | null
   setCurrentClient: (client: CurrentClient | null) => void
-  /** The Ctrl/Cmd+K client switcher. */
-  switcherOpen: boolean
-  setSwitcherOpen: (open: boolean) => void
+  /**
+   * Set when something asks for the sidebar's client search (Ctrl/Cmd+K, "Find a client").
+   * The search box focuses itself and clears it, even if it only mounts afterwards
+   * (the mobile sidebar is a sheet that renders when opened).
+   */
+  searchFocusRequested: boolean
+  setSearchFocusRequested: (requested: boolean) => void
 }
 
 const ShellContext = createContext<ShellState | null>(null)
 
 export function ShellProvider({ children }: { children: ReactNode }) {
   const [currentClient, setCurrentClient] = useState<CurrentClient | null>(null)
-  const [switcherOpen, setSwitcherOpen] = useState(false)
-
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault()
-        setSwitcherOpen((open) => !open)
-      }
-    }
-    window.addEventListener("keydown", onKeyDown)
-    return () => window.removeEventListener("keydown", onKeyDown)
-  }, [])
+  const [searchFocusRequested, setSearchFocusRequested] = useState(false)
 
   const value = useMemo(
-    () => ({ currentClient, setCurrentClient, switcherOpen, setSwitcherOpen }),
-    [currentClient, switcherOpen],
+    () => ({ currentClient, setCurrentClient, searchFocusRequested, setSearchFocusRequested }),
+    [currentClient, searchFocusRequested],
   )
   return <ShellContext value={value}>{children}</ShellContext>
 }

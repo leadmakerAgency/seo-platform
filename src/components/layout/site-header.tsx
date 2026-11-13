@@ -14,10 +14,10 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Button } from "@/components/ui/button"
-import { Kbd } from "@/components/ui/kbd"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { AGENCY_NAV, clientHref, findClientSection } from "@/lib/navigation"
+import { ClientSearchShortcut, useOpenClientSearch } from "./client-search"
 import { NotificationsBell } from "./notifications-bell"
 import { useShell } from "./shell-context"
 
@@ -43,7 +43,7 @@ function useCrumbs(): Crumb[] {
 }
 
 export function SiteHeader() {
-  const { setSwitcherOpen } = useShell()
+  const openSearch = useOpenClientSearch()
 
   return (
     <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4 md:px-6">
@@ -53,25 +53,18 @@ export function SiteHeader() {
       <Suspense fallback={<div className="flex-1" />}>
         <Crumbs />
       </Suspense>
-      <Button
-        variant="outline"
-        size="sm"
-        className="ml-auto hidden w-56 justify-start gap-2 font-normal text-muted-foreground sm:flex"
-        onClick={() => setSwitcherOpen(true)}
-      >
-        <Search />
-        Find a client
-        <Kbd className="ml-auto">⌘K</Kbd>
-      </Button>
+      <ClientSearchShortcut />
+      {/* Client search lives in the sidebar; on phones the sidebar is a sheet, so open it from here. */}
       <Button
         variant="ghost"
         size="icon"
-        className="ml-auto sm:hidden"
+        className="ml-auto md:hidden"
         aria-label="Find a client"
-        onClick={() => setSwitcherOpen(true)}
+        onClick={openSearch}
       >
         <Search />
       </Button>
+      <span className="ml-auto hidden md:block" />
       <NotificationsBell />
     </header>
   )
