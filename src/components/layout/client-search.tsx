@@ -85,36 +85,47 @@ export function ClientSearch() {
 
   const [query, setQuery] = useState("")
   const [open, setOpen] = useState(false)
+  // The latest answer, plus every answer this page has seen (so a repeat search is instant).
   const [state, setState] = useState<SearchState | null>(null)
+  const [cache, setCache] = useState<Record<string, ClientSearchResult[]>>({})
   const rootRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const key = query.trim()
+  const haveAll = cache[""] !== undefined
 
-  // Fetch matches while the list is open (debounced; the last request wins).
+  // Fetch matches (debounced; the last request wins). The full list loads in the
+  // background as soon as the sidebar mounts, so the first open shows clients at once.
   useEffect(() => {
-    if (!open) return
+    if (!open && (key !== "" || haveAll)) return
     const controller = new AbortController()
-    const timer = window.setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/clients/search?q=${encodeURIComponent(query.trim())}`, {
-          signal: controller.signal,
-        })
-        if (res.status === 401) {
-          const next = `${window.location.pathname}${window.location.search}`
-          router.replace(`/login?next=${encodeURIComponent(next)}`)
-          return
+    const timer = window.setTimeout(
+      async () => {
+        try {
+          const res = await fetch(`/api/clients/search?q=${encodeURIComponent(key)}`, {
+            signal: controller.signal,
+          })
+          if (res.status === 401) {
+            // Only interrupt the user when they're actually searching.
+            if (!open) return
+            const next = `${window.location.pathname}${window.location.search}`
+            router.replace(`/login?next=${encodeURIComponent(next)}`)
+            return
+          }
+          if (!res.ok) throw new Error(String(res.status))
+          const body = (await res.json()) as { results: ClientSearchResult[] }
+          setState({ query: key, results: body.results, error: false })
+          setCache((c) => ({ ...c, [key]: body.results }))
+        } catch {
+          if (!controller.signal.aborted) setState({ query: key, results: [], error: true })
         }
-        if (!res.ok) throw new Error(String(res.status))
-        const body = (await res.json()) as { results: ClientSearchResult[] }
-        setState({ query, results: body.results, error: false })
-      } catch {
-        if (!controller.signal.aborted) setState({ query, results: [], error: true })
-      }
-    }, 120)
+      },
+      open ? 120 : 0,
+    )
     return () => {
       controller.abort()
       window.clearTimeout(timer)
     }
-  }, [query, open, router])
+  }, [key, open, haveAll, router])
 
   // Ctrl/Cmd+K or "Find a client": focus the box (also right after the mobile sheet opens).
   useEffect(() => {
@@ -126,9 +137,13 @@ export function ClientSearch() {
     setSearchFocusRequested(false)
   }, [searchFocusRequested, setSearchFocusRequested])
 
-  const loading = open && (state === null || state.query !== query)
-  // Keep showing the previous results while the next ones load (no flicker).
-  const results = state?.results ?? []
+  // Seen this search before: show it now (and refresh quietly). Otherwise keep the
+  // previous results on screen, dimmed, until the new ones arrive.
+  const cached = cache[key]
+  const fresh = state?.query === key
+  const results = fresh ? state.results : (cached ?? state?.results ?? [])
+  const loading = open && !fresh && cached === undefined
+  const failed = fresh && state.error
 
   function close() {
     setOpen(false)
@@ -237,20 +252,21 @@ export function ClientSearch() {
             onMouseDown={(e) => e.preventDefault()}
             className="max-h-72 overflow-y-auto overscroll-contain rounded-md border border-sidebar-border bg-background p-1 shadow-sm"
           >
-            {state?.error ? (
+            {failed ? (
               <p className="px-2 py-3 text-center text-xs text-muted-foreground">
                 Search isn&apos;t working right now. Try again.
               </p>
             ) : !loading && results.length === 0 ? (
               <p className="px-2 py-3 text-center text-xs text-muted-foreground">
-                {query.trim()
-                  ? `No clients match “${query.trim()}”.`
+                {key
+                  ? `No clients match “${key}”.`
                   : "No clients yet. Add one from the Dashboard."}
               </p>
             ) : (
               <CommandPrimitive.Group
-                heading={query.trim() ? "Matches" : "Clients"}
-                className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pt-1 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
+                heading={key ? "Matches" : "Clients"}
+                aria-busy={loading}
+                className="transition-opacity aria-busy:opacity-50 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pt-1 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground"
               >
                 {results.length === 0 && loading && (
                   <p className="px-2 py-2 text-xs text-muted-foreground">Searching…</p>
