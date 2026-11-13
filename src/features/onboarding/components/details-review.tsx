@@ -136,11 +136,11 @@ export function DetailsReview({
             onClick={() =>
               startTransition(async () => {
                 const r = await onApply(clientId, [...chosen])
-                if (!r.ok) toast.error(r.error ?? "Couldn't apply.")
-                else
-                  toast.success(
-                    `Applied ${chosen.size} ${chosen.size === 1 ? "field" : "fields"} to the profile`,
-                  )
+                if (!r.ok) return void toast.error(r.error ?? "Couldn't apply.")
+                toast.success(
+                  `Applied ${chosen.size} ${chosen.size === 1 ? "field" : "fields"} to the profile`,
+                )
+                setChosen(new Set())
               })
             }
           >
