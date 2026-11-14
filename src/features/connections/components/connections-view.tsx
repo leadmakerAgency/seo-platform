@@ -62,7 +62,7 @@ type Props = {
   result: { result?: string; platform?: string; code?: string; message?: string }
 }
 
-/** The client's connected accounts, one card per platform. */
+/** The client's connected accounts, one row per platform. */
 export function ConnectionsView({
   clientId,
   clientName,
@@ -124,9 +124,9 @@ export function ConnectionsView({
         )}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <ul aria-label="Platforms" className="flex flex-col divide-y rounded-lg border bg-card">
         {PLATFORMS.map((platform) => (
-          <PlatformCard
+          <PlatformRow
             key={platform}
             platform={platform}
             accounts={byPlatform.get(platform) ?? []}
@@ -134,10 +134,9 @@ export function ConnectionsView({
             now={now}
             canManage={canManage}
             zernioReady={zernioReady}
-            className={platform === "googlebusiness" ? "lg:col-span-2" : undefined}
           />
         ))}
-      </div>
+      </ul>
 
       {data.links.length > 0 && (
         <section className="flex flex-col gap-3">
@@ -224,14 +223,14 @@ function useResultToast(result: Props["result"]) {
   }, [result, router, pathname])
 }
 
-function PlatformCard({
+/** One platform in the list: logo, what it's for, its status, the actions, then its accounts. */
+function PlatformRow({
   platform,
   accounts,
   clientId,
   now,
   canManage,
   zernioReady,
-  className,
 }: {
   platform: SocialPlatform
   accounts: ConnectedAccount[]
@@ -239,48 +238,73 @@ function PlatformCard({
   now: Date
   canManage: boolean
   zernioReady: boolean
-  className?: string
 }) {
   const meta = PLATFORM_META[platform]
   const active = accounts.filter((a) => a.status !== "removed")
+  const broken = active.some((a) => a.status === "needs_reconnect")
   const canAct = canManage && zernioReady
+  const summary = broken
+    ? { label: "Needs reconnecting", className: "bg-warning-soft text-warning", dot: "bg-warning" }
+    : active.length
+      ? {
+          label: active.length === 1 ? "Connected" : `${active.length} connected`,
+          className: "bg-success-soft text-success",
+          dot: "bg-success",
+        }
+      : {
+          label: "Not connected",
+          className: "bg-muted text-muted-foreground",
+          dot: "bg-muted-foreground/50",
+        }
 
   return (
-    <section className={cn("flex flex-col gap-4 rounded-lg border bg-card p-4", className)}>
-      <div className="flex items-start gap-3">
-        <PlatformMark platform={platform} />
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <h3 className="text-sm font-semibold">{meta.label}</h3>
-          <p className="text-sm text-muted-foreground">{meta.what}</p>
+    <li className="flex flex-col gap-3 px-4 py-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
+        <div className="flex min-w-0 flex-1 items-start gap-3 md:items-center">
+          <PlatformMark platform={platform} className="size-10" />
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <h3 className="text-sm font-semibold">{meta.label}</h3>
+              <span
+                className={cn(
+                  "inline-flex h-5 items-center gap-1.5 rounded-md px-1.5 text-[11px] font-medium whitespace-nowrap",
+                  summary.className,
+                )}
+              >
+                <span aria-hidden className={cn("size-1.5 rounded-full", summary.dot)} />
+                {summary.label}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">{meta.what}</p>
+            {active.length === 0 && <p className="text-xs text-muted-foreground/80">{meta.help}</p>}
+          </div>
         </div>
+
+        {canAct && (
+          <div className="flex shrink-0 flex-wrap gap-2 pl-[52px] md:pl-0">
+            <ConnectButton
+              clientId={clientId}
+              platform={platform}
+              variant={active.length ? "outline" : "default"}
+              label={active.length ? "Connect another" : "Connect"}
+            />
+            <ClientLinkButton
+              clientId={clientId}
+              platform={platform}
+              variant={active.length ? "ghost" : "outline"}
+            />
+          </div>
+        )}
       </div>
 
       {accounts.length > 0 && (
-        <ul className="flex flex-col divide-y rounded-md border">
+        <ul className="flex flex-col divide-y rounded-md border md:ml-[52px]">
           {accounts.map((a) => (
             <AccountRow key={a.id} account={a} clientId={clientId} now={now} canManage={canAct} />
           ))}
         </ul>
       )}
-
-      {active.length === 0 && <p className="text-xs text-muted-foreground">{meta.help}</p>}
-
-      {canAct && (
-        <div className="flex flex-wrap gap-2">
-          <ConnectButton
-            clientId={clientId}
-            platform={platform}
-            variant={active.length ? "outline" : "default"}
-            label={active.length ? "Connect another" : "Connect"}
-          />
-          <ClientLinkButton
-            clientId={clientId}
-            platform={platform}
-            variant={active.length ? "ghost" : "outline"}
-          />
-        </div>
-      )}
-    </section>
+    </li>
   )
 }
 
