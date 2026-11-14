@@ -234,7 +234,7 @@ function RequestPanel({
 
       <div className={cn("flex flex-col gap-8 p-6 transition-opacity", pending && "opacity-80")}>
         {/* Where it stands, and the next step */}
-        <div className="flex flex-col gap-3 rounded-lg border p-4">
+        <div className="flex flex-col gap-3 rounded-lg border bg-card p-4">
           <div className="flex flex-wrap items-center gap-2">
             <RequestStatusBadge status={r.status} overdue={overdue} />
             <span className="text-sm text-muted-foreground">{statusLine(r, now)}</span>
@@ -482,7 +482,7 @@ function KindSummary({ request: r }: { request: RequestDetail }) {
             href={o.link_url}
             target="_blank"
             rel="noreferrer"
-            className="w-fit truncate text-primary underline-offset-4 hover:underline"
+            className="w-fit truncate text-brand underline-offset-4 hover:underline"
           >
             {o.link_url}
           </a>
@@ -505,7 +505,7 @@ function KindSummary({ request: r }: { request: RequestDetail }) {
           href={o.help_url}
           target="_blank"
           rel="noreferrer"
-          className="w-fit text-xs text-primary underline-offset-4 hover:underline"
+          className="w-fit text-xs text-brand underline-offset-4 hover:underline"
         >
           Help article
         </a>

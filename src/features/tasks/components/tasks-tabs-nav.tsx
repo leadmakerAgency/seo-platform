@@ -34,7 +34,7 @@ export function TasksTabsNav({
   return (
     <nav
       aria-label="Which tasks"
-      className="flex w-fit max-w-full overflow-x-auto rounded-lg border p-0.5"
+      className="flex w-fit max-w-full overflow-x-auto rounded-lg border bg-card p-0.5"
     >
       {tabs.map((tab) => (
         <TabLink
@@ -75,7 +75,7 @@ export function TabLink({
       {count !== undefined && (
         <span
           className={cn(
-            "rounded px-1.5 text-xs tabular-nums",
+            "rounded-sm px-1.5 text-xs tabular-nums",
             active ? "bg-background/20" : "bg-muted",
           )}
         >

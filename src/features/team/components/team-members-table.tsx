@@ -15,6 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { StatusTag, type Tone } from "@/components/common/status"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -59,10 +60,10 @@ import { changeRole, newInviteLink, removeMember, setMemberAccess } from "../act
 import type { TeamMemberRow } from "../queries"
 import { CopyLink } from "./copy-link"
 
-const STATUS_STYLE: Record<MemberStatus, string> = {
-  active: "bg-success-soft text-success",
-  invited: "bg-brand-soft text-primary",
-  disabled: "bg-muted text-muted-foreground",
+const STATUS_TONE: Record<MemberStatus, Tone> = {
+  active: "success",
+  invited: "info",
+  disabled: "neutral",
 }
 
 export function TeamMembersTable({
@@ -89,12 +90,12 @@ export function TeamMembersTable({
     <>
       <div
         className={cn(
-          "overflow-x-auto rounded-lg border transition-opacity",
+          "overflow-x-auto rounded-lg border bg-card transition-opacity",
           pending && "pointer-events-none opacity-60",
         )}
       >
         <Table className="min-w-[860px]">
-          <TableHeader className="bg-muted/40">
+          <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="h-9 pl-4 text-xs font-medium text-muted-foreground">
                 Person
@@ -168,14 +169,7 @@ export function TeamMembersTable({
                     </Select>
                   </TableCell>
                   <TableCell>
-                    <span
-                      className={cn(
-                        "inline-flex h-6 items-center rounded-md px-2 text-xs font-medium",
-                        STATUS_STYLE[m.status],
-                      )}
-                    >
-                      {STATUS_LABELS[m.status]}
-                    </span>
+                    <StatusTag tone={STATUS_TONE[m.status]}>{STATUS_LABELS[m.status]}</StatusTag>
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {can(m.role, "clients.see_all")

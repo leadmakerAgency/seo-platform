@@ -74,9 +74,9 @@ export function RequestsTable({
 
   const head = "h-9 text-xs font-medium text-muted-foreground"
   return (
-    <div className="overflow-x-auto rounded-lg border">
+    <div className="overflow-x-auto rounded-lg border bg-card">
       <Table className={showClient ? "min-w-[980px]" : "min-w-[820px]"}>
-        <TableHeader className="bg-muted/40">
+        <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead className={cn(head, "w-40 pl-4")}>Status</TableHead>
             <TableHead className={head}>Request</TableHead>

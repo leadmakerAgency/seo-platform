@@ -183,7 +183,7 @@ export function WebsiteStep({
             </div>
           )}
 
-          <section className="flex flex-col gap-4 rounded-xl border p-4">
+          <section className="flex flex-col gap-4 rounded-lg border bg-card p-4">
             <h3 className="text-lg font-semibold tracking-tight">Give us access</h3>
             {steps ? (
               <ol className="flex flex-col gap-2">

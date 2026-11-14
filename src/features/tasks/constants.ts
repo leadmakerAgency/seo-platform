@@ -1,3 +1,4 @@
+import type { Tone } from "@/components/common/status"
 import type { Database } from "@/lib/supabase/database.types"
 
 export type TaskStatus = Database["public"]["Enums"]["task_status"]
@@ -19,21 +20,17 @@ export const TASK_TYPES: TaskType[] = [
   "other",
 ]
 
-export const STATUS_META: Record<TaskStatus, { label: string; badge: string; dot: string }> = {
-  todo: { label: "To do", badge: "bg-muted text-foreground/80", dot: "bg-muted-foreground/50" },
-  in_progress: { label: "In progress", badge: "bg-brand-soft text-primary", dot: "bg-primary" },
-  waiting_on_client: {
-    label: "Waiting on client",
-    badge: "bg-warning-soft text-warning",
-    dot: "bg-warning",
-  },
-  done: { label: "Done", badge: "bg-success-soft text-success", dot: "bg-success" },
+export const STATUS_META: Record<TaskStatus, { label: string; tone: Tone }> = {
+  todo: { label: "To do", tone: "neutral" },
+  in_progress: { label: "In progress", tone: "brand" },
+  waiting_on_client: { label: "Waiting on client", tone: "warning" },
+  done: { label: "Done", tone: "success" },
 }
 
 export const PRIORITY_META: Record<TaskPriority, { label: string; dot: string }> = {
-  high: { label: "High", dot: "bg-danger" },
+  high: { label: "High", dot: "bg-danger-dot" },
   normal: { label: "Normal", dot: "bg-muted-foreground/60" },
-  low: { label: "Low", dot: "bg-muted-foreground/25" },
+  low: { label: "Low", dot: "bg-neutral-dot/60" },
 }
 
 export const TYPE_LABELS: Record<TaskType, string> = {

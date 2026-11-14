@@ -109,14 +109,16 @@ export function NotificationsBell() {
         >
           <Bell />
           {unread > 0 && (
-            <span className="absolute top-1 right-1 grid min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] leading-4 font-semibold text-white tabular-nums">
+            <span className="absolute top-1 right-1 grid min-w-4 place-items-center rounded-sm bg-danger px-1 text-[10px] leading-4 font-semibold text-danger-foreground tabular-nums">
               {unread > 9 ? "9+" : unread}
             </span>
           )}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-[360px] p-0">
-        <div className="border-b px-4 py-3 text-sm font-semibold">Notifications</div>
+        <div className="border-b px-4 py-3 font-heading text-[15px] font-semibold">
+          Notifications
+        </div>
         {items.length === 0 ? (
           <p className="px-4 py-8 text-center text-sm text-muted-foreground">
             Nothing yet. Assignments, @mentions, client answers and broken connections show up here.

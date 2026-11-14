@@ -97,7 +97,7 @@ export function LoginsStep({
       </p>
 
       {logins.length > 0 && (
-        <ul className="flex flex-col divide-y rounded-xl border">
+        <ul className="flex flex-col divide-y rounded-lg border bg-card">
           {logins.map((l) => (
             <li key={l.id} className="flex items-center gap-3 px-4 py-3">
               <Lock className="size-4 shrink-0 text-success" aria-hidden />
@@ -124,7 +124,7 @@ export function LoginsStep({
       )}
 
       {!readOnly && (
-        <section className="flex flex-col gap-5 rounded-xl border p-4">
+        <section className="flex flex-col gap-5 rounded-lg border bg-card p-4">
           <h3 className="text-lg font-semibold tracking-tight">Add a login</h3>
           <div className="grid gap-5 sm:grid-cols-2">
             <Field id="l-site" label="Site" error={errors.site_name}>

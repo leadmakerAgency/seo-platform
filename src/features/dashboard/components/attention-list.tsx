@@ -46,7 +46,7 @@ export function AttentionList({
   }
 
   return (
-    <ul className="divide-y rounded-lg border">
+    <ul className="divide-y rounded-lg border bg-card">
       {items.map((item) => {
         const Icon = item.urgent ? TriangleAlert : CircleAlert
         return (

@@ -57,7 +57,7 @@ export function GoogleStep({
         <SaveIndicator state={save.state} message={save.message} />
       </div>
 
-      <div className="flex flex-col gap-2 rounded-xl border bg-muted/30 p-4">
+      <div className="flex flex-col gap-2 rounded-lg border bg-muted/30 p-4">
         <span className="text-sm text-muted-foreground">The email to add</span>
         {reportingEmail ? (
           <div className="flex flex-wrap items-center gap-2">
@@ -152,7 +152,7 @@ function Block({
   children: React.ReactNode
 }) {
   return (
-    <section className="flex flex-col gap-4 rounded-xl border p-4">
+    <section className="flex flex-col gap-4 rounded-lg border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-lg font-semibold tracking-tight">{title}</h3>
         <Button asChild variant="outline" size="sm">

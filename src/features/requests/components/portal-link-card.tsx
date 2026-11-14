@@ -91,7 +91,7 @@ export function PortalLinkCard({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border p-4">
+    <div className="flex flex-col gap-3 rounded-lg border bg-card p-4">
       <div className="flex flex-col gap-0.5">
         <p className="text-sm font-medium">Client link</p>
         <p className="text-sm text-muted-foreground">

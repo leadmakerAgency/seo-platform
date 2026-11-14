@@ -68,8 +68,8 @@ export function PortalView({
 
       {answered.length > 0 && (
         <section className="flex flex-col gap-3">
-          <h2 className="text-sm font-semibold">Sent, we&apos;ll check them</h2>
-          <ul className="divide-y rounded-xl border">
+          <h2 className="text-[15px] font-semibold">Sent, we&apos;ll check them</h2>
+          <ul className="divide-y rounded-lg border bg-card">
             {answered.map((r) => (
               <SentRow key={r.id} request={r} icon="clock" />
             ))}
@@ -84,7 +84,7 @@ export function PortalView({
             Finished ({finished.length})
           </CollapsibleTrigger>
           <CollapsibleContent>
-            <ul className="mt-3 divide-y rounded-xl border">
+            <ul className="mt-3 divide-y rounded-lg border bg-card">
               {finished.map((r) => (
                 <SentRow key={r.id} request={r} icon="check" />
               ))}

@@ -10,7 +10,7 @@ import {
   type LucideIcon,
   NotebookPen,
   Plug,
-  Sparkles,
+  Radar,
   Star,
   Users,
 } from "lucide-react"
@@ -122,7 +122,7 @@ export const CLIENT_SECTIONS: ClientSection[] = [
     id: "ai-visibility",
     segment: "ai-visibility",
     title: "AI visibility",
-    icon: Sparkles,
+    icon: Radar,
     roles: ["admin", "manager", "viewer"],
     comingSoon: true,
     summary:

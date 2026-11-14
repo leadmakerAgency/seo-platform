@@ -1,3 +1,4 @@
+import type { Tone } from "@/components/common/status"
 import type { Database } from "@/lib/supabase/database.types"
 
 export type SocialPlatform = Database["public"]["Enums"]["social_platform"]
@@ -77,21 +78,10 @@ export const PLATFORM_META: Record<
   },
 }
 
-export const STATUS_META: Record<
-  SocialAccountStatus,
-  { label: string; badge: string; dot: string }
-> = {
-  connected: { label: "Connected", badge: "bg-success-soft text-success", dot: "bg-success" },
-  needs_reconnect: {
-    label: "Needs reconnecting",
-    badge: "bg-warning-soft text-warning",
-    dot: "bg-warning",
-  },
-  removed: {
-    label: "Disconnected",
-    badge: "bg-muted text-muted-foreground",
-    dot: "bg-muted-foreground/50",
-  },
+export const STATUS_META: Record<SocialAccountStatus, { label: string; tone: Tone }> = {
+  connected: { label: "Connected", tone: "success" },
+  needs_reconnect: { label: "Needs reconnecting", tone: "warning" },
+  removed: { label: "Disconnected", tone: "neutral" },
 }
 
 export function isSocialPlatform(value: string): value is SocialPlatform {

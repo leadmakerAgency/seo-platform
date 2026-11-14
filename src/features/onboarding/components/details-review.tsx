@@ -155,9 +155,9 @@ export function DetailsReview({
           The client hasn&apos;t filled in any business details yet.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border">
+        <div className="overflow-x-auto rounded-lg border bg-card">
           <table className="w-full min-w-[640px] text-sm">
-            <thead className="bg-muted/40 text-xs text-muted-foreground">
+            <thead className="border-b bg-muted/60 text-xs text-muted-foreground">
               <tr>
                 {canManage && (
                   <th className="w-10 py-2 pl-4 text-left font-medium" aria-label="Apply" />

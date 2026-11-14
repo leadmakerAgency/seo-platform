@@ -1,10 +1,11 @@
 "use client"
 
-import { ArrowLeft, ArrowRight, Check, CircleCheck, Loader2, Lock, PartyPopper } from "lucide-react"
+import { ArrowLeft, ArrowRight, Check, CircleCheck, Loader2, Lock } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { toast } from "sonner"
 
+import { StatusTag } from "@/components/common/status"
 import { Button } from "@/components/ui/button"
 import {
   connectErrorMessage,
@@ -127,14 +128,20 @@ export function OnboardingWizard({
                   onClick={() => go(key)}
                   aria-current={active ? "step" : undefined}
                   className={cn(
-                    "flex h-10 items-center gap-2 rounded-full border px-3 text-sm transition-colors",
-                    active ? "border-foreground bg-foreground text-background" : "hover:bg-muted",
+                    "flex h-10 items-center gap-2 rounded-md border bg-card px-3 text-sm transition-colors",
+                    active
+                      ? "border-primary bg-brand-soft font-medium text-brand"
+                      : "hover:bg-muted",
                   )}
                 >
                   <span
                     className={cn(
                       "grid size-5 place-items-center rounded-full text-[11px] font-semibold",
-                      active ? "bg-background/20" : done ? "bg-success text-white" : "bg-muted",
+                      active
+                        ? "bg-primary text-primary-foreground"
+                        : done
+                          ? "bg-success-soft text-success"
+                          : "bg-muted text-muted-foreground",
                     )}
                   >
                     {done && !active ? <Check className="size-3" /> : i + 1}
@@ -148,13 +155,13 @@ export function OnboardingWizard({
       </nav>
 
       {readOnly && (
-        <div className="flex gap-3 rounded-xl border border-success/30 bg-success-soft px-4 py-3 text-[15px]">
+        <div className="flex gap-3 rounded-lg border border-success/30 bg-success-soft px-4 py-3 text-[15px]">
           <Lock className="mt-0.5 size-4 shrink-0" aria-hidden />
           <p>
             Your onboarding is complete. Your LeadMaker team has checked these answers and is using
-            them, so they&apos;re locked and can only be viewed here. You can still connect
-            accounts on the <strong className="font-medium">Accounts</strong> step. If anything
-            else needs to change, tell {data.contact ?? "your account manager"}.
+            them, so they&apos;re locked and can only be viewed here. You can still connect accounts
+            on the <strong className="font-medium">Accounts</strong> step. If anything else needs to
+            change, tell {data.contact ?? "your account manager"}.
           </p>
         </div>
       )}
@@ -271,8 +278,8 @@ function ReviewStep({
 
   if (submitted) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-xl border px-6 py-12 text-center">
-        <PartyPopper className="size-10 text-primary" aria-hidden />
+      <div className="flex flex-col items-center gap-4 rounded-lg border bg-card px-6 py-12 text-center">
+        <CircleCheck className="size-10 text-success" aria-hidden />
         <h2 className="text-xl font-semibold tracking-tight">Thank you, that&apos;s everything!</h2>
         <p className="max-w-prose text-[15px] text-muted-foreground">
           Your LeadMaker team has been told and will check everything. You can keep this link: if
@@ -297,7 +304,7 @@ function ReviewStep({
           same link.
         </p>
       </div>
-      <ul className="flex flex-col divide-y rounded-xl border">
+      <ul className="flex flex-col divide-y rounded-lg border bg-card">
         {STEPS.map((s) => {
           const meta = STEP_STATUS_META[steps[s.key]]
           return (
@@ -311,9 +318,7 @@ function ReviewStep({
                 />
               )}
               <span className="flex-1 text-[15px] font-medium">{s.label}</span>
-              <span className={cn("rounded-md px-2 py-0.5 text-xs font-medium", meta.badge)}>
-                {meta.label}
-              </span>
+              <StatusTag tone={meta.tone}>{meta.label}</StatusTag>
               {!isFinished(steps[s.key]) && (
                 <Button variant="ghost" size="sm" onClick={() => onGo(s.key)}>
                   Open

@@ -23,7 +23,7 @@ export function ActivityFeed({ entries, now }: { entries: ActivityEntry[]; now: 
   }
 
   return (
-    <ol className="divide-y rounded-lg border">
+    <ol className="divide-y rounded-lg border bg-card">
       {entries.map((entry) => (
         <li
           key={entry.id}

@@ -395,7 +395,7 @@ function TaskPanel({
                   />
                 </div>
               )}
-              <ul className="divide-y rounded-lg border">
+              <ul className="divide-y rounded-lg border bg-card">
                 {visibleClients.map((c) => (
                   <li key={c.id} className="flex items-center gap-3 px-3 py-2.5">
                     <Checkbox

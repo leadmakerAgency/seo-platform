@@ -1,3 +1,4 @@
+import type { Tone } from "@/components/common/status"
 import {
   BadgeCheck,
   KeyRound,
@@ -53,26 +54,23 @@ export const KIND_META: Record<
 
 export const REQUEST_STATUS_META: Record<
   RequestStatus,
-  { label: string; short: string; badge: string; dot: string }
+  { label: string; short: string; tone: Tone }
 > = {
   open: {
     label: "Waiting on client",
     short: "Waiting",
-    badge: "bg-warning-soft text-warning",
-    dot: "bg-warning",
+    tone: "warning",
   },
   answered: {
     label: "Answered, needs you",
     short: "Answered",
-    badge: "bg-brand-soft text-primary",
-    dot: "bg-primary",
+    tone: "brand",
   },
-  done: { label: "Done", short: "Done", badge: "bg-success-soft text-success", dot: "bg-success" },
+  done: { label: "Done", short: "Done", tone: "success" },
   cancelled: {
     label: "Cancelled",
     short: "Cancelled",
-    badge: "bg-muted text-muted-foreground",
-    dot: "bg-muted-foreground/50",
+    tone: "neutral",
   },
 }
 

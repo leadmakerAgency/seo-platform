@@ -58,7 +58,7 @@ export function LoginsVault({
           No logins stored for this client.
         </p>
       ) : (
-        <ul className="divide-y rounded-lg border">
+        <ul className="divide-y rounded-lg border bg-card">
           {logins.map((l) => (
             <LoginRow key={l.id} login={l} canManage={canManage} canReveal={canReveal} now={now} />
           ))}

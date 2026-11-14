@@ -7,6 +7,7 @@ import { Suspense } from "react"
 import { AccessGuard } from "@/components/layout/access-guard"
 import { PageHeader, Section } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
+import { StatStripSkeleton } from "@/components/common/stat-strip"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getClientBySlug } from "@/features/clients/queries"
 import { PortalLinkCard } from "@/features/requests/components/portal-link-card"
@@ -126,7 +127,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
                 <Link
                   href={`${requestsHref(basePath, filters, { show: undefined, request: undefined })}#requests`}
                   scroll={false}
-                  className="text-primary underline-offset-4 hover:underline"
+                  className="text-brand underline-offset-4 hover:underline"
                 >
                   Show all requests
                 </Link>
@@ -175,11 +176,7 @@ function PageSkeleton() {
     <div className="flex flex-col gap-10">
       <Skeleton className="h-16 w-[420px] max-w-full" />
       <Skeleton className="h-[120px] w-full rounded-lg" />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {Array.from({ length: 4 }, (_, i) => (
-          <Skeleton key={i} className="h-[88px] rounded-lg" />
-        ))}
-      </div>
+      <StatStripSkeleton />
       <Skeleton className="h-[260px] w-full rounded-lg" />
     </div>
   )

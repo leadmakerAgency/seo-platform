@@ -47,7 +47,7 @@ export function PortalRequestCard({ token, request: r, today, name }: Props) {
   return (
     <article
       className={cn(
-        "flex flex-col gap-4 rounded-xl border bg-card p-5",
+        "flex flex-col gap-4 rounded-lg border bg-card p-5",
         due?.text === "overdue" && "border-danger/30",
       )}
     >
@@ -319,7 +319,7 @@ function ActionAnswer(props: AnswerProps) {
           href={o.help_url}
           target="_blank"
           rel="noreferrer noopener"
-          className="inline-flex w-fit items-center gap-1 text-sm text-primary underline-offset-4 hover:underline"
+          className="inline-flex w-fit items-center gap-1 text-sm text-brand underline-offset-4 hover:underline"
         >
           Step-by-step help with pictures
           <ExternalLink className="size-3.5" />
@@ -454,7 +454,7 @@ function FilesAnswer(props: AnswerProps) {
   return (
     <div className="flex flex-col gap-3">
       {r.files.length > 0 && (
-        <ul className="flex flex-col divide-y rounded-lg border">
+        <ul className="flex flex-col divide-y rounded-lg border bg-card">
           {r.files.map((f) => (
             <li key={f.id} className="flex items-center gap-3 px-3 py-2.5">
               <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden />

@@ -33,7 +33,7 @@ export function IntegrationCard({ status, nowIso }: { status: IntegrationStatus;
   }[status.apiKey]
 
   return (
-    <section className="flex flex-col gap-4 rounded-lg border p-4">
+    <section className="flex flex-col gap-4 rounded-lg border bg-card p-4">
       <div className="flex flex-col gap-0.5">
         <h2 className="text-[15px] font-semibold tracking-tight">Zernio setup</h2>
         <p className="text-sm text-muted-foreground">

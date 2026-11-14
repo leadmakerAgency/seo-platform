@@ -142,7 +142,7 @@ function NavLink({
         asChild
         isActive={active}
         tooltip={item.comingSoon ? `${item.title} (coming soon)` : item.title}
-        className="data-[active=true]:font-medium data-[active=true]:text-foreground data-[active=true]:[&>svg]:text-primary"
+        className="relative text-sidebar-foreground data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[active=true]:before:absolute data-[active=true]:before:inset-y-1.5 data-[active=true]:before:left-0 data-[active=true]:before:w-0.5 data-[active=true]:before:rounded-full data-[active=true]:before:bg-primary [&>svg]:text-muted-foreground data-[active=true]:[&>svg]:text-primary"
       >
         <Link href={href}>
           <Icon />
@@ -153,7 +153,7 @@ function NavLink({
       </SidebarMenuButton>
       {!item.comingSoon && count !== undefined && count > 0 && (
         <SidebarMenuBadge
-          className="bg-danger text-[11px] font-semibold text-white tabular-nums peer-hover/menu-button:text-white"
+          className="rounded-sm bg-danger text-[11px] font-semibold text-danger-foreground tabular-nums peer-hover/menu-button:text-danger-foreground peer-data-active/menu-button:text-danger-foreground"
           aria-label={`${count} overdue or due today`}
         >
           {count > 99 ? "99+" : count}

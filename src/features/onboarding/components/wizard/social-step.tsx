@@ -103,7 +103,7 @@ export function SocialStep({
             <li
               key={platform}
               className={cn(
-                "flex flex-col gap-3 rounded-xl border p-4",
+                "flex flex-col gap-3 rounded-lg border bg-card p-4",
                 platform === "googlebusiness" && "border-foreground/20",
                 skipped && "bg-muted/40",
               )}
@@ -114,7 +114,7 @@ export function SocialStep({
                   <span className="text-[15px] font-semibold">
                     {meta.label}
                     {platform === "googlebusiness" && (
-                      <span className="ml-2 rounded bg-brand-soft px-1.5 py-0.5 text-xs font-medium text-primary">
+                      <span className="ml-2 rounded-sm bg-brand-soft px-1.5 py-0.5 text-xs font-medium text-brand">
                         Most important
                       </span>
                     )}

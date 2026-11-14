@@ -37,9 +37,9 @@ export function RoleMatrix() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="overflow-x-auto rounded-lg border">
+      <div className="overflow-x-auto rounded-lg border bg-card">
         <Table className="min-w-[720px]">
-          <TableHeader className="bg-muted/40">
+          <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="h-9 pl-4 text-xs font-medium text-muted-foreground">
                 Permission
@@ -74,7 +74,7 @@ export function RoleMatrix() {
       </div>
       <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {ROLES.map((r) => (
-          <div key={r} className="rounded-lg border p-3">
+          <div key={r} className="rounded-lg border bg-card p-3">
             <dt className="text-sm font-medium">{ROLE_LABELS[r]}</dt>
             <dd className="mt-1 text-xs text-muted-foreground">{ROLE_DESCRIPTIONS[r]}</dd>
           </div>

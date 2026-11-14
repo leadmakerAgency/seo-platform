@@ -191,7 +191,7 @@ export function ClientsView({
 
       <div
         className={cn(
-          "overflow-hidden rounded-lg border transition-opacity",
+          "overflow-hidden rounded-lg border bg-card transition-opacity",
           pending && "pointer-events-none opacity-60",
         )}
         aria-busy={pending}
@@ -218,7 +218,7 @@ export function ClientsView({
           </Empty>
         ) : (
           <Table className="min-w-[980px]">
-            <TableHeader className="bg-muted/40">
+            <TableHeader>
               {table.getHeaderGroups().map((group) => (
                 <TableRow key={group.id} className="hover:bg-transparent">
                   {group.headers.map((header) => (

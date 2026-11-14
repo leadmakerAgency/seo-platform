@@ -4,6 +4,7 @@ import { Suspense } from "react"
 
 import { AccessGuard } from "@/components/layout/access-guard"
 import { PageHeader, Section } from "@/components/layout/page-header"
+import { StatStripSkeleton } from "@/components/common/stat-strip"
 import { Skeleton } from "@/components/ui/skeleton"
 import { RequestSheetSkeleton } from "@/features/requests/components/request-sheet"
 import { RequestSheetLoader } from "@/features/requests/components/request-sheet-loader"
@@ -111,11 +112,7 @@ function RequestsSkeleton() {
   return (
     <div className="flex flex-col gap-10">
       <Skeleton className="h-9 w-[420px] max-w-full" />
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
-        {Array.from({ length: 3 }, (_, i) => (
-          <Skeleton key={i} className="h-[88px] rounded-lg" />
-        ))}
-      </div>
+      <StatStripSkeleton count={3} />
       <Skeleton className="h-[280px] w-full rounded-lg" />
     </div>
   )

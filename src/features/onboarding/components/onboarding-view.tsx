@@ -31,6 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { StatusTag } from "@/components/common/status"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
@@ -96,14 +97,9 @@ export function OnboardingView(props: Props) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <h2 className="text-[15px] font-semibold tracking-tight">Progress</h2>
-            <span
-              className={cn(
-                "rounded-md px-2 py-0.5 text-xs font-medium",
-                ONBOARDING_STATUS_META[status].badge,
-              )}
-            >
+            <StatusTag tone={ONBOARDING_STATUS_META[status].tone}>
               {ONBOARDING_STATUS_META[status].label}
-            </span>
+            </StatusTag>
           </div>
           <span className="text-xs text-muted-foreground">
             {live ? "Updates every 20 seconds while the link is active" : ""}
@@ -112,22 +108,19 @@ export function OnboardingView(props: Props) {
               : ""}
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border md:grid-cols-5">
           {STEPS.map((s) => {
             const st = o.progress?.[stepColumn(s.key)] ?? "todo"
             const meta = STEP_STATUS_META[st]
             return (
-              <div key={s.key} className="flex flex-col gap-2 rounded-lg border p-3">
+              <div
+                key={s.key}
+                className="flex flex-col gap-2 bg-card p-3 last:odd:col-span-2 md:last:odd:col-span-1"
+              >
                 <span className="text-sm font-medium">{s.label}</span>
-                <span
-                  className={cn(
-                    "inline-flex w-fit items-center gap-1.5 rounded-md px-2 py-0.5 text-xs font-medium",
-                    meta.badge,
-                  )}
-                >
-                  <span aria-hidden className={cn("size-1.5 rounded-full", meta.dot)} />
+                <StatusTag tone={meta.tone} className="w-fit">
                   {meta.label}
-                </span>
+                </StatusTag>
               </div>
             )
           })}
@@ -156,12 +149,15 @@ export function OnboardingView(props: Props) {
             </Link>
           </Button>
         </div>
-        <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-2 lg:grid-cols-3">
           {PLATFORMS.map((p) => {
             const mine = o.accounts.filter((a) => a.platform === p)
             const skipped = o.notUsing.includes(p)
             return (
-              <li key={p} className="flex items-center gap-3 rounded-lg border px-3 py-2.5">
+              <li
+                key={p}
+                className="flex items-center gap-3 bg-card px-3 py-2.5 sm:last:odd:col-span-2 lg:last:odd:col-span-1"
+              >
                 <PlatformMark platform={p} className="size-7 text-[11px]" />
                 <div className="flex min-w-0 flex-col">
                   <span className="text-sm font-medium">{PLATFORM_META[p].label}</span>
@@ -368,7 +364,7 @@ function LinkCard({
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border p-4">
+    <div className="flex flex-col gap-3 rounded-lg border bg-card p-4">
       <div className="flex flex-col gap-0.5">
         <p className="text-sm font-medium">Onboarding link</p>
         <p className="text-sm text-muted-foreground">
@@ -536,7 +532,7 @@ function GoogleAccess({ clientId, overview, canManage, reportingEmailSet }: Prop
           to add.
         </p>
       )}
-      <ul className="divide-y rounded-lg border">
+      <ul className="divide-y rounded-lg border bg-card">
         {rows.map((r) => (
           <li key={r.which} className="flex flex-wrap items-center gap-3 px-4 py-3">
             <div className="flex min-w-0 flex-1 flex-col">
@@ -591,7 +587,7 @@ function Website({ overview }: { overview: OnboardingOverview }) {
       {!w ? (
         <p className="text-sm text-muted-foreground">Not answered yet.</p>
       ) : (
-        <dl className="grid gap-x-6 gap-y-3 rounded-lg border p-4 text-sm sm:grid-cols-2">
+        <dl className="grid gap-x-6 gap-y-3 rounded-lg border bg-card p-4 text-sm sm:grid-cols-2">
           <Item label="Platform">{platform ?? "—"}</Item>
           <Item label="Address">
             {w.url ? (
@@ -660,7 +656,7 @@ function FinishCard({
 
   if (status === "reviewed") {
     return (
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card p-4">
         <p className="flex items-center gap-2 text-sm">
           <CircleCheck className="size-4 text-success" aria-hidden />
           Onboarding reviewed {reviewedAt ? formatRelative(reviewedAt, now) : ""}. The client&apos;s
@@ -685,7 +681,7 @@ function FinishCard({
   }
 
   return (
-    <section className="flex flex-col gap-3 rounded-lg border p-4">
+    <section className="flex flex-col gap-3 rounded-lg border bg-card p-4">
       <div className="flex flex-col gap-0.5">
         <h2 className="text-[15px] font-semibold tracking-tight">Finish onboarding</h2>
         <p className="text-sm text-muted-foreground">

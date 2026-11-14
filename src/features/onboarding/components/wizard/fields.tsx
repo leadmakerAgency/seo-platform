@@ -173,7 +173,7 @@ export function HoursEditor({
   }
 
   return (
-    <div className="flex flex-col divide-y rounded-lg border">
+    <div className="flex flex-col divide-y rounded-lg border bg-card">
       {DAYS.map(({ key, label }) => {
         const slots = hours[key]
         const mode = !slots
@@ -262,7 +262,7 @@ export function ChoiceButtons<T extends string>({
           className={cn(
             "min-h-11 rounded-md border px-3.5 py-2 text-left text-[15px] transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent",
             value === o.value &&
-              "border-primary bg-brand-soft text-primary hover:bg-brand-soft disabled:hover:bg-brand-soft",
+              "border-primary bg-brand-soft text-brand hover:bg-brand-soft disabled:hover:bg-brand-soft",
           )}
         >
           {o.label}

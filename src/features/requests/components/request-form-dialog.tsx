@@ -259,7 +259,7 @@ export function RequestFormDialog({
                       aria-pressed={templateId === t.id}
                       className={cn(
                         "inline-flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs transition-colors hover:bg-muted",
-                        templateId === t.id && "border-primary bg-brand-soft text-primary",
+                        templateId === t.id && "border-primary bg-brand-soft text-brand",
                       )}
                     >
                       <Icon className="size-3.5" aria-hidden />

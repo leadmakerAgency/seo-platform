@@ -46,7 +46,7 @@ export function SiteHeader() {
   const openSearch = useOpenClientSearch()
 
   return (
-    <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4 md:px-6">
+    <header className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-2 border-b bg-background px-4 md:px-6">
       <SidebarTrigger className="-ml-1.5" />
       <Separator orientation="vertical" className="mr-1 data-[orientation=vertical]:h-4" />
       {/* Reads the URL, so it streams in behind Suspense (Cache Components rule). */}

@@ -1,3 +1,4 @@
+import type { Tone } from "@/components/common/status"
 import type { Database } from "@/lib/supabase/database.types"
 
 type Enums = Database["public"]["Enums"]
@@ -20,26 +21,18 @@ export const STEPS: { key: StepKey; label: string; short: string; minutes: numbe
   { key: "logins", label: "Other logins", short: "Logins", minutes: 2 },
 ]
 
-export const STEP_STATUS_META: Record<StepStatus, { label: string; badge: string; dot: string }> = {
-  todo: {
-    label: "Not started",
-    badge: "bg-muted text-muted-foreground",
-    dot: "bg-muted-foreground/40",
-  },
-  in_progress: { label: "In progress", badge: "bg-warning-soft text-warning", dot: "bg-warning" },
-  done: { label: "Done", badge: "bg-success-soft text-success", dot: "bg-success" },
-  skipped: {
-    label: "Skipped",
-    badge: "bg-muted text-muted-foreground",
-    dot: "bg-muted-foreground/60",
-  },
+export const STEP_STATUS_META: Record<StepStatus, { label: string; tone: Tone }> = {
+  todo: { label: "Not started", tone: "neutral" },
+  in_progress: { label: "In progress", tone: "warning" },
+  done: { label: "Done", tone: "success" },
+  skipped: { label: "Skipped", tone: "neutral" },
 }
 
-export const ONBOARDING_STATUS_META: Record<OnboardingStatus, { label: string; badge: string }> = {
-  not_started: { label: "Not started", badge: "bg-muted text-muted-foreground" },
-  in_progress: { label: "In progress", badge: "bg-warning-soft text-warning" },
-  submitted: { label: "Submitted, needs review", badge: "bg-brand-soft text-primary" },
-  reviewed: { label: "Reviewed", badge: "bg-success-soft text-success" },
+export const ONBOARDING_STATUS_META: Record<OnboardingStatus, { label: string; tone: Tone }> = {
+  not_started: { label: "Not started", tone: "neutral" },
+  in_progress: { label: "In progress", tone: "warning" },
+  submitted: { label: "Submitted, needs review", tone: "brand" },
+  reviewed: { label: "Reviewed", tone: "success" },
 }
 
 export const isFinished = (s: StepStatus) => s === "done" || s === "skipped"

@@ -6,6 +6,7 @@ import { AccessGuard } from "@/components/layout/access-guard"
 import { FindClientButton } from "@/components/layout/find-client-button"
 import { PageHeader, Section } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
+import { StatStripSkeleton } from "@/components/common/stat-strip"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AddClientDialog } from "@/features/clients/components/add-client-dialog"
 import { getTeamMembers } from "@/features/clients/queries"
@@ -174,18 +175,12 @@ function HeaderActionsSkeleton() {
 }
 
 function TilesSkeleton() {
-  return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-      {Array.from({ length: 4 }, (_, i) => (
-        <Skeleton key={i} className="h-[88px] rounded-lg" />
-      ))}
-    </div>
-  )
+  return <StatStripSkeleton />
 }
 
 function ListSkeleton({ rows }: { rows: number }) {
   return (
-    <div className="flex flex-col gap-px overflow-hidden rounded-lg border">
+    <div className="flex flex-col gap-px overflow-hidden rounded-lg border bg-card">
       {Array.from({ length: rows }, (_, i) => (
         <Skeleton key={i} className="h-14 rounded-none" />
       ))}

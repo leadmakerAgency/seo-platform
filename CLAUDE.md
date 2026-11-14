@@ -41,8 +41,11 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
 - **New page:** add or flip the entry in `src/lib/navigation.ts` (`comingSoon: false`), put the
   route file in `src/app/(app)/...` and keep it thin; logic goes in `src/features/<module>/`
   (`queries.ts` server-only reads, `actions.ts` Server Actions, `schemas.ts` zod, `components/`).
-- **UI:** white surfaces, zinc text, violet `--primary` only for primary actions, the active nav
-  item and focus rings. No gradients, glows or big shadows. Use shadcn components from
+- **UI:** follow `docs/design-system.md`: navy-tinted neutrals, one violet (`--primary`, the
+  bolt) for primary actions, the active nav item, selection and focus. Status colour only through
+  `StatusTag`/`StatusDot` tones (`src/components/common/status.tsx`), stat rows through
+  `StatStrip`, violet text through `text-brand`. Only tokens: no palette classes or hex (platform
+  logos excepted). No gradients, glows, blur or big shadows. Use shadcn components from
   `src/components/ui` (add new ones with `npx shadcn@latest add <name>`; don't hand-edit them
   except for the theme). Numbers get `tabular-nums`. Every list needs a real empty state.
 - **Filters in the URL:** list pages keep filters in search params (see

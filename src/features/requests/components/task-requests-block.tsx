@@ -69,7 +69,7 @@ export function TaskRequestsBlock({
             : "Need a code, photos or a yes from the client? Ask them here. The task waits until they answer."}
         </p>
       ) : (
-        <ul className="divide-y rounded-lg border">
+        <ul className="divide-y rounded-lg border bg-card">
           {requests.map((r) => (
             <li key={r.id} className="flex flex-col gap-2.5 px-3 py-3">
               <div className="flex items-start gap-3">

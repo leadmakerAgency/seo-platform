@@ -82,9 +82,9 @@ export function ClientTasksView({
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border">
+    <div className="overflow-x-auto rounded-lg border bg-card">
       <Table className="min-w-[860px]">
-        <TableHeader className="bg-muted/40">
+        <TableHeader>
           <TableRow className="hover:bg-transparent">
             <TableHead className="h-9 w-24 pl-4 text-xs font-medium text-muted-foreground">
               Done here

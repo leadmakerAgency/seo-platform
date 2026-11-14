@@ -184,7 +184,7 @@ export function TasksView({
       <div
         role="tablist"
         aria-label="Which tasks"
-        className="flex w-fit max-w-full overflow-x-auto rounded-lg border p-0.5"
+        className="flex w-fit max-w-full overflow-x-auto rounded-lg border bg-card p-0.5"
       >
         {tabs.map((tab) => {
           const active = params.view === tab.view
@@ -205,7 +205,7 @@ export function TasksView({
               {tab.count !== undefined && (
                 <span
                   className={cn(
-                    "rounded px-1.5 text-xs tabular-nums",
+                    "rounded-sm px-1.5 text-xs tabular-nums",
                     active ? "bg-background/20" : "bg-muted",
                   )}
                 >
@@ -229,7 +229,7 @@ export function TasksView({
 
       <div
         className={cn(
-          "overflow-hidden rounded-lg border transition-opacity",
+          "overflow-hidden rounded-lg border bg-card transition-opacity",
           pending && "pointer-events-none opacity-60",
         )}
         aria-busy={pending}
@@ -244,7 +244,7 @@ export function TasksView({
         ) : (
           <div className="overflow-x-auto">
             <Table className="min-w-[1040px]">
-              <TableHeader className="bg-muted/40">
+              <TableHeader>
                 {table.getHeaderGroups().map((group) => (
                   <TableRow key={group.id} className="hover:bg-transparent">
                     {group.headers.map((header) => (

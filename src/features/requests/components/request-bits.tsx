@@ -1,3 +1,4 @@
+import { StatusTag } from "@/components/common/status"
 import { dueLabel, dueState, type DueState } from "@/lib/dates"
 import { cn } from "@/lib/utils"
 import {
@@ -20,23 +21,11 @@ export function RequestStatusBadge({
   className?: string
 }) {
   const meta = REQUEST_STATUS_META[status]
+  const late = overdue && status === "open"
   return (
-    <span
-      className={cn(
-        "inline-flex h-6 items-center gap-1.5 rounded-md px-2 text-xs font-medium whitespace-nowrap",
-        overdue && status === "open" ? "bg-danger-soft text-danger" : meta.badge,
-        className,
-      )}
-    >
-      <span
-        aria-hidden
-        className={cn(
-          "size-1.5 rounded-full",
-          overdue && status === "open" ? "bg-danger" : meta.dot,
-        )}
-      />
-      {overdue && status === "open" ? "Overdue" : short ? meta.short : meta.label}
-    </span>
+    <StatusTag tone={late ? "danger" : meta.tone} className={className}>
+      {late ? "Overdue" : short ? meta.short : meta.label}
+    </StatusTag>
   )
 }
 

@@ -93,7 +93,7 @@ export function ClientPicker({
             return (
               <span
                 key={id}
-                className="inline-flex max-w-[200px] items-center gap-1 rounded-md bg-brand-soft py-0.5 pr-1 pl-2 text-xs text-primary"
+                className="inline-flex max-w-[200px] items-center gap-1 rounded-md bg-brand-soft py-0.5 pr-1 pl-2 text-xs text-brand"
               >
                 <span className="truncate">{c.name}</span>
                 <button
@@ -116,7 +116,7 @@ export function ClientPicker({
         </div>
       )}
 
-      <div className="rounded-lg border">
+      <div className="rounded-lg border bg-card">
         <div className="flex flex-col gap-2 border-b p-2">
           <div className="relative">
             <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />

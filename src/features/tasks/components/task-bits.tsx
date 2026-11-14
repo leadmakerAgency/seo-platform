@@ -1,4 +1,5 @@
 import { Repeat } from "lucide-react"
+import { StatusTag } from "@/components/common/status"
 
 import { dueLabel, dueState, type DueState } from "@/lib/dates"
 import { cn } from "@/lib/utils"
@@ -17,16 +18,9 @@ import {
 export function TaskStatusBadge({ status, className }: { status: TaskStatus; className?: string }) {
   const meta = STATUS_META[status]
   return (
-    <span
-      className={cn(
-        "inline-flex h-6 items-center gap-1.5 rounded-md px-2 text-xs font-medium whitespace-nowrap",
-        meta.badge,
-        className,
-      )}
-    >
-      <span aria-hidden className={cn("size-1.5 rounded-full", meta.dot)} />
+    <StatusTag tone={meta.tone} className={className}>
       {meta.label}
-    </span>
+    </StatusTag>
   )
 }
 
@@ -123,12 +117,15 @@ export function ClientChips({ names, total }: { names: string[]; total: number }
   return (
     <span className="flex max-w-[260px] flex-wrap gap-1">
       {names.map((name) => (
-        <span key={name} className="max-w-[160px] truncate rounded-md bg-muted px-2 py-0.5 text-xs">
+        <span
+          key={name}
+          className="max-w-[160px] truncate rounded-sm bg-muted px-1.5 py-0.5 text-xs"
+        >
           {name}
         </span>
       ))}
       {more > 0 && (
-        <span className="rounded-md bg-brand-soft px-2 py-0.5 text-xs font-medium text-primary">
+        <span className="rounded-sm bg-brand-soft px-1.5 py-0.5 text-xs font-medium text-brand">
           +{more} more
         </span>
       )}

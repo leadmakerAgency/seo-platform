@@ -31,7 +31,7 @@ async function SetupGate() {
 
   if (!setupRequired) {
     return (
-      <div className="flex flex-col gap-4 rounded-lg border p-5">
+      <div className="flex flex-col gap-4 rounded-md bg-muted p-4">
         <p className="text-sm text-muted-foreground">
           Setup is already done. Ask an admin to invite you, or sign in.
         </p>

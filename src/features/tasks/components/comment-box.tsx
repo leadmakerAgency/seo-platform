@@ -158,7 +158,7 @@ export function CommentBody({ body, names }: { body: string; names: string[] }) 
     <>
       {parts.map((part, i) =>
         part.startsWith("@") && names.includes(part.slice(1)) ? (
-          <span key={i} className="font-medium text-primary">
+          <span key={i} className="font-medium text-brand">
             {part}
           </span>
         ) : (

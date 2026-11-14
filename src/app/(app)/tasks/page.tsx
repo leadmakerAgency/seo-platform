@@ -3,6 +3,7 @@ import { Suspense } from "react"
 
 import { AccessGuard } from "@/components/layout/access-guard"
 import { PageHeader, Section } from "@/components/layout/page-header"
+import { StatStripSkeleton } from "@/components/common/stat-strip"
 import { Skeleton } from "@/components/ui/skeleton"
 import { TaskFormDialog } from "@/features/tasks/components/task-form-dialog"
 import { TaskSheetSkeleton } from "@/features/tasks/components/task-sheet"
@@ -115,11 +116,7 @@ async function TasksContent({ searchParams }: { searchParams: SearchParams }) {
 function TasksSkeleton() {
   return (
     <div className="flex flex-col gap-10">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {Array.from({ length: 4 }, (_, i) => (
-          <Skeleton key={i} className="h-[88px] rounded-lg" />
-        ))}
-      </div>
+      <StatStripSkeleton />
       <div className="flex flex-col gap-3">
         <Skeleton className="h-9 w-[420px] max-w-full" />
         <Skeleton className="h-9 w-[560px] max-w-full" />
