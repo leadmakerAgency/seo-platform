@@ -11,7 +11,7 @@ export function ShockwaveMark({ className }: { className?: string }) {
       alt=""
       aria-hidden
       priority
-      className={cn("h-7 w-auto shrink-0 select-none", className)}
+      className={cn("h-10 w-auto shrink-0 select-none", className)}
     />
   )
 }
@@ -19,16 +19,16 @@ export function ShockwaveMark({ className }: { className?: string }) {
 /** Shockwave wordmark: the lightning mark with the product name beside it. */
 export function Logo({ className, compact = false }: { className?: string; compact?: boolean }) {
   return (
-    <span className={cn("flex items-center gap-2", className)}>
-      <span className="grid size-7 shrink-0 place-items-center">
-        <ShockwaveMark />
+    <span className={cn("flex items-center gap-2.5", className)}>
+      <span className={cn("grid shrink-0 place-items-center", compact ? "h-9 w-6" : "h-10 w-6")}>
+        <ShockwaveMark className={compact ? "h-9" : undefined} />
       </span>
       {compact ? (
         <span className="sr-only">Shockwave</span>
       ) : (
-        <span className="flex min-w-0 flex-col leading-none">
-          <span className="truncate text-[14px] font-semibold tracking-tight">Shockwave</span>
-          <span className="truncate text-[11px] text-muted-foreground">SEO Platform</span>
+        <span className="flex min-w-0 flex-col gap-0.5 leading-none">
+          <span className="truncate text-[17px] font-semibold tracking-tight">Shockwave</span>
+          <span className="truncate text-[12px] text-muted-foreground">SEO Platform</span>
         </span>
       )}
     </span>
