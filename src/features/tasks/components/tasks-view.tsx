@@ -197,7 +197,7 @@ export function TasksView({
               className={cn(
                 "flex h-8 items-center gap-2 rounded-md px-3 text-sm whitespace-nowrap transition-colors",
                 active
-                  ? "bg-foreground text-background"
+                  ? "bg-foreground text-background dark:bg-muted dark:text-foreground dark:ring-1 dark:ring-input"
                   : "text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
@@ -206,7 +206,7 @@ export function TasksView({
                 <span
                   className={cn(
                     "rounded-sm px-1.5 text-xs tabular-nums",
-                    active ? "bg-background/20" : "bg-muted",
+                    active ? "bg-background/20 dark:bg-background" : "bg-muted",
                   )}
                 >
                   {formatNumber(tab.count)}

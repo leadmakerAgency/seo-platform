@@ -93,7 +93,7 @@ export function OnboardingView(props: Props) {
     <div className="flex flex-col gap-10">
       <LinkCard {...props} now={now} />
 
-      <section className="flex flex-col gap-3">
+      <section className="@container flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <h2 className="text-[15px] font-semibold tracking-tight">Progress</h2>
@@ -108,14 +108,14 @@ export function OnboardingView(props: Props) {
               : ""}
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border @3xl:grid-cols-5">
           {STEPS.map((s) => {
             const st = o.progress?.[stepColumn(s.key)] ?? "todo"
             const meta = STEP_STATUS_META[st]
             return (
               <div
                 key={s.key}
-                className="flex flex-col gap-2 bg-card p-3 last:odd:col-span-2 md:last:odd:col-span-1"
+                className="flex flex-col gap-2 bg-card p-3 last:odd:col-span-2 @3xl:last:odd:col-span-1"
               >
                 <span className="text-sm font-medium">{s.label}</span>
                 <StatusTag tone={meta.tone} className="w-fit">
@@ -137,7 +137,7 @@ export function OnboardingView(props: Props) {
         onApply={applyOnboardingProfile}
       />
 
-      <section className="flex flex-col gap-3">
+      <section className="@container flex flex-col gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-[15px] font-semibold tracking-tight">
             Google profile & social media
@@ -149,14 +149,14 @@ export function OnboardingView(props: Props) {
             </Link>
           </Button>
         </div>
-        <ul className="grid gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-px overflow-hidden rounded-lg border bg-border @md:grid-cols-2 @3xl:grid-cols-3">
           {PLATFORMS.map((p) => {
             const mine = o.accounts.filter((a) => a.platform === p)
             const skipped = o.notUsing.includes(p)
             return (
               <li
                 key={p}
-                className="flex items-center gap-3 bg-card px-3 py-2.5 sm:last:odd:col-span-2 lg:last:odd:col-span-1"
+                className="@md:max-@3xl:last:odd:col-span-2 flex items-center gap-3 bg-card px-3 py-2.5"
               >
                 <PlatformMark platform={p} className="size-7 text-[11px]" />
                 <div className="flex min-w-0 flex-col">

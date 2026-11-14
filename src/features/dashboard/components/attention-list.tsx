@@ -55,7 +55,7 @@ export function AttentionList({
               aria-label={item.urgent ? "Action needed" : "Needs a look"}
               className={cn("mt-0.5 size-4 shrink-0", item.urgent ? "text-danger" : "text-warning")}
             />
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <div className="flex min-w-0 flex-[1_1_16rem] flex-col gap-0.5">
               <p className="text-sm">
                 {item.client && (
                   <>
@@ -89,7 +89,7 @@ export function AttentionList({
               aria-label={urgent ? "Action needed" : "Needs a look"}
               className={cn("mt-0.5 size-4 shrink-0", urgent ? "text-danger" : "text-warning")}
             />
-            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <div className="flex min-w-0 flex-[1_1_16rem] flex-col gap-0.5">
               <p className="text-sm">
                 {alert.client && (
                   <Link

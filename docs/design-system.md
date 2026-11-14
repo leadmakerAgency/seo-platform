@@ -194,7 +194,9 @@ Plain `Badge` is for neutral labels only ("Soon", role names).
 **Tables and lists.** A white panel (`bg-card`) with a 1 px border and 6 px radius. Header row: `muted`
 background, 12 px medium muted text, sentence case. Cells 14 px, 12 px horizontal padding.
 Row hover is `muted/60`; the selected row is `brand-soft`. Lists (`divide-y`) follow the same
-panel rule. Numbers right-aligned and tabular.
+panel rule. Numbers right-aligned and tabular. Layouts that sit inside the content column
+switch on the space they have (`@container` queries), not the window width, so they hold up
+next to the sidebar.
 
 **Stats.** `StatStrip`: one bordered panel split into equal cells with hairline dividers
 (2 columns on phones, 3–4 on desktop). Label on top in `small` muted with an optional status
@@ -203,7 +205,8 @@ dot, number below in `stat`. A cell that is the current filter gets a 2 px viole
 used for the onboarding step progress and the platform list.
 
 **Tabs.** Segmented: a bordered `bg-card` track; the active segment is solid ink
-(`bg-foreground text-background`), counts in a small `rounded-sm` chip. Ink, not violet, so
+(`bg-foreground text-background`) in light; in dark it is a raised `muted` segment with an
+`input` ring, because a white block on graphite is too loud. Counts sit in a small `rounded-sm` chip. Ink, not violet, so
 the violet stays rare.
 
 **Sidebar.** Tinted panel (`--sidebar`), the Shockwave mark and wordmark at the top. Items are

@@ -251,9 +251,9 @@ function PlatformRow({
       : { label: "Not connected", tone: "neutral" }
 
   return (
-    <li className="flex flex-col gap-3 px-4 py-4">
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
-        <div className="flex min-w-0 flex-1 items-start gap-3 md:items-center">
+    <li className="@container flex flex-col gap-3 px-4 py-4">
+      <div className="flex flex-col gap-3 @2xl:flex-row @2xl:items-center @2xl:gap-4">
+        <div className="flex min-w-0 flex-1 items-start gap-3 @2xl:items-center">
           <PlatformMark platform={platform} className="size-10" />
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -266,7 +266,7 @@ function PlatformRow({
         </div>
 
         {canAct && (
-          <div className="flex shrink-0 flex-wrap gap-2 pl-[52px] md:pl-0">
+          <div className="flex shrink-0 flex-wrap gap-2 pl-[52px] @2xl:pl-0">
             <ConnectButton
               clientId={clientId}
               platform={platform}
@@ -283,7 +283,7 @@ function PlatformRow({
       </div>
 
       {accounts.length > 0 && (
-        <ul className="flex flex-col divide-y rounded-md border bg-card md:ml-[52px]">
+        <ul className="flex flex-col divide-y rounded-md border bg-card @2xl:ml-[52px]">
           {accounts.map((a) => (
             <AccountRow key={a.id} account={a} clientId={clientId} now={now} canManage={canAct} />
           ))}
