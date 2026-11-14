@@ -73,6 +73,10 @@ export type ClientRow = {
   stage: "onboarding" | "active" | "paused" | "churned"
   owner: { id: string; name: string } | null
   plan: { keywords: number; backlinks: number; articles: number }
+  /** This month's backlinks and articles (from the Overview's month progress). */
+  progress: Partial<
+    Record<"backlinks" | "articles", { done: number; target: number; behind: boolean }>
+  >
   createdAt: string
 }
 
@@ -110,9 +114,24 @@ export async function getClientsPage(
   const { data, count, error } = await query.range(from, from + DASHBOARD_PAGE_SIZE - 1)
   if (error) throw new Error(`Could not load clients: ${error.message}`)
 
+  // One call for the whole page: this month's backlinks and articles per client.
+  const progress = new Map<string, ClientRow["progress"]>()
+  if (data?.length) {
+    const { data: summary } = await supabase.rpc("month_progress_summary", {
+      p_client_ids: data.map((c) => c.id),
+    })
+    for (const s of summary ?? []) {
+      if (s.kind !== "backlinks" && s.kind !== "articles") continue
+      const entry = progress.get(s.client_id) ?? {}
+      entry[s.kind] = { done: s.done, target: s.target, behind: s.status === "behind" }
+      progress.set(s.client_id, entry)
+    }
+  }
+
   return {
     total: count ?? 0,
     rows: (data ?? []).map((c) => ({
+      progress: progress.get(c.id) ?? {},
       id: c.id,
       slug: c.slug,
       name: c.name,

@@ -83,6 +83,98 @@ export type Database = {
           },
         ]
       }
+      ai_answers: {
+        Row: {
+          check_id: string
+          cited_url: string | null
+          client_id: string
+          keyword_id: string
+          mentioned: boolean
+          position: number | null
+          run_no: number
+          tool: Database["public"]["Enums"]["ai_tool"]
+        }
+        Insert: {
+          check_id: string
+          cited_url?: string | null
+          client_id: string
+          keyword_id: string
+          mentioned: boolean
+          position?: number | null
+          run_no: number
+          tool: Database["public"]["Enums"]["ai_tool"]
+        }
+        Update: {
+          check_id?: string
+          cited_url?: string | null
+          client_id?: string
+          keyword_id?: string
+          mentioned?: boolean
+          position?: number | null
+          run_no?: number
+          tool?: Database["public"]["Enums"]["ai_tool"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_answers_check_id_client_id_fkey"
+            columns: ["check_id", "client_id"]
+            isOneToOne: false
+            referencedRelation: "ai_checks"
+            referencedColumns: ["id", "client_id"]
+          },
+          {
+            foreignKeyName: "ai_answers_keyword_id_client_id_fkey"
+            columns: ["keyword_id", "client_id"]
+            isOneToOne: false
+            referencedRelation: "keywords"
+            referencedColumns: ["id", "client_id"]
+          },
+        ]
+      }
+      ai_checks: {
+        Row: {
+          checked_at: string | null
+          client_id: string
+          cost_usd: number | null
+          error: string | null
+          id: string
+          runs: number
+          source: string
+          started_at: string
+          status: Database["public"]["Enums"]["check_status"]
+        }
+        Insert: {
+          checked_at?: string | null
+          client_id: string
+          cost_usd?: number | null
+          error?: string | null
+          id?: string
+          runs?: number
+          source?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["check_status"]
+        }
+        Update: {
+          checked_at?: string | null
+          client_id?: string
+          cost_usd?: number | null
+          error?: string | null
+          id?: string
+          runs?: number
+          source?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["check_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_checks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alerts: {
         Row: {
           action_href: string | null
@@ -298,6 +390,41 @@ export type Database = {
             columns: ["last_viewed_by"]
             isOneToOne: false
             referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_month_plans: {
+        Row: {
+          client_id: string
+          created_at: string
+          kind: Database["public"]["Enums"]["deliverable_kind"]
+          month: string
+          prorated: boolean
+          target: number
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          kind: Database["public"]["Enums"]["deliverable_kind"]
+          month: string
+          prorated?: boolean
+          target: number
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          kind?: Database["public"]["Enums"]["deliverable_kind"]
+          month?: string
+          prorated?: boolean
+          target?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_month_plans_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
             referencedColumns: ["id"]
           },
         ]
@@ -578,19 +705,25 @@ export type Database = {
       }
       clients: {
         Row: {
+          ai_fixes_target: number
           articles_target: number
           backlinks_target: number
           city: string | null
           country_code: string
           created_at: string
           created_by: string | null
+          gbp_posts_target: number
           health: Database["public"]["Enums"]["client_health"]
+          health_changed_at: string | null
+          health_reason: string | null
           id: string
           industry: string | null
           keywords_target: number
           name: string
           owner_id: string | null
+          package: Database["public"]["Enums"]["package_kind"]
           region: string | null
+          review_requests_target: number
           slug: string
           stage: Database["public"]["Enums"]["client_stage"]
           started_on: string
@@ -598,19 +731,25 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          ai_fixes_target?: number
           articles_target?: number
           backlinks_target?: number
           city?: string | null
           country_code?: string
           created_at?: string
           created_by?: string | null
+          gbp_posts_target?: number
           health?: Database["public"]["Enums"]["client_health"]
+          health_changed_at?: string | null
+          health_reason?: string | null
           id?: string
           industry?: string | null
           keywords_target?: number
           name: string
           owner_id?: string | null
+          package?: Database["public"]["Enums"]["package_kind"]
           region?: string | null
+          review_requests_target?: number
           slug: string
           stage?: Database["public"]["Enums"]["client_stage"]
           started_on?: string
@@ -618,19 +757,25 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          ai_fixes_target?: number
           articles_target?: number
           backlinks_target?: number
           city?: string | null
           country_code?: string
           created_at?: string
           created_by?: string | null
+          gbp_posts_target?: number
           health?: Database["public"]["Enums"]["client_health"]
+          health_changed_at?: string | null
+          health_reason?: string | null
           id?: string
           industry?: string | null
           keywords_target?: number
           name?: string
           owner_id?: string | null
+          package?: Database["public"]["Enums"]["package_kind"]
           region?: string | null
+          review_requests_target?: number
           slug?: string
           stage?: Database["public"]["Enums"]["client_stage"]
           started_on?: string
@@ -648,6 +793,93 @@ export type Database = {
           {
             foreignKeyName: "clients_owner_id_fkey"
             columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      keyword_ranks: {
+        Row: {
+          check_id: string
+          client_id: string
+          engine: Database["public"]["Enums"]["rank_engine"]
+          keyword_id: string
+          position: number | null
+          url: string | null
+        }
+        Insert: {
+          check_id: string
+          client_id: string
+          engine: Database["public"]["Enums"]["rank_engine"]
+          keyword_id: string
+          position?: number | null
+          url?: string | null
+        }
+        Update: {
+          check_id?: string
+          client_id?: string
+          engine?: Database["public"]["Enums"]["rank_engine"]
+          keyword_id?: string
+          position?: number | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "keyword_ranks_check_id_client_id_engine_fkey"
+            columns: ["check_id", "client_id", "engine"]
+            isOneToOne: false
+            referencedRelation: "rank_checks"
+            referencedColumns: ["id", "client_id", "engine"]
+          },
+          {
+            foreignKeyName: "keyword_ranks_keyword_id_client_id_fkey"
+            columns: ["keyword_id", "client_id"]
+            isOneToOne: false
+            referencedRelation: "keywords"
+            referencedColumns: ["id", "client_id"]
+          },
+        ]
+      }
+      keywords: {
+        Row: {
+          archived_at: string | null
+          client_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          phrase: string
+          tracked: boolean
+        }
+        Insert: {
+          archived_at?: string | null
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          phrase: string
+          tracked?: boolean
+        }
+        Update: {
+          archived_at?: string | null
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          phrase?: string
+          tracked?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "keywords_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "keywords_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "team_members"
             referencedColumns: ["id"]
@@ -1035,6 +1267,56 @@ export type Database = {
           },
         ]
       }
+      rank_checks: {
+        Row: {
+          checked_at: string | null
+          client_id: string
+          cost_usd: number | null
+          device: string | null
+          engine: Database["public"]["Enums"]["rank_engine"]
+          error: string | null
+          id: string
+          location: string | null
+          source: string
+          started_at: string
+          status: Database["public"]["Enums"]["check_status"]
+        }
+        Insert: {
+          checked_at?: string | null
+          client_id: string
+          cost_usd?: number | null
+          device?: string | null
+          engine: Database["public"]["Enums"]["rank_engine"]
+          error?: string | null
+          id?: string
+          location?: string | null
+          source?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["check_status"]
+        }
+        Update: {
+          checked_at?: string | null
+          client_id?: string
+          cost_usd?: number | null
+          device?: string | null
+          engine?: Database["public"]["Enums"]["rank_engine"]
+          error?: string | null
+          id?: string
+          location?: string | null
+          source?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["check_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rank_checks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       social_accounts: {
         Row: {
           avatar_url: string | null
@@ -1339,6 +1621,7 @@ export type Database = {
         Row: {
           assignee_id: string | null
           completed_at: string | null
+          counts_as: Database["public"]["Enums"]["deliverable_kind"] | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -1352,11 +1635,13 @@ export type Database = {
           steps: string[]
           title: string
           type: Database["public"]["Enums"]["task_type"]
+          units: number
           updated_at: string
         }
         Insert: {
           assignee_id?: string | null
           completed_at?: string | null
+          counts_as?: Database["public"]["Enums"]["deliverable_kind"] | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -1370,11 +1655,13 @@ export type Database = {
           steps?: string[]
           title: string
           type?: Database["public"]["Enums"]["task_type"]
+          units?: number
           updated_at?: string
         }
         Update: {
           assignee_id?: string | null
           completed_at?: string | null
+          counts_as?: Database["public"]["Enums"]["deliverable_kind"] | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -1388,6 +1675,7 @@ export type Database = {
           steps?: string[]
           title?: string
           type?: Database["public"]["Enums"]["task_type"]
+          units?: number
           updated_at?: string
         }
         Relationships: [
@@ -1447,6 +1735,86 @@ export type Database = {
           status?: Database["public"]["Enums"]["member_status"]
         }
         Relationships: []
+      }
+      work_items: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          delivered_on: string
+          id: string
+          kind: Database["public"]["Enums"]["deliverable_kind"]
+          month: string | null
+          note: string | null
+          quantity: number
+          source: Database["public"]["Enums"]["work_source"]
+          source_id: string | null
+          task_id: string | null
+          title: string
+          url: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          delivered_on: string
+          id?: string
+          kind: Database["public"]["Enums"]["deliverable_kind"]
+          month?: string | null
+          note?: string | null
+          quantity?: number
+          source: Database["public"]["Enums"]["work_source"]
+          source_id?: string | null
+          task_id?: string | null
+          title: string
+          url?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          delivered_on?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["deliverable_kind"]
+          month?: string | null
+          note?: string | null
+          quantity?: number
+          source?: Database["public"]["Enums"]["work_source"]
+          source_id?: string | null
+          task_id?: string | null
+          title?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_items_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_items_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_items_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "task_list"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_items_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       zernio_profiles: {
         Row: {
@@ -1581,6 +1949,16 @@ export type Database = {
         Args: { p_client_id: string; p_fields: string[] }
         Returns: undefined
       }
+      client_activity: {
+        Args: { p_before?: number; p_client_id: string; p_limit?: number }
+        Returns: {
+          action: string
+          actor_name: string
+          created_at: string
+          id: number
+          meta: Json
+        }[]
+      }
       client_health_counts: {
         Args: never
         Returns: {
@@ -1588,9 +1966,31 @@ export type Database = {
           total: number
         }[]
       }
+      client_month_progress: {
+        Args: { p_client_id: string; p_month?: string }
+        Returns: {
+          done: number
+          expected: number
+          kind: Database["public"]["Enums"]["deliverable_kind"]
+          prorated: boolean
+          status: string
+          target: number
+        }[]
+      }
+      client_visibility: { Args: { p_client_id: string }; Returns: Json }
       configure_zernio_cron: {
         Args: { p_base_url: string }
         Returns: undefined
+      }
+      month_progress_summary: {
+        Args: { p_client_ids: string[] }
+        Returns: {
+          client_id: string
+          done: number
+          kind: Database["public"]["Enums"]["deliverable_kind"]
+          status: string
+          target: number
+        }[]
       }
       onboarding_add_login: {
         Args: {
@@ -1689,8 +2089,10 @@ export type Database = {
       zernio_cron_status: { Args: never; Returns: Json }
     }
     Enums: {
+      ai_tool: "chatgpt" | "perplexity" | "gemini" | "ai_overviews" | "claude"
       alert_severity: "needs_look" | "action_needed"
       app_role: "admin" | "manager" | "va" | "writer" | "viewer"
+      check_status: "running" | "done" | "failed"
       client_health: "on_track" | "needs_look" | "action_needed"
       client_stage: "onboarding" | "active" | "paused" | "churned"
       connect_attempt_status:
@@ -1701,6 +2103,12 @@ export type Database = {
         | "cancelled"
       connect_method: "oauth" | "invite"
       connect_source: "team" | "onboarding"
+      deliverable_kind:
+        | "backlinks"
+        | "articles"
+        | "gbp_posts"
+        | "review_requests"
+        | "ai_fixes"
       google_access_status:
         | "todo"
         | "added"
@@ -1724,6 +2132,8 @@ export type Database = {
         | "submitted"
         | "reviewed"
       onboarding_step_status: "todo" | "in_progress" | "done" | "skipped"
+      package_kind: "seo" | "geo" | "seo_geo" | "custom"
+      rank_engine: "google" | "bing" | "google_maps"
       request_decision: "approved" | "changes_requested"
       request_kind: "question" | "code" | "files" | "approval" | "action"
       request_status: "open" | "answered" | "done" | "cancelled"
@@ -1762,6 +2172,14 @@ export type Database = {
         | "other"
         | "none"
         | "unknown"
+      work_source:
+        | "task"
+        | "manual"
+        | "backlink"
+        | "article"
+        | "gbp_post"
+        | "review_request"
+        | "ai_fix"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1889,8 +2307,10 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      ai_tool: ["chatgpt", "perplexity", "gemini", "ai_overviews", "claude"],
       alert_severity: ["needs_look", "action_needed"],
       app_role: ["admin", "manager", "va", "writer", "viewer"],
+      check_status: ["running", "done", "failed"],
       client_health: ["on_track", "needs_look", "action_needed"],
       client_stage: ["onboarding", "active", "paused", "churned"],
       connect_attempt_status: [
@@ -1902,6 +2322,13 @@ export const Constants = {
       ],
       connect_method: ["oauth", "invite"],
       connect_source: ["team", "onboarding"],
+      deliverable_kind: [
+        "backlinks",
+        "articles",
+        "gbp_posts",
+        "review_requests",
+        "ai_fixes",
+      ],
       google_access_status: ["todo", "added", "no_access", "not_using", "help"],
       login_source: ["onboarding", "team"],
       member_status: ["active", "invited", "disabled"],
@@ -1922,6 +2349,8 @@ export const Constants = {
         "reviewed",
       ],
       onboarding_step_status: ["todo", "in_progress", "done", "skipped"],
+      package_kind: ["seo", "geo", "seo_geo", "custom"],
+      rank_engine: ["google", "bing", "google_maps"],
       request_decision: ["approved", "changes_requested"],
       request_kind: ["question", "code", "files", "approval", "action"],
       request_status: ["open", "answered", "done", "cancelled"],
@@ -1962,6 +2391,15 @@ export const Constants = {
         "other",
         "none",
         "unknown",
+      ],
+      work_source: [
+        "task",
+        "manual",
+        "backlink",
+        "article",
+        "gbp_post",
+        "review_request",
+        "ai_fix",
       ],
     },
   },

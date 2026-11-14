@@ -75,7 +75,7 @@ export const CLIENT_SECTIONS: ClientSection[] = [
     title: "Overview",
     icon: House,
     roles: ALL,
-    comingSoon: true,
+    comingSoon: false,
     summary:
       "Who the client is, where they show up (website, map pack, AI answers) and this month's work.",
   },

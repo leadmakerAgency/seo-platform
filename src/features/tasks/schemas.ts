@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { DELIVERABLES } from "@/features/overview/constants"
 import { TASK_PRIORITIES, TASK_REPEATS, TASK_STATUSES, TASK_TYPES } from "./constants"
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Choose a date.")
@@ -31,7 +32,21 @@ export const taskFormSchema = z.object({
     .max(30, "Use 30 steps or fewer.")
     .transform((steps) => steps.map((s) => s.text).filter(Boolean)),
   clientIds: z.array(z.uuid()).max(500, "Pick 500 clients or fewer."),
+  // What ticking a client off counts toward on the Overview ("none" = nothing).
+  countsAs: z.enum(["none", ...DELIVERABLES] as [string, ...string[]]),
+  units: z
+    .number({ error: "Enter a number." })
+    .int("Use a whole number.")
+    .min(1, "At least 1.")
+    .max(50, "At most 50."),
 })
+
+/** The usual "counts toward" for a task type (used when creating a task). */
+export function defaultCountsAs(type: string): string {
+  if (type === "backlinks") return "backlinks"
+  if (type === "content") return "articles"
+  return "none"
+}
 
 export type TaskFormInput = z.input<typeof taskFormSchema>
 export type TaskFormValues = z.output<typeof taskFormSchema>

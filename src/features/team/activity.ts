@@ -1,4 +1,11 @@
+import {
+  HEALTH_META,
+  STAGE_LABELS,
+  type ClientHealth,
+  type ClientStage,
+} from "@/features/clients/constants"
 import { PLATFORM_META, type SocialPlatform } from "@/features/connections/constants"
+import { DELIVERABLES, DELIVERABLE_META, type DeliverableKind } from "@/features/overview/constants"
 import { STEPS } from "@/features/onboarding/constants"
 import { STATUS_META, type TaskStatus } from "@/features/tasks/constants"
 import { formatDay } from "@/lib/dates"
@@ -24,6 +31,20 @@ const platform = (v: unknown) =>
   PLATFORM_META[v as SocialPlatform]?.label ?? (str(v) || "an account")
 const statusLabel = (v: unknown) => STATUS_META[v as TaskStatus]?.label ?? str(v)
 const num = (v: unknown) => (typeof v === "number" || typeof v === "string" ? String(v) : "")
+
+const listOf = (items: string[]) =>
+  items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`
+
+const TARGET_LABELS: Record<string, string> = {
+  keywords: "keywords",
+  ...Object.fromEntries(DELIVERABLES.map((k) => [k, DELIVERABLE_META[k].many])),
+}
+
+const deliverable = (kind: unknown, n: number) => {
+  const meta = DELIVERABLE_META[kind as DeliverableKind]
+  if (!meta) return "items"
+  return n === 1 ? meta.one : meta.many
+}
 
 export function describeActivity(entry: ActivityLike): string {
   const m = entry.meta
@@ -110,6 +131,50 @@ export function describeActivity(entry: ActivityLike): string {
       return `cancelled R-${num(m.number)} “${str(m.title)}”`
     case "request.updated":
       return `updated R-${num(m.number)} “${str(m.title)}”`
+    case "client.updated": {
+      const fields = Array.isArray(m.fields) ? (m.fields as unknown[]).map(str).filter(Boolean) : []
+      if (str(m.stage))
+        return `moved the client to ${STAGE_LABELS[m.stage as ClientStage] ?? str(m.stage)}`
+      return fields.length ? `updated the client's ${listOf(fields)}` : "updated the client"
+    }
+    case "client.targets_changed": {
+      const changes = (m.changes ?? {}) as Record<string, unknown>
+      const parts = Object.entries(changes).map(([k, v]) => {
+        const [from, to] = Array.isArray(v) ? v : []
+        return `${TARGET_LABELS[k] ?? k} ${num(from)} → ${num(to)}`
+      })
+      return parts.length
+        ? `changed the monthly plan: ${parts.join(", ")}`
+        : "changed the monthly plan"
+    }
+    case "client.health_changed":
+      return `changed the status to ${HEALTH_META[m.to as ClientHealth]?.label ?? str(m.to)}${
+        str(m.reason) ? ` (${str(m.reason)})` : ""
+      }`
+    case "work.logged": {
+      const q = Number(m.quantity)
+      const what = deliverable(m.kind, Math.abs(q))
+      return q < 0
+        ? `corrected ${what} by −${Math.abs(q)}: “${str(m.title)}”`
+        : `logged ${q} ${what}: “${str(m.title)}”`
+    }
+    case "work.removed":
+      return `removed the logged work “${str(m.title)}”`
+    // Reserved for the Rankings, AI visibility, Backlinks, Content, Reviews and Report pages.
+    case "rank.check_finished":
+      return num(m.moved_into_top10)
+        ? `finished a ranking check: ${num(m.moved_into_top10)} keywords moved into the top 10`
+        : "finished a ranking check"
+    case "ai.check_finished":
+      return `finished an AI answers check${num(m.mentions) ? `: named in ${num(m.mentions)} answers` : ""}`
+    case "backlink.live":
+      return `confirmed a backlink live on ${str(m.site) || "a directory"}`
+    case "article.published":
+      return `published the article “${str(m.title)}”`
+    case "review.received":
+      return `received a ${num(m.rating)}-star review${str(m.author) ? ` from ${str(m.author)}` : ""}`
+    case "report.sent":
+      return `emailed the ${str(m.month) || "monthly"} report to the client`
     default:
       return entry.action.replace(/[._]/g, " ")
   }

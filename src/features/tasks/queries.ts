@@ -6,6 +6,7 @@ import { ilikePattern } from "@/lib/search"
 import type { Database } from "@/lib/supabase/database.types"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import type { ClientHealth } from "@/features/clients/constants"
+import type { DeliverableKind } from "@/features/overview/constants"
 import type { TaskPriority, TaskRepeat, TaskStatus, TaskType } from "./constants"
 import { TASKS_PAGE_SIZE, type TaskParams } from "./search-params"
 import { getRequestsForTask, type TaskRequest } from "@/features/requests/queries"
@@ -166,6 +167,9 @@ export type TaskDetail = {
   createdAt: string
   assignee: { id: string; name: string } | null
   createdBy: string | null
+  /** What ticking a client off counts toward on the Overview (null = nothing). */
+  countsAs: DeliverableKind | null
+  units: number
   isRepeatCopy: boolean
   clients: TaskClient[]
   comments: TaskComment[]
@@ -179,7 +183,7 @@ export async function getTaskDetail(number: number): Promise<TaskDetail | null> 
   const { data: t, error } = await supabase
     .from("tasks")
     .select(
-      `id, number, title, description, steps, type, status, priority, repeat, due_on, completed_at, created_at, previous_task_id,
+      `id, number, title, description, steps, type, status, priority, repeat, due_on, completed_at, created_at, previous_task_id, counts_as, units,
        assignee:team_members!tasks_assignee_id_fkey(id, full_name, email),
        creator:team_members!tasks_created_by_fkey(full_name, email),
        task_clients(done_at, done_by,
@@ -238,6 +242,8 @@ export async function getTaskDetail(number: number): Promise<TaskDetail | null> 
     createdAt: t.created_at,
     assignee: t.assignee ? { id: t.assignee.id, name: nameOf(t.assignee)! } : null,
     createdBy: nameOf(t.creator),
+    countsAs: t.counts_as,
+    units: t.units,
     isRepeatCopy: Boolean(t.previous_task_id),
     clients,
     comments: (comments ?? []).map((c) => ({

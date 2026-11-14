@@ -38,6 +38,7 @@ const PERMISSIONS = {
   "clients.see_all": ["admin", "manager", "viewer"],
   "tasks.manage": ["admin", "manager"],
   "tasks.work": ["admin", "manager", "va", "writer"],
+  "work.log": ["admin", "manager", "va", "writer"],
   "requests.create": ["admin", "manager", "va", "writer"],
   "requests.manage": ["admin", "manager"],
   "connections.manage": ["admin", "manager"],
@@ -57,6 +58,8 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "clients.delete": "Delete clients",
   "tasks.manage": "Create, assign and delete tasks",
   "tasks.work": "Work on their tasks and tick clients off",
+  "work.log":
+    "Log work done outside the app on a client's Overview (VAs and writers: clients in their tasks)",
   "requests.create": "Ask clients for codes, files and approvals (VAs: clients in their tasks)",
   "requests.manage": "Turn on or replace a client's private link",
   "connections.manage": "Connect and disconnect a client's Google and social accounts",

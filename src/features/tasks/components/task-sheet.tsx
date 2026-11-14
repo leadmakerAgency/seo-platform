@@ -53,6 +53,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { Skeleton } from "@/components/ui/skeleton"
+import { DELIVERABLE_META } from "@/features/overview/constants"
 import { TaskRequestsBlock } from "@/features/requests/components/task-requests-block"
 import { actorLabel, describeActivity } from "@/features/team/activity"
 import { formatRelative, initials } from "@/lib/format"
@@ -342,6 +343,21 @@ function TaskPanel({
                   When it&apos;s done, a fresh copy is created automatically.
                 </span>
               </span>
+            )}
+          </Detail>
+          <Detail label="Counts toward" className="col-span-2">
+            {task.countsAs ? (
+              <span>
+                {task.units === 1
+                  ? `1 ${DELIVERABLE_META[task.countsAs].one}`
+                  : `${task.units} ${DELIVERABLE_META[task.countsAs].many}`}{" "}
+                per client.{" "}
+                <span className="text-muted-foreground">
+                  Ticking a client off adds it to their monthly work.
+                </span>
+              </span>
+            ) : (
+              <span className="text-muted-foreground">Not a monthly deliverable</span>
             )}
           </Detail>
         </dl>

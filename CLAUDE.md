@@ -72,4 +72,9 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
 - **Onboarding:** the client side writes only through the `onboarding_*` functions (token checked,
   validated, throttled); never add anon table policies. Passwords only ever go to Supabase Vault
   (`client_logins.secret_id`); never select or log them. Plan: `docs/plans/onboarding.md`.
+- **Overview / monthly work:** delivered work is only ever a row in `work_items` (one per
+  `(source, source_id, client)`); never count from tasks or other tables directly. New modules
+  insert their own `source` rows (contract in `docs/architecture.md`). `clients.health` is derived
+  from open alerts by triggers; raise or resolve an alert instead of setting it. Month maths uses
+  `agencyMonth()`/`daysLeftInMonth()` (`src/lib/dates.ts`). Plan: `docs/plans/overview.md`.
 - The `cn` helper comes from the `cn` package (shadcn's), re-exported by `src/lib/utils.ts`.

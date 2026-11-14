@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import { DELIVERABLES, DELIVERABLE_META } from "@/features/overview/constants"
 import { ROLE_LABELS, type AppRole } from "@/lib/roles"
 import { createTask, updateTask } from "../actions"
 import {
@@ -48,7 +49,12 @@ import {
   type TaskPriority,
 } from "../constants"
 import type { ClientOption, MemberOption, TaskDetail } from "../queries"
-import { taskFormSchema, type TaskFormInput, type TaskFormValues } from "../schemas"
+import {
+  defaultCountsAs,
+  taskFormSchema,
+  type TaskFormInput,
+  type TaskFormValues,
+} from "../schemas"
 import { ClientPicker } from "./client-picker"
 import { DueDatePicker } from "./due-date-picker"
 import { StepsEditor } from "./steps-editor"
@@ -67,6 +73,8 @@ function initialValues(task?: TaskDetail, defaultClientIds: string[] = []): Task
       dueOn: "",
       steps: [],
       clientIds: defaultClientIds,
+      countsAs: defaultCountsAs("backlinks"),
+      units: 1,
     }
   }
   return {
@@ -79,6 +87,8 @@ function initialValues(task?: TaskDetail, defaultClientIds: string[] = []): Task
     dueOn: task.dueOn ?? "",
     steps: task.steps.map((text) => ({ text })),
     clientIds: task.clients.map((c) => c.id),
+    countsAs: task.countsAs ?? "none",
+    units: task.units,
   }
 }
 
@@ -189,7 +199,14 @@ export function TaskFormDialog({
                   control={form.control}
                   name="type"
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    <Select
+                      value={field.value}
+                      onValueChange={(v) => {
+                        field.onChange(v)
+                        // New tasks: suggest what this type usually counts toward.
+                        if (!task) form.setValue("countsAs", defaultCountsAs(v))
+                      }}
+                    >
                       <SelectTrigger id="task-type" className="w-full">
                         <SelectValue />
                       </SelectTrigger>
@@ -294,6 +311,47 @@ export function TaskFormDialog({
                   )}
                 />
                 <FieldDescription>When it&apos;s done, a fresh copy is created.</FieldDescription>
+              </Field>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-[1fr_120px]">
+              <Field>
+                <FieldLabel htmlFor="task-counts">Counts toward</FieldLabel>
+                <Controller
+                  control={form.control}
+                  name="countsAs"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger id="task-counts" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nothing (not a monthly deliverable)</SelectItem>
+                        {DELIVERABLES.map((k) => (
+                          <SelectItem key={k} value={k}>
+                            {DELIVERABLE_META[k].label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                <FieldDescription>
+                  Ticking a client off adds to that client&apos;s monthly work on their Overview.
+                </FieldDescription>
+              </Field>
+              <Field data-invalid={Boolean(errors.units)}>
+                <FieldLabel htmlFor="task-units">Per client</FieldLabel>
+                <Input
+                  id="task-units"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  max={50}
+                  className="tabular-nums"
+                  {...form.register("units", { valueAsNumber: true })}
+                />
+                <FieldError errors={[errors.units]} />
               </Field>
             </div>
 

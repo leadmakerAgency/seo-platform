@@ -2,6 +2,7 @@
 
 import { refresh } from "next/cache"
 
+import type { DeliverableKind } from "@/features/overview/constants"
 import { PermissionError, requirePermission, type CurrentMember } from "@/lib/auth"
 import type { Permission } from "@/lib/roles"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
@@ -68,6 +69,8 @@ export async function createTask(input: TaskFormInput): Promise<ActionResult<{ n
       repeat: v.repeat as TaskRepeat,
       assignee_id: v.assigneeId,
       due_on: v.dueOn,
+      counts_as: v.countsAs === "none" ? null : (v.countsAs as DeliverableKind),
+      units: v.units,
       created_by: g.member.id,
     })
     .select("id, number")
@@ -118,6 +121,8 @@ export async function updateTask(
       repeat: v.repeat as TaskRepeat,
       assignee_id: v.assigneeId,
       due_on: v.dueOn,
+      counts_as: v.countsAs === "none" ? null : (v.countsAs as DeliverableKind),
+      units: v.units,
     })
     .eq("id", taskId)
     .select("id, number")

@@ -108,13 +108,24 @@ const columns = column.columns([
   }),
   column.display({
     id: "plan",
-    header: "Every month",
+    header: "This month",
     cell: ({ row }) => {
-      const { keywords, backlinks, articles } = row.original.plan
-      return (
-        <span className="whitespace-nowrap text-muted-foreground tabular-nums">
-          {keywords} keywords · {backlinks} links · {articles} articles
+      const { backlinks, articles } = row.original.progress
+      const part = (label: string, p?: { done: number; target: number; behind: boolean }) =>
+        p && p.target > 0 ? (
+          <span className={cn(p.behind ? "font-medium text-warning" : "text-muted-foreground")}>
+            {label} {p.done}/{p.target}
+          </span>
+        ) : null
+      const shown = [part("Backlinks", backlinks), part("Articles", articles)].filter(Boolean)
+      return shown.length ? (
+        <span className="flex gap-1.5 whitespace-nowrap tabular-nums">
+          {shown[0]}
+          {shown[1] && <span className="text-muted-foreground">·</span>}
+          {shown[1]}
         </span>
+      ) : (
+        <span className="text-muted-foreground">Nothing planned</span>
       )
     },
   }),

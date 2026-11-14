@@ -20,28 +20,29 @@ Browser ──> src/proxy.ts ──> app routes (thin) ──> features/<module>
 
 ## Routes
 
-| Route                                    | What                                                                                                  | Status      |
-| ---------------------------------------- | ----------------------------------------------------------------------------------------------------- | ----------- |
-| `/login`, `/setup`, `/no-access`         | Sign in, one-time first-admin setup, waiting for access                                               | Built       |
-| `/auth/confirm`                          | Email confirmation callback (PKCE `code` or `token_hash`)                                             | Built       |
-| `/dashboard`                             | Health tiles, Needs attention, client list, Add client                                                | Built       |
-| `/tasks`                                 | Task list (tabs, tiles, filters), task panel (`?task=1051`), create/edit, comments                    | Built       |
-| `/team`                                  | Members, invite links, roles, access, permission matrix, activity log (admin only)                    | Built       |
-| `/welcome`                               | Invited members set their name and password                                                           | Built       |
-| `/tasks/requests`                        | Client requests across all clients: the chase list (admins, managers)                                 | Built       |
-| `/clients/[clientSlug]/tasks`            | Tasks that include one client, tick per client                                                        | Built       |
-| `/clients/[clientSlug]/requests`         | Things we need from the client, their private link, request panel (`?request=101`)                    | Built       |
-| `/clients/[clientSlug]/onboarding`       | Onboarding link, live progress, review & apply details, logins vault (admins, managers; viewers read) | Built       |
-| `/onboard/[slug-token]`                  | The client onboarding wizard: public, no sign-in, autosaves (also `connect.<domain>/<slug-token>`)    | Built       |
-| `/onboard/done`                          | Where Zernio returns the client after an onboarding sign-in (one-time key, not the token)             | Built       |
-| `/clients/[clientSlug]/connections`      | Client Google Business Profile and social accounts through Zernio (admins, managers)                  | Built       |
-| `/integrations/zernio/callback`          | Where Zernio's hosted sign-in returns; checks the attempt, syncs, redirects                           | Built       |
-| `/api/webhooks/zernio`                   | Zernio webhooks (HMAC-signed, no session)                                                             | Built       |
-| `/api/cron/zernio-sync`                  | Hourly Zernio health sync, called by pg_cron with a Vault token (no session)                          | Built       |
-| `/c/[token]`                             | The client portal: public, no sign-in, the token is the key (noindex, no-referrer)                    | Built       |
-| `/clients/[clientSlug]` and `/[section]` | Overview, rankings, AI visibility, backlinks, content, reviews, connections, report                   | Coming soon |
-| `/api/clients/search?q=`                 | Client search in the sidebar (Ctrl/Cmd+K focuses it)                                                  | Built       |
-| `/api/notifications`                     | Latest notifications for the header bell                                                              | Built       |
+| Route                               | What                                                                                                  | Status      |
+| ----------------------------------- | ----------------------------------------------------------------------------------------------------- | ----------- |
+| `/login`, `/setup`, `/no-access`    | Sign in, one-time first-admin setup, waiting for access                                               | Built       |
+| `/auth/confirm`                     | Email confirmation callback (PKCE `code` or `token_hash`)                                             | Built       |
+| `/dashboard`                        | Health tiles, Needs attention, client list, Add client                                                | Built       |
+| `/tasks`                            | Task list (tabs, tiles, filters), task panel (`?task=1051`), create/edit, comments                    | Built       |
+| `/team`                             | Members, invite links, roles, access, permission matrix, activity log (admin only)                    | Built       |
+| `/welcome`                          | Invited members set their name and password                                                           | Built       |
+| `/tasks/requests`                   | Client requests across all clients: the chase list (admins, managers)                                 | Built       |
+| `/clients/[clientSlug]/tasks`       | Tasks that include one client, tick per client                                                        | Built       |
+| `/clients/[clientSlug]/requests`    | Things we need from the client, their private link, request panel (`?request=101`)                    | Built       |
+| `/clients/[clientSlug]/onboarding`  | Onboarding link, live progress, review & apply details, logins vault (admins, managers; viewers read) | Built       |
+| `/onboard/[slug-token]`             | The client onboarding wizard: public, no sign-in, autosaves (also `connect.<domain>/<slug-token>`)    | Built       |
+| `/onboard/done`                     | Where Zernio returns the client after an onboarding sign-in (one-time key, not the token)             | Built       |
+| `/clients/[clientSlug]/connections` | Client Google Business Profile and social accounts through Zernio (admins, managers)                  | Built       |
+| `/integrations/zernio/callback`     | Where Zernio's hosted sign-in returns; checks the attempt, syncs, redirects                           | Built       |
+| `/api/webhooks/zernio`              | Zernio webhooks (HMAC-signed, no session)                                                             | Built       |
+| `/api/cron/zernio-sync`             | Hourly Zernio health sync, called by pg_cron with a Vault token (no session)                          | Built       |
+| `/c/[token]`                        | The client portal: public, no sign-in, the token is the key (noindex, no-referrer)                    | Built       |
+| `/clients/[clientSlug]`             | Overview: details, needs attention, where they show up, month work (`?month=2026-10`), tasks, history | Built       |
+| `/clients/[clientSlug]/[section]`   | Rankings, AI visibility, backlinks, content, reviews, report                                          | Coming soon |
+| `/api/clients/search?q=`            | Client search in the sidebar (Ctrl/Cmd+K focuses it)                                                  | Built       |
+| `/api/notifications`                | Latest notifications for the header bell                                                              | Built       |
 
 All page definitions (title, icon, roles, coming-soon flag, summary) are in `src/lib/navigation.ts`.
 
@@ -50,8 +51,9 @@ All page definitions (title, icon, roles, coming-soon flag, summary) are in `src
 - `team_members`: one row per auth user; `role` (admin, manager, va, writer, viewer) and
   `status`. The first sign-up becomes the active admin (trigger `handle_new_user`); later users
   start as invited viewers.
-- `clients`: the SEO clients, with `health` (on_track, needs_look, action_needed), `stage` and
-  the monthly plan (keywords, backlinks, articles).
+- `clients`: the SEO clients, with `health` (on_track, needs_look, action_needed; set
+  automatically from open alerts), `stage`, `package` and the monthly targets (see "Client
+  Overview and the work ledger").
 - `alerts`: open problems that feed "Needs attention". Modules write here (a broken connection, a
   failed publish, a client behind on deliverables).
 - `activity_log`: append-only record of actions (with `task_id` for task history).
@@ -159,6 +161,46 @@ requests page. The page reads through `portal_get` with a session-less Supabase 
 browser to `client-uploads` (a storage policy only allows open "files" requests with room left),
 then `portal_attach_file` records them. `/c` is a public path in the proxy, and the route sends
 `Referrer-Policy: no-referrer` and `X-Robots-Tag: noindex` (`next.config.ts`).
+
+## Client Overview and the work ledger
+
+Plan: `docs/plans/overview.md`. Migrations `0018`–`0022`.
+
+- **Monthly plan.** `clients` holds the targets (`backlinks_target`, `articles_target`,
+  `gbp_posts_target`, `review_requests_target`, `ai_fixes_target`; `keywords_target` is for
+  Rankings) and `package`. `client_month_plans` snapshots them per month the first time a month is
+  read (`private.ensure_month_plan`). Editing a target changes only the current month; past months
+  never change. A client who starts after the 1st gets that month scaled to the days left.
+- **`work_items` is the only record of delivered work.** Every count on the Overview and the
+  Dashboard is `sum(quantity)` per client, month and `kind`. The unique index on
+  `(source, source_id, client_id)` means one piece of work counts once.
+  - Tasks feed it by trigger: a task with `counts_as` set adds `units` per client when that client
+    is ticked off, and removes it when un-ticked; changing `counts_as`/`units`/title moves the
+    rows. VAs and writers can't change `counts_as` (guard trigger).
+  - The team logs work by hand (`source = 'manual'`, this or last month, a negative quantity needs
+    a note). Logged and removed entries go to `activity_log`.
+  - **Contract for the coming pages:** when a backlink goes live, an article is published, a Google
+    post is sent, a review request goes out or an AI fix is applied, insert one `work_items` row
+    with `source` = `backlink` / `article` / `gbp_post` / `review_request` / `ai_fix` and
+    `source_id` = that row's id (service role or a security-definer trigger), and delete it if the
+    thing is undone. When a page starts writing its own rows, turn `counts_as` off on the matching
+    task type so nothing counts twice.
+- **Progress and status.** `client_month_progress(client, month)` returns target, done, expected by
+  today and a status (`done`, `on_track`, `behind`; past months `delivered`, `short`). Behind =
+  below schedule by more than max(1, 15% of the target), from day 5. `private.check_client_pace`
+  raises or clears the `pace:<client_id>` alert for Active clients; `client.health` is always the
+  most severe open alert (`private.refresh_client_health`, trigger on `alerts`), with
+  `health_reason`. Never set `health` from the app. A daily pg_cron job (`overview-daily`, 07:10
+  UTC) re-checks pace and health and creates the month's plans.
+- **Where they show up.** `keywords`, `rank_checks` + `keyword_ranks` (engine `google`, `bing`,
+  `google_maps`) and `ai_checks` + `ai_answers` are written by the Rankings and AI visibility jobs
+  (service role). Composite foreign keys keep every rank/answer on its own client's check.
+  `client_visibility(client)` returns, per place, the latest check, the previous one and the
+  baseline (first check on or after `started_on`): Google top 10, Bing top 10, map pack top 3,
+  and AI answers naming the business. Only `status = 'done'` checks count. When a check finishes,
+  log `rank.check_finished` / `ai.check_finished` for the history.
+- **History.** `client_activity(client, before, limit)` pages `activity_log` for one client.
+  Wording for every action is in `src/features/team/activity.ts`.
 
 ## Next widgets for the Dashboard (when their modules exist)
 
