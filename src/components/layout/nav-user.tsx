@@ -1,7 +1,6 @@
 "use client"
 
-import { ChevronsUpDown, LogOut, Monitor, Moon, Sun } from "lucide-react"
-import { useTheme } from "next-themes"
+import { ChevronsUpDown, LogOut } from "lucide-react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -10,8 +9,6 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -32,7 +29,6 @@ export type NavUserProps = {
 
 export function NavUser({ displayName, email, initials, roleLabel }: NavUserProps) {
   const { isMobile } = useSidebar()
-  const { theme, setTheme } = useTheme()
 
   return (
     <SidebarMenu>
@@ -62,24 +58,6 @@ export function NavUser({ displayName, email, initials, roleLabel }: NavUserProp
               <span className="text-sm font-medium">{displayName}</span>
               <span className="truncate text-xs text-muted-foreground">{email}</span>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-              Appearance
-            </DropdownMenuLabel>
-            <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={setTheme}>
-              <DropdownMenuRadioItem value="light">
-                <Sun />
-                Light
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="dark">
-                <Moon />
-                Dark
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="system">
-                <Monitor />
-                Match system
-              </DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <form action={signOut}>

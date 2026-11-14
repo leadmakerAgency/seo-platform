@@ -13,6 +13,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
+import { ThemeToggle } from "@/components/common/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
@@ -65,6 +66,7 @@ export function SiteHeader() {
         <Search />
       </Button>
       <span className="ml-auto hidden md:block" />
+      <ThemeToggle />
       <NotificationsBell />
     </header>
   )

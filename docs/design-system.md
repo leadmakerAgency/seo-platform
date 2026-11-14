@@ -57,7 +57,7 @@ Text pairs meet **AA (4.5:1)**; large numbers and icons meet 3:1.
 
 | Token                                | Value                                                 | Use                                   | Contrast                                          |
 | ------------------------------------ | ----------------------------------------------------- | ------------------------------------- | ------------------------------------------------- |
-| `--background`                       | `oklch(0.992 0.003 286)`                              | Page canvas                           |                                                   |
+| `--background`                       | `oklch(0.996 0.0015 286)`                             | Page canvas                           |                                                   |
 | `--card`, `--popover`                | `oklch(1 0 0)`                                        | Panels, tables, menus                 |                                                   |
 | `--sidebar`                          | `oklch(0.966 0.008 286)`                              | Sidebar                               |                                                   |
 | `--muted`, `--secondary`, `--accent` | `oklch(0.955 0.009 286)`                              | Hover, table head, chips              |                                                   |
@@ -76,28 +76,31 @@ Text pairs meet **AA (4.5:1)**; large numbers and icons meet 3:1.
 
 ### Dark
 
-Dark mode is the logo's navy, not neutral black. Surfaces get lighter as they rise
-(canvas → card → popover), the sidebar is the darkest.
+Dark is **warm graphite**: near-neutral greys with a faint warm tint (hue 70, chroma 0.005),
+not the navy of light mode and not cold blue-black. Against warm grey the violet bolt is the
+only cool, saturated colour on screen, so it reads as the accent rather than blending into a
+blue background. Surfaces get lighter as they rise (sidebar → canvas → card → popover).
 
-| Token                           | Value                                               | Contrast                          |
-| ------------------------------- | --------------------------------------------------- | --------------------------------- |
-| `--sidebar`                     | `oklch(0.155 0.024 279)`                            |                                   |
-| `--background`                  | `oklch(0.175 0.025 279)`                            |                                   |
-| `--card`                        | `oklch(0.205 0.027 279)`                            |                                   |
-| `--popover`                     | `oklch(0.225 0.028 279)`                            |                                   |
-| `--muted`, `--accent`           | `oklch(0.25 0.028 280)`                             |                                   |
-| `--border` / `--input`          | `oklch(0.285 0.028 280)` / `oklch(0.34 0.03 280)`   |                                   |
-| `--foreground`                  | `oklch(0.95 0.008 286)`                             | 15.5 on card                      |
-| `--muted-foreground`            | `oklch(0.72 0.025 284)`                             | 7.2 on card, 6.5 on muted         |
-| `--primary` / `--primary-hover` | `oklch(0.555 0.215 300)` / `oklch(0.5 0.2 300)`     | white text 5.1 / 6.5; 3.4 on card |
-| `--brand` / `--brand-soft`      | `oklch(0.78 0.13 300)` / `oklch(0.27 0.07 298)`     | 8.6 on card, 7.4 on soft          |
-| `--success` / `-soft` / `-dot`  | `0.78 0.13 158` / `0.27 0.05 160` / `0.72 0.15 155` | 7.8 on soft                       |
-| `--warning` / `-soft` / `-dot`  | `0.82 0.13 80` / `0.28 0.05 70` / `0.8 0.15 78`     | 8.3 on soft                       |
-| `--danger` / `-soft` / `-dot`   | `0.74 0.15 22` / `0.28 0.07 22` / `0.68 0.19 24`    | 6.1 on soft                       |
-| `--info` / `-soft` / `-dot`     | `0.77 0.11 245` / `0.27 0.05 250` / `0.7 0.12 250`  | 7.3 on soft                       |
+| Token                           | Value                                               | Contrast                     |
+| ------------------------------- | --------------------------------------------------- | ---------------------------- |
+| `--sidebar`                     | `oklch(0.165 0.005 70)`                             |                              |
+| `--background`                  | `oklch(0.185 0.005 70)`                             |                              |
+| `--card`                        | `oklch(0.215 0.005 70)`                             |                              |
+| `--popover`                     | `oklch(0.235 0.005 70)`                             |                              |
+| `--muted`, `--accent`           | `oklch(0.26 0.005 70)`                              |                              |
+| `--border` / `--input`          | `oklch(0.3 0.005 70)` / `oklch(0.36 0.005 70)`      |                              |
+| `--foreground`                  | `oklch(0.95 0.004 70)`                              | 15.1 on card, 16.1 on canvas |
+| `--muted-foreground`            | `oklch(0.72 0.008 70)`                              | 7.1 on card, 6.3 on muted    |
+| `--primary` / `--primary-hover` | `oklch(0.56 0.215 300)` / `oklch(0.5 0.2 300)`      | white text 5.0; 3.4 on card  |
+| `--brand` / `--brand-soft`      | `oklch(0.79 0.12 300)` / `oklch(0.29 0.07 300)`     | 8.7 on card, 7.2 on soft     |
+| `--success` / `-soft` / `-dot`  | `0.78 0.13 158` / `0.28 0.05 160` / `0.72 0.15 155` | 7.5 on soft                  |
+| `--warning` / `-soft` / `-dot`  | `0.82 0.13 80` / `0.29 0.05 75` / `0.8 0.15 78`     | 8.0 on soft                  |
+| `--danger` / `-soft` / `-dot`   | `0.75 0.15 22` / `0.29 0.07 22` / `0.68 0.19 24`    | 6.1 on soft                  |
+| `--info` / `-soft` / `-dot`     | `0.78 0.1 245` / `0.28 0.045 250` / `0.7 0.12 250`  | 7.4 on soft                  |
 
-Dark mode follows the operating system by default; the user menu has a Light / Dark / System
-switch (next-themes, `class` strategy).
+The app opens in light mode. The moon/sun button in the top bar
+(`src/components/common/theme-toggle.tsx`) switches to dark and back; the choice is remembered
+per browser (next-themes, `class` strategy, system preference ignored).
 
 **Input borders** are 1.8:1, below the 3:1 non-text guideline, like most product UIs (GitHub,
 Linear). Inputs are always labelled and the focus state (violet border plus ring) is 6.8:1.
