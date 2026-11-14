@@ -12,11 +12,12 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { Skeleton } from "@/components/ui/skeleton"
 import { HealthDot } from "@/features/clients/components/health-badge"
 import type { ClientSearchResult } from "@/features/clients/types"
 import { clientHref, findClientSection } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
-import { useShell } from "./shell-context"
+import { useActiveClient, useShell } from "./shell-context"
 
 type SearchState = { query: string; results: ClientSearchResult[]; error: boolean }
 
@@ -81,8 +82,9 @@ export function ClientSearch() {
   const router = useRouter()
   const pathname = usePathname()
   const { isMobile, setOpenMobile } = useSidebar()
-  const { currentClient, setCurrentClient, searchFocusRequested, setSearchFocusRequested } =
-    useShell()
+  const { setCurrentClient, searchFocusRequested, setSearchFocusRequested } = useShell()
+  const activeClient = useActiveClient()
+  const activeName = activeClient?.client?.name
   const openSearch = useOpenClientSearch()
   const shortcut = useShortcutLabel()
 
@@ -175,12 +177,12 @@ export function ClientSearch() {
             <span>Search clients</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
-        {currentClient && (
+        {activeClient && (
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip={currentClient.name}>
-              <Link href={clientHref(currentClient.slug)}>
-                <ClientInitials name={currentClient.name} />
-                <span>{currentClient.name}</span>
+            <SidebarMenuButton asChild tooltip={activeName ?? "Client overview"}>
+              <Link href={clientHref(activeClient.slug)}>
+                <ClientInitials name={activeName} />
+                <span>{activeName ?? "Client overview"}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -278,7 +280,7 @@ export function ClientSearch() {
                   <p className="px-2 py-2 text-xs text-muted-foreground">Searching…</p>
                 )}
                 {results.map((client) => {
-                  const current = client.id === currentClient?.id
+                  const current = client.slug === activeClient?.slug
                   return (
                     <CommandPrimitive.Item
                       key={client.id}
@@ -310,35 +312,45 @@ export function ClientSearch() {
       </CommandPrimitive>
 
       {/* The client you're working on. */}
-      {currentClient && !open && (
+      {activeClient && !open && (
         <Link
-          href={clientHref(currentClient.slug)}
-          aria-label={`${currentClient.name}: open the overview`}
+          href={clientHref(activeClient.slug)}
+          aria-label={activeName ? `${activeName}: open the overview` : "Open the client overview"}
           className="flex items-center gap-2.5 rounded-md border border-sidebar-border bg-sidebar-accent/60 px-2.5 py-2 outline-none group-data-[collapsible=icon]:hidden hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <ClientInitials name={currentClient.name} />
-          <span className="flex min-w-0 flex-1 flex-col leading-tight">
-            <span className="truncate text-[13px] font-medium">{currentClient.name}</span>
-            {currentClient.location && (
-              <span className="truncate text-xs text-muted-foreground">
-                {currentClient.location}
+          <ClientInitials name={activeName} />
+          {activeClient.client ? (
+            <>
+              <span className="flex min-w-0 flex-1 flex-col leading-tight">
+                <span className="truncate text-[13px] font-medium">{activeClient.client.name}</span>
+                {activeClient.client.location && (
+                  <span className="truncate text-xs text-muted-foreground">
+                    {activeClient.client.location}
+                  </span>
+                )}
               </span>
-            )}
-          </span>
-          <HealthDot health={currentClient.health} />
+              <HealthDot health={activeClient.client.health} />
+            </>
+          ) : (
+            // The client's details are still loading (opened by URL).
+            <span className="flex min-w-0 flex-1 flex-col gap-1.5" aria-hidden>
+              <Skeleton className="h-3 w-3/4" />
+              <Skeleton className="h-2.5 w-1/2" />
+            </span>
+          )}
         </Link>
       )}
     </div>
   )
 }
 
-function ClientInitials({ name }: { name: string }) {
+function ClientInitials({ name }: { name?: string }) {
   return (
     <span
       aria-hidden
       className="grid size-6 shrink-0 place-items-center rounded-md bg-muted text-[10px] font-semibold text-foreground"
     >
-      {name.slice(0, 2).toUpperCase()}
+      {name?.slice(0, 2).toUpperCase()}
     </span>
   )
 }

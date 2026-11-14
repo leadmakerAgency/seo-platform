@@ -16,25 +16,26 @@ import {
 import { ThemeToggle } from "@/components/common/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { AGENCY_NAV, clientHref, findClientSection } from "@/lib/navigation"
 import { ClientSearchShortcut, useOpenClientSearch } from "./client-search"
 import { NotificationsBell } from "./notifications-bell"
-import { useShell } from "./shell-context"
+import { useActiveClient } from "./shell-context"
 
-type Crumb = { label: string; href?: string }
+/** `label: null` is a name that is still loading (shown as a placeholder). */
+type Crumb = { label: string | null; href?: string }
 
 function useCrumbs(): Crumb[] {
   const pathname = usePathname()
-  const { currentClient } = useShell()
+  const activeClient = useActiveClient()
   const [, first, slug, segment = ""] = pathname.split("/")
 
   if (first === "clients" && slug) {
     const section = findClientSection(segment)
-    const name = currentClient?.slug === slug ? currentClient.name : "Client"
     return [
       { label: "Clients", href: "/dashboard" },
-      { label: name, href: segment ? clientHref(slug) : undefined },
+      { label: activeClient?.client?.name ?? null, href: segment ? clientHref(slug) : undefined },
       ...(segment && section ? [{ label: section.title }] : []),
     ]
   }
@@ -78,10 +79,12 @@ function Crumbs() {
     <Breadcrumb className="min-w-0">
       <BreadcrumbList className="flex-nowrap">
         {crumbs.map((crumb, i) => (
-          <Fragment key={`${crumb.label}-${i}`}>
+          <Fragment key={i}>
             {i > 0 && <BreadcrumbSeparator />}
             <BreadcrumbItem className="min-w-0">
-              {crumb.href ? (
+              {crumb.label === null ? (
+                <Skeleton className="h-4 w-24" aria-label="Loading client" />
+              ) : crumb.href ? (
                 <BreadcrumbLink asChild>
                   <Link href={crumb.href} className="truncate">
                     {crumb.label}

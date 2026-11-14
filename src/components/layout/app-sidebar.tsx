@@ -22,7 +22,7 @@ import { AGENCY_NAV, CLIENT_SECTIONS, canAccess, clientHref, type NavItem } from
 import type { AppRole } from "@/lib/roles"
 import { ClientSearch, useOpenClientSearch } from "./client-search"
 import { NavUser, type NavUserProps } from "./nav-user"
-import { useShell } from "./shell-context"
+import { useActiveClient } from "./shell-context"
 
 export function AppSidebar({
   member,
@@ -33,7 +33,7 @@ export function AppSidebar({
   taskAttention?: number
 }) {
   const pathname = usePathname()
-  const { currentClient } = useShell()
+  const activeClient = useActiveClient()
   const openSearch = useOpenClientSearch()
 
   const agencyItems = AGENCY_NAV.filter((item) => canAccess(item, member.role))
@@ -74,10 +74,10 @@ export function AppSidebar({
           <SidebarGroupContent className="flex flex-col gap-1.5">
             <ClientSearch />
 
-            {currentClient ? (
+            {activeClient ? (
               <SidebarMenu>
                 {clientItems.map((item) => {
-                  const href = clientHref(currentClient.slug, item.segment)
+                  const href = clientHref(activeClient.slug, item.segment)
                   return (
                     <NavLink key={item.id} item={item} href={href} active={pathname === href} />
                   )
