@@ -45,7 +45,9 @@ export function MonthWork(props: Props) {
   const visible = rows.filter((r) => r.target > 0 || r.done !== 0)
   const prorated = rows.some((r) => r.prorated)
   const paused = stage === "paused" || stage === "churned"
-  const canLogHere = props.canLog && month >= props.earliestLogMonth
+  const startMonth = `${startedOn.slice(0, 7)}-01`
+  // Logging is for this month or last month, and never before the client started.
+  const canLogHere = props.canLog && month >= props.earliestLogMonth && month >= startMonth
 
   const description = isCurrent
     ? `What we promised this client this month and how far along it is. ${
@@ -99,7 +101,7 @@ export function MonthWork(props: Props) {
         <div className="rounded-lg border bg-card px-4 py-6 text-sm">
           <p className="font-medium">No work planned for {formatMonth(month, true)}</p>
           <p className="text-muted-foreground">
-            {month < startedOn.slice(0, 7) + "-01"
+            {month < startMonth
               ? `The client started on ${formatDate(startedOn)}.`
               : "Set the monthly targets in Edit details to track the work here."}
           </p>
@@ -168,7 +170,7 @@ function WorkRow({
         aria-controls={panelId}
         className="grid w-full grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-4 py-3 text-left transition-colors outline-none hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset md:grid-cols-[180px_1fr_auto_auto]"
       >
-        <span className="flex items-center gap-1.5 text-sm font-medium">
+        <span className="col-start-1 row-start-1 flex items-center gap-1.5 text-sm font-medium">
           <ChevronDown
             aria-hidden
             className={cn(
@@ -180,7 +182,7 @@ function WorkRow({
         </span>
 
         <span
-          className="relative col-span-2 h-2 rounded-full bg-muted md:col-span-1"
+          className="relative col-start-1 row-start-2 h-2 self-center rounded-full bg-muted md:col-start-2 md:row-start-1"
           role="progressbar"
           aria-label={`${meta.label}: ${row.done} of ${row.target}`}
           aria-valuemin={0}
@@ -201,10 +203,10 @@ function WorkRow({
           )}
         </span>
 
-        <span className="row-start-1 text-right text-sm tabular-nums md:row-start-auto">
+        <span className="col-start-2 row-start-2 text-right text-sm tabular-nums md:col-start-3 md:row-start-1">
           {row.done} <span className="text-muted-foreground">/ {row.target}</span>
         </span>
-        <span className="col-start-2 row-start-1 hidden md:col-start-auto md:row-start-auto md:block">
+        <span className="col-start-2 row-start-1 justify-self-end md:col-start-4 md:row-start-1">
           <StatusTag tone={status.tone}>
             {row.status === "short" ? `Short by ${short}` : status.label}
           </StatusTag>
@@ -213,10 +215,12 @@ function WorkRow({
 
       {open && (
         <div id={panelId} className="border-t bg-muted/30 px-4 py-3 md:pl-[38px]">
-          <p className="mb-2 text-[13px] text-muted-foreground md:hidden">
-            {row.status === "short" ? `Short by ${short}` : status.label}
-            {expectedPct !== null && ` · about ${Math.round(row.expected)} expected by today`}
-          </p>
+          {expectedPct !== null && (
+            <p className="mb-2 text-[13px] text-muted-foreground">
+              About {Math.round(row.expected)} expected by today; the tick on the bar marks where
+              that is.
+            </p>
+          )}
           {row.items.length === 0 ? (
             <p className="text-[13px] text-muted-foreground">
               Nothing delivered yet. Ticking this client off a task that counts toward{" "}

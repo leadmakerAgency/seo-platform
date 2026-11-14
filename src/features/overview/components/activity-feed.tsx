@@ -86,7 +86,9 @@ export function ActivityFeed({
                   <li key={e.id} className="flex items-start gap-2.5 text-sm">
                     <StatusDot tone="brand" className="mt-[7px]" />
                     <p className="min-w-0 flex-1">
-                      <span className="font-medium">{actorLabel(e)}</span>{" "}
+                      <span className="font-medium">
+                        {actorLabel(e, e.action.startsWith("onboarding.") ? "The client" : "System")}
+                      </span>{" "}
                       <span className="text-muted-foreground">{describeActivity(e)}</span>
                     </p>
                     <time
