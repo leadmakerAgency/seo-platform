@@ -77,6 +77,8 @@ export type ClientRow = {
   progress: Partial<
     Record<"backlinks" | "articles", { done: number; target: number; behind: boolean }>
   >
+  /** Google top 10 in the latest full weekly check (Rankings), or null before the first. */
+  googleTop10: { top10: number; keywords: number } | null
   createdAt: string
 }
 
@@ -128,10 +130,34 @@ export async function getClientsPage(
     }
   }
 
+  // Latest full Google check per client on this page (its summary has the top-10 count).
+  const top10 = new Map<string, ClientRow["googleTop10"]>()
+  if (data?.length) {
+    const { data: checks } = await supabase
+      .from("rank_checks")
+      .select("client_id, summary, checked_at")
+      .in(
+        "client_id",
+        data.map((c) => c.id),
+      )
+      .eq("engine", "google")
+      .eq("scope", "full")
+      .eq("status", "done")
+      .gte("checked_at", new Date(Date.now() - 45 * 86_400_000).toISOString())
+      .order("checked_at", { ascending: false })
+      .limit(1000)
+    for (const c of checks ?? []) {
+      if (top10.has(c.client_id)) continue
+      const s = (c.summary ?? {}) as { top10?: number; keywords?: number }
+      if (typeof s.keywords === "number") top10.set(c.client_id, { top10: s.top10 ?? 0, keywords: s.keywords })
+    }
+  }
+
   return {
     total: count ?? 0,
     rows: (data ?? []).map((c) => ({
       progress: progress.get(c.id) ?? {},
+      googleTop10: top10.get(c.id) ?? null,
       id: c.id,
       slug: c.slug,
       name: c.name,

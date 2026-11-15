@@ -1,4 +1,5 @@
 import Link from "next/link"
+import type { ReactNode } from "react"
 
 import { formatNumber } from "@/lib/format"
 import { cn } from "@/lib/utils"
@@ -14,6 +15,8 @@ export type StatItem = {
   tone?: Tone
   /** A status dot before the label. */
   dot?: Tone
+  /** One short line under the number (e.g. the change since last week). */
+  note?: ReactNode
 }
 
 /**
@@ -58,6 +61,7 @@ export function StatStrip({ items, label }: { items: StatItem[]; label: string }
           >
             {formatNumber(item.count)}
           </span>
+          {item.note && <span className="-mt-1 text-xs text-muted-foreground">{item.note}</span>}
         </Link>
       ))}
     </nav>

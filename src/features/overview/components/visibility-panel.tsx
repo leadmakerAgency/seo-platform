@@ -97,7 +97,10 @@ function Change({ stats }: { stats: PlaceStats }) {
   if (stats.checks < 2 || stats.baseline === null) {
     return <p className="text-[13px] text-muted-foreground">First check, so nothing to compare yet</p>
   }
-  const diff = stats.current - stats.baseline
+  // Like for like: the baseline counts only keywords that were in both checks. When the
+  // keyword list changed since then, say how many were compared.
+  const sameSet = stats.compared !== null && stats.compared !== stats.outOf && stats.compared > 0
+  const diff = (sameSet && stats.currentCompared !== null ? stats.currentCompared : stats.current) - stats.baseline
   const Icon = diff > 0 ? TrendingUp : diff < 0 ? TrendingDown : Minus
   return (
     <p
@@ -107,11 +110,15 @@ function Change({ stats }: { stats: PlaceStats }) {
       )}
     >
       <Icon className="size-3.5" aria-hidden />
-      {diff > 0
-        ? `Up from ${stats.baseline} at the start`
-        : diff < 0
-          ? `Down from ${stats.baseline} at the start`
-          : `Same as at the start (${stats.baseline})`}
+      {sameSet
+        ? diff === 0
+          ? `Same as at the start (${stats.baseline}), on the same ${stats.compared} keywords`
+          : `${diff > 0 ? "Up" : "Down"} from ${stats.baseline} to ${stats.baseline + diff} since the start, on the same ${stats.compared} keywords`
+        : diff > 0
+          ? `Up from ${stats.baseline} at the start`
+          : diff < 0
+            ? `Down from ${stats.baseline} at the start`
+            : `Same as at the start (${stats.baseline})`}
     </p>
   )
 }

@@ -40,7 +40,10 @@ Browser ──> src/proxy.ts ──> app routes (thin) ──> features/<module>
 | `/api/cron/zernio-sync`             | Hourly Zernio health sync, called by pg_cron with a Vault token (no session)                          | Built       |
 | `/c/[token]`                        | The client portal: public, no sign-in, the token is the key (noindex, no-referrer)                    | Built       |
 | `/clients/[clientSlug]`             | Overview: details, needs attention, where they show up, month work (`?month=2026-10`), tasks, history | Built       |
-| `/clients/[clientSlug]/[section]`   | Rankings, AI visibility, backlinks, content, reviews, report                                          | Coming soon |
+| `/clients/[clientSlug]/rankings`    | Rankings: tracked keywords (`?tab=keywords&show=top10`), Find better keywords (`?tab=research`), Settings | Built       |
+| `/api/webhooks/dataforseo`          | DataForSEO postbacks for SERP tasks (Vault token in the URL, no session)                              | Built       |
+| `/api/cron/rankings`                | Every 10 minutes from pg_cron (Vault token): start due checks, recover tasks, research, daily balance | Built       |
+| `/clients/[clientSlug]/[section]`   | AI visibility, backlinks, content, reviews, report                                                    | Coming soon |
 | `/api/clients/search?q=`            | Client search in the sidebar (Ctrl/Cmd+K focuses it)                                                  | Built       |
 | `/api/notifications`                | Latest notifications for the header bell                                                              | Built       |
 
@@ -202,10 +205,42 @@ Plan: `docs/plans/overview.md`. Migrations `0018`–`0022`.
 - **History.** `client_activity(client, before, limit)` pages `activity_log` for one client.
   Wording for every action is in `src/features/team/activity.ts`.
 
+## Rankings (DataForSEO)
+
+Plan: `docs/plans/rankings/` (00-overview to 04-page-and-polish). Migrations `0024`–`0030`.
+
+- **Settings per client** (`rank_settings`): created on the first visit to the page
+  (`ensureRankSettings`, service role) from the client's city, services and categories. The
+  search location is a DataForSEO location code from the cached `dfs_locations` list (downloaded
+  once a month per country, free). Checks are blocked until a location is set. Device mobile,
+  engines Google (top 100), Google Maps (top 20) and Bing (top 100), one weekday per client
+  (spread by client id), 09:00 UTC.
+- **Tracked keywords** (`keywords`): added only through `add_keywords`, `replace_keyword`,
+  `track_candidate`, `archive_keyword` (security definer, admins and managers). Phrases are
+  normalized by trigger; at most `clients.keywords_target` active ones. Archiving keeps history.
+  New keywords queue a `partial` run so they get a first position within minutes.
+- **Checks.** `rank_runs` (one per weekly/manual/new-keywords run) → `rank_checks` (one per
+  engine) → `serp_tasks` (one per DataForSEO task id, the ledger) → `keyword_ranks`. Tasks are
+  posted to the standard queue with a postback URL; `/api/webhooks/dataforseo` stores the result
+  with `dfs_store_rank` (idempotent). The cron route recovers anything missed (`tasks_ready`,
+  `task_get` after 2 hours, expired after 24) and `dfs_finalize_runs` writes the summary, the run
+  status, the `rank.check_finished` history line and the `rankings:failed:` / `rankings:drop:`
+  alerts. Only `full` checks count on the Overview, and "since the start" compares the same
+  keywords on both sides (`private.rank_place`: `compared`, `current_compared`).
+- **Research** (`keyword_research_runs` → `keyword_candidates`): Labs ranked keywords, ideas,
+  suggestions, related and competitor keywords (country level), a relevance gate (topic and
+  negative terms), then Google Ads search volume for the client's city (cached 35 days in the
+  shared `keyword_metrics`), scored in `src/features/rankings/scoring.ts`. Runs in steps with a
+  heartbeat; the cron resumes stale ones. Weak keywords and suggested swaps are computed on the
+  page from the same scores; the team decides every swap.
+- **Money.** Every DataForSEO call goes through `src/lib/dataforseo/client.ts` and writes a
+  `dfs_calls` row with the real cost. `dfs_settings` holds the monthly budget, research runs per
+  client per month and the low-balance warning; over budget, new checks and research are refused
+  in the database. Check now is limited to once a day per client.
+
 ## Next widgets for the Dashboard (when their modules exist)
 
-- Columns in the client list: Google top 10 (x/20), change in 30 days, backlinks this month,
-  articles this month.
+- Columns in the client list: change in 30 days (Google top 10 is built).
 - "This month" totals: backlinks built, articles published, articles waiting for approval, new
   reviews.
 - "Publishing this week" across clients.

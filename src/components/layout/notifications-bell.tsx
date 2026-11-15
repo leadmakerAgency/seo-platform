@@ -29,6 +29,12 @@ function describe(n: NotificationItem) {
     const label = PLATFORM_META[s.platform as SocialPlatform]?.label ?? "account"
     return `${s.client?.name ?? "A client"}'s ${label} needs reconnecting`
   }
+  if (n.kind === "research_finished") {
+    return `Keyword research for ${n.client?.name ?? "a client"} is ready. See the better keywords`
+  }
+  if (n.kind === "dfs_low_balance") {
+    return "The DataForSEO balance is low. Top it up so ranking checks keep running"
+  }
   if (n.kind === "request_answered") {
     const r = n.request
     if (!r) return "A client answered a request"
@@ -47,6 +53,8 @@ function hrefFor(n: NotificationItem) {
   if ((n.kind === "onboarding_opened" || n.kind === "onboarding_submitted") && n.client) {
     return clientHref(n.client.slug, "onboarding")
   }
+  if (n.kind === "research_finished" && n.client) return `${clientHref(n.client.slug, "rankings")}?tab=research`
+  if (n.kind === "dfs_low_balance") return "/dashboard"
   if (n.socialAccount?.client) return clientHref(n.socialAccount.client.slug, "connections")
   if (n.request?.client) {
     return `${clientHref(n.request.client.slug, "requests")}?request=${n.request.number}`

@@ -130,6 +130,24 @@ const columns = column.columns([
     },
   }),
   column.display({
+    id: "rankings",
+    header: "Google top 10",
+    cell: ({ row }) => {
+      const r = row.original.googleTop10
+      return r ? (
+        <Link
+          href={clientHref(row.original.slug, "rankings")}
+          className="whitespace-nowrap tabular-nums underline-offset-4 hover:underline"
+        >
+          {r.top10}
+          <span className="text-muted-foreground">/{r.keywords}</span>
+        </Link>
+      ) : (
+        <span className="whitespace-nowrap text-muted-foreground">Not checked</span>
+      )
+    },
+  }),
+  column.display({
     id: "added",
     header: "Added",
     cell: ({ row }) => (

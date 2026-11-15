@@ -114,9 +114,9 @@ export const CLIENT_SECTIONS: ClientSection[] = [
     title: "Rankings",
     icon: ChartNoAxesColumn,
     roles: ALL,
-    comingSoon: true,
+    comingSoon: false,
     summary:
-      "Positions for the 20 target keywords on Google, Bing, the map pack and AI answers, checked weekly.",
+      "Where the tracked keywords rank on Google, Google Maps and Bing each week, and better keywords to track.",
   },
   {
     id: "ai-visibility",

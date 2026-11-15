@@ -183,9 +183,9 @@
   --info-dot: oklch(0.7 0.12 250);
   --neutral-dot: oklch(0.56 0.008 70);
 
-  --chart-1: oklch(0.68 0.18 300);
-  --chart-2: oklch(0.72 0.11 195);
-  --chart-3: oklch(0.8 0.14 78);
+  --chart-1: oklch(0.64 0.19 300);
+  --chart-2: oklch(0.65 0.11 195);
+  --chart-3: oklch(0.655 0.14 75);
   --chart-4: oklch(0.7 0.06 260);
   --chart-5: oklch(0.72 0.15 20);
 

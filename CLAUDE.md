@@ -77,4 +77,11 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   insert their own `source` rows (contract in `docs/architecture.md`). `clients.health` is derived
   from open alerts by triggers; raise or resolve an alert instead of setting it. Month maths uses
   `agencyMonth()`/`daysLeftInMonth()` (`src/lib/dates.ts`). Plan: `docs/plans/overview.md`.
+- **Rankings (DataForSEO):** call DataForSEO only through `src/lib/dataforseo/client.ts` (it
+  logs every call's cost to `dfs_calls` and handles retries and rate limits). Tracked keywords
+  change only through the `add_keywords` / `replace_keyword` / `archive_keyword` /
+  `track_candidate` functions; ranks are written only by the job functions (`dfs_store_rank`,
+  `dfs_finalize_runs`, service role). Never show a not-found position as 0, never mix partial
+  checks into trends, and never spend without the budget check in the database. Plan:
+  `docs/plans/rankings/`.
 - The `cn` helper comes from the `cn` package (shadcn's), re-exported by `src/lib/utils.ts`.

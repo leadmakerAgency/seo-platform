@@ -176,6 +176,10 @@ export type PlaceStats = {
   outOf: number
   previous: number | null
   baseline: number | null
+  /** Keywords in both the first and the latest check (the baseline counts only these). */
+  compared: number | null
+  /** The latest count over only those same keywords. */
+  currentCompared: number | null
   baselineCheckedAt: string | null
   lastCheckedAt: string
   checks: number
@@ -194,6 +198,8 @@ type RawPlace = {
   out_of: number
   previous: number | null
   baseline: number | null
+  compared?: number | null
+  current_compared?: number | null
   baseline_checked_at: string | null
   last_checked_at: string
   checks: number
@@ -206,6 +212,8 @@ const place = (raw: RawPlace | undefined): PlaceStats | null =>
         outOf: raw.out_of ?? 0,
         previous: raw.previous,
         baseline: raw.baseline,
+        compared: raw.compared ?? null,
+        currentCompared: raw.current_compared ?? null,
         baselineCheckedAt: raw.baseline_checked_at,
         lastCheckedAt: raw.last_checked_at,
         checks: raw.checks,

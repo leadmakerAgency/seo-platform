@@ -39,6 +39,7 @@ const PERMISSIONS = {
   "tasks.manage": ["admin", "manager"],
   "tasks.work": ["admin", "manager", "va", "writer"],
   "work.log": ["admin", "manager", "va", "writer"],
+  "rankings.manage": ["admin", "manager"],
   "requests.create": ["admin", "manager", "va", "writer"],
   "requests.manage": ["admin", "manager"],
   "connections.manage": ["admin", "manager"],
@@ -60,6 +61,7 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "tasks.work": "Work on their tasks and tick clients off",
   "work.log":
     "Log work done outside the app on a client's Overview (VAs and writers: clients in their tasks)",
+  "rankings.manage": "Choose tracked keywords, run keyword research and change ranking settings",
   "requests.create": "Ask clients for codes, files and approvals (VAs: clients in their tasks)",
   "requests.manage": "Turn on or replace a client's private link",
   "connections.manage": "Connect and disconnect a client's Google and social accounts",

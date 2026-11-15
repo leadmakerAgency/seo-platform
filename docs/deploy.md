@@ -36,6 +36,14 @@ After deploying, an admin opens any client's **Connections** page on the live si
 **Zernio setup** card, clicks **Register webhook**, **Send test** and **Turn on hourly checks**.
 Nothing else is set up by hand (the hourly job lives in Supabase pg_cron; its token is in Vault).
 
+**DataForSEO (Rankings page): `DATAFORSEO_LOGIN` and `DATAFORSEO_PASSWORD`.** The API login
+and API password from the DataForSEO dashboard (API access), not the website password. Type
+**Encrypted**, scope **Run Time**, and in `.env.local` locally. Optional:
+`DATAFORSEO_API_BASE=https://sandbox.dataforseo.com` for free test calls with dummy data (local
+only). The 10-minute job (`rankings-tick` in pg_cron) and the postbacks use tokens in Supabase
+Vault and the `app_base_url` secret set up for Zernio, and need `SUPABASE_SECRET_KEY`. Nothing
+else is set up by hand. The budget lives on any client's Rankings → Settings (admins).
+
 **Client onboarding link (optional settings).** Links work straight away on the app domain
 (`https://<app>/onboard/<client>-<code>`). For the subdomain later: add `connect.leadmaker.agency`
 under the app's Settings → Domains in DigitalOcean (CNAME at your DNS provider), then set

@@ -24,6 +24,31 @@ export function getZernioWebhookSecret(): string | null {
   return process.env.ZERNIO_WEBHOOK_SECRET || null
 }
 
+/** DataForSEO: API login (account email) and API password from app.dataforseo.com/api-access. */
+export function hasDataForSeo() {
+  return Boolean(process.env.DATAFORSEO_LOGIN && process.env.DATAFORSEO_PASSWORD)
+}
+
+export function getDataForSeoAuth(): string {
+  const login = process.env.DATAFORSEO_LOGIN
+  const password = process.env.DATAFORSEO_PASSWORD
+  if (!login || !password) {
+    throw new Error(
+      "Missing DATAFORSEO_LOGIN or DATAFORSEO_PASSWORD. Add them to .env.local (and to the host as encrypted Run Time variables).",
+    )
+  }
+  return `Basic ${Buffer.from(`${login}:${password}`).toString("base64")}`
+}
+
+/** https://api.dataforseo.com, or https://sandbox.dataforseo.com for free sample data. */
+export function getDataForSeoBase(): string {
+  return (process.env.DATAFORSEO_API_BASE || "https://api.dataforseo.com").replace(/\/+$/, "")
+}
+
+export function isDataForSeoSandbox(): boolean {
+  return getDataForSeoBase().includes("sandbox")
+}
+
 export function getZernioApiBase(): string {
   return (process.env.ZERNIO_API_BASE || "https://zernio.com/api/v1").replace(/\/+$/, "")
 }

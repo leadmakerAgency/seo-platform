@@ -160,11 +160,34 @@ export function describeActivity(entry: ActivityLike): string {
     }
     case "work.removed":
       return `removed the logged work “${str(m.title)}”`
-    // Reserved for the Rankings, AI visibility, Backlinks, Content, Reviews and Report pages.
-    case "rank.check_finished":
-      return num(m.moved_into_top10)
-        ? `finished a ranking check: ${num(m.moved_into_top10)} keywords moved into the top 10`
-        : "finished a ranking check"
+    case "keyword.added": {
+      const n = Number(m.count) || 0
+      const phrases = Array.isArray(m.phrases) ? (m.phrases as unknown[]).map(String) : []
+      return n === 1 && phrases[0]
+        ? `started tracking the keyword “${phrases[0]}”`
+        : `started tracking ${n} keywords${phrases.length ? `: ${phrases.slice(0, 3).map((p) => `“${p}”`).join(", ")}${n > 3 ? "…" : ""}` : ""}`
+    }
+    case "keyword.removed":
+      return `stopped tracking the keyword “${str(m.phrase)}”${str(m.reason) ? ` (${str(m.reason)})` : ""}`
+    case "keyword.replaced":
+      return `replaced the keyword “${str(m.from)}” with “${str(m.to)}”`
+    case "keyword.research_finished":
+      return `ran keyword research: ${num(m.saved) || 0} keywords scored${Number(m.new) ? `, ${num(m.new)} new` : ""}`
+    case "rank.check_requested":
+      return "started a ranking check"
+    case "rankings.settings_changed":
+      return "changed the ranking settings"
+    case "rank.check_finished": {
+      const into = Number(m.moved_into_top10) || 0
+      const out = Number(m.moved_out_of_top10) || 0
+      const what = m.scope === "partial" ? "checked the new keywords" : "finished the weekly ranking check"
+      const parts = [
+        into ? `${into} keyword${into === 1 ? "" : "s"} moved into the Google top 10` : "",
+        out ? `${out} dropped out` : "",
+      ].filter(Boolean)
+      return parts.length ? `${what}: ${parts.join(", ")}` : what
+    }
+    // Reserved for the AI visibility, Backlinks, Content, Reviews and Report pages.
     case "ai.check_finished":
       return `finished an AI answers check${num(m.mentions) ? `: named in ${num(m.mentions)} answers` : ""}`
     case "backlink.live":
