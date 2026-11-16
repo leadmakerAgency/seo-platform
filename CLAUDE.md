@@ -89,4 +89,9 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   strength only by `dfs_store_strength`. Footprints never contain search operators (5x price).
   Never spend without `request_backlink_discovery` / `request_strength_check` (budgets and limits
   live there). Never fetch the URLs searches return on the server. Plan: `docs/plans/backlinks/`.
+- **Clients and countries:** create clients only through `createClient` → `public.create_client`
+  (one transaction with the profile and onboarding link); `/clients/new` is a route, so
+  `slugify` never returns `new`. Countries come only from `src/lib/countries.ts` (every ISO
+  code, `CountryPicker` in forms) and states/provinces from `src/lib/regions.ts` (US, CA and AU
+  stored as short codes like `AZ`). Plan: `docs/plans/add-client-page.md`.
 - The `cn` helper comes from the `cn` package (shadcn's), re-exported by `src/lib/utils.ts`.

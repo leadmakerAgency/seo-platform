@@ -5,6 +5,7 @@ import { normalizeHost } from "@/lib/dataforseo/domains"
 import { googleMapsLive, googleOrganicLive, type OrganicRow } from "@/lib/dataforseo/serp-live"
 import type { Json, Tables } from "@/lib/supabase/database.types"
 import { US_STATES } from "@/features/rankings/constants"
+import { regionCode, regionList, regionName } from "@/lib/regions"
 import { ensureRankSettings, syncAndResolve } from "@/features/rankings/setup"
 import { classify, type ClassifyContext, type LibraryEntry } from "./classify"
 import {
@@ -75,11 +76,12 @@ export function stateOf(
 ): { state: string | null; code: string | null } {
   const r = region?.trim() ?? ""
   if (!r) return { state: null, code: null }
-  if (countryIso.toUpperCase() === "US") {
-    const code = r.toUpperCase()
-    if (US_STATES[code]) return { state: US_STATES[code], code }
-    const hit = Object.entries(US_STATES).find(([, name]) => name.toLowerCase() === r.toLowerCase())
-    if (hit) return { state: hit[1], code: hit[0] }
+  // US, Canada and Australia: "AZ" / "Arizona", "ON" / "Ontario", "NSW" / "New South Wales".
+  const country = countryIso.toUpperCase()
+  if (regionList(country)) {
+    const code = regionCode(country, r)
+    const name = regionName(country, code)
+    if (code && name && name !== code) return { state: name, code }
   }
   return { state: r, code: r.length <= 3 ? r.toUpperCase() : null }
 }

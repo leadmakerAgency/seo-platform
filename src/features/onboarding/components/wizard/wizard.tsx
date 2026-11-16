@@ -182,6 +182,7 @@ export function OnboardingWizard({
               token={data.token}
               clientName={data.client.name}
               business={data.business}
+              fromProfile={data.businessFromProfile}
               readOnly={readOnly}
               onSteps={setSteps}
             />,

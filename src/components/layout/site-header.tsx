@@ -31,6 +31,9 @@ function useCrumbs(): Crumb[] {
   const activeClient = useActiveClient()
   const [, first, slug, segment = ""] = pathname.split("/")
 
+  if (first === "clients" && slug === "new") {
+    return [{ label: "Clients", href: "/dashboard" }, { label: "Add client" }]
+  }
   if (first === "clients" && slug) {
     const section = findClientSection(segment)
     return [

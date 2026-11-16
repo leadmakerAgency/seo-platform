@@ -2,79 +2,116 @@
 
 import { refresh } from "next/cache"
 
+import { newToken } from "@/features/onboarding/token"
 import { PermissionError, requirePermission } from "@/lib/auth"
+import { normalizeHost } from "@/lib/dataforseo/domains"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import {
-  addClientSchema,
+  looksLikeWebsite,
+  newClientSchema,
   normalizeWebsite,
   slugify,
-  type AddClientInput,
-  type AddClientResult,
+  type NewClientField,
+  type NewClientInput,
+  type NewClientResult,
 } from "./schemas"
 
-/** Creates a client. Admins and managers only (checked here and by RLS). */
-export async function addClient(input: AddClientInput): Promise<AddClientResult> {
-  let member
+/**
+ * Creates a client from the Add client page: the client, the team-approved business
+ * profile, the onboarding row, optionally the onboarding link and the history line, all in
+ * one database transaction (public.create_client). Admins and managers only, checked here
+ * and again in the database.
+ */
+export async function createClient(input: NewClientInput): Promise<NewClientResult> {
   try {
-    member = await requirePermission("clients.create")
+    await requirePermission("clients.create")
   } catch (error) {
     if (error instanceof PermissionError) return { ok: false, error: error.message }
     throw error
   }
 
-  const parsed = addClientSchema.safeParse(input)
+  const parsed = newClientSchema.safeParse(input)
   if (!parsed.success) {
-    const fieldErrors: Record<string, string> = {}
+    const fieldErrors: Partial<Record<NewClientField, string>> = {}
     for (const issue of parsed.error.issues) {
-      const key = String(issue.path[0])
+      const key = String(issue.path[0]) as NewClientField
       fieldErrors[key] ??= issue.message
     }
     return { ok: false, error: "Check the highlighted fields.", fieldErrors }
   }
+  const v = parsed.data
+  const website = v.noWebsite ? null : normalizeWebsite(v.website)
 
-  const values = parsed.data
   const supabase = await createSupabaseServerClient()
-  const baseSlug = slugify(values.name)
-
-  // Find a free slug: king-air, king-air-2, king-air-3…
-  const { data: taken } = await supabase.from("clients").select("slug").like("slug", `${baseSlug}%`)
-  const takenSet = new Set((taken ?? []).map((r) => r.slug))
-  let slug = baseSlug
-  for (let n = 2; takenSet.has(slug); n++) slug = `${baseSlug}-${n}`
-
-  const { data: client, error } = await supabase
-    .from("clients")
-    .insert({
-      name: values.name,
-      slug,
-      website: normalizeWebsite(values.website),
-      city: values.city,
-      region: values.region ?? null,
-      country_code: values.country,
-      industry: values.industry ?? null,
-      owner_id: values.ownerId ?? null,
-      keywords_target: values.keywords,
-      backlinks_target: values.backlinks,
-      articles_target: values.articles,
-      created_by: member.id,
-    })
-    .select("id, slug, name")
-    .single()
+  const { data, error } = await supabase.rpc("create_client", {
+    p_slug: slugify(v.name),
+    p_link_token: v.createLink ? newToken() : undefined,
+    p: {
+      name: v.name,
+      website,
+      industry: v.industry,
+      phone: v.phone,
+      public_email: v.publicEmail,
+      country_code: v.country,
+      street: v.street,
+      city: v.city,
+      region: v.region,
+      postal_code: v.postalCode,
+      service_area_business: v.serviceAreaBusiness,
+      service_areas: v.serviceAreas,
+      services: v.services,
+      other_categories: v.otherCategories,
+      year_founded: v.yearFounded,
+      description: v.description,
+      contact_name: v.contactName,
+      contact_role: v.contactRole,
+      contact_email: v.contactEmail,
+      contact_phone: v.contactPhone,
+      preferred_contact: v.preferredContact,
+      package: v.package,
+      started_on: v.startedOn,
+      owner_id: v.ownerId,
+      keywords_target: v.keywords,
+      backlinks_target: v.backlinks,
+      articles_target: v.articles,
+      gbp_posts_target: v.gbpPosts,
+      review_requests_target: v.reviewRequests,
+      ai_fixes_target: v.aiFixes,
+    },
+  })
 
   if (error) {
-    if (error.code === "23505") {
-      return { ok: false, error: "A client with this name was just added. Try again." }
+    if ((error.code === "P0001" || error.code === "42501") && error.message) {
+      return { ok: false, error: error.message }
     }
+    if (error.code === "23514") return { ok: false, error: "One of the fields is too long or not valid. Check them and try again." }
+    console.error("[clients] create_client failed", error)
     return { ok: false, error: "Couldn't save the client. Try again." }
   }
 
-  await supabase.from("activity_log").insert({
-    actor_id: member.id,
-    client_id: client.id,
-    action: "client.created",
-    meta: { name: client.name },
-  })
-
+  const r = data as { id: string; slug: string }
   refresh()
-  return { ok: true, slug: client.slug, name: client.name }
+  return { ok: true, slug: r.slug, name: v.name, withLink: v.createLink, contactName: v.contactName }
+}
+
+/** Is this website already a client? (A warning on the Add client page, not a block.) */
+export async function findClientByWebsite(
+  website: string,
+): Promise<{ name: string; slug: string } | null> {
+  try {
+    await requirePermission("clients.create")
+  } catch {
+    return null
+  }
+  if (!looksLikeWebsite(website)) return null
+  const host = normalizeHost(normalizeWebsite(website))
+  if (!host) return null
+  const supabase = await createSupabaseServerClient()
+  const { data } = await supabase
+    .from("clients")
+    .select("name, slug, website")
+    .ilike("website", `%${host.replace(/[%_]/g, "")}%`)
+    .limit(10)
+  const hit = (data ?? []).find((c) => normalizeHost(c.website) === host)
+  return hit ? { name: hit.name, slug: hit.slug } : null
 }

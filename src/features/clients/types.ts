@@ -8,3 +8,6 @@ export type ClientSearchResult = {
   location: string
   health: ClientHealth
 }
+
+/** A team member offered as the client's account manager. */
+export type OwnerOption = { id: string; name: string }

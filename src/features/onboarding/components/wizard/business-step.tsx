@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { COUNTRIES } from "@/lib/format"
+import { COMMON_COUNTRIES, COUNTRIES } from "@/lib/countries"
+import { postalLabel, regionLabel } from "@/lib/regions"
 import { PREFERRED_CONTACT, type Hours, type StepStatuses } from "../../constants"
 import type { OnboardingBusiness } from "../../public"
 import { saveBusiness } from "../../public-actions"
@@ -71,12 +72,15 @@ export function BusinessStep({
   token,
   clientName,
   business,
+  fromProfile = false,
   readOnly,
   onSteps,
 }: {
   token: string
   clientName: string
   business: OnboardingBusiness | null
+  /** `business` is what the team filled in on the Add client page, not saved by the client yet. */
+  fromProfile?: boolean
   readOnly: boolean
   onSteps: (s: StepStatuses) => void
 }) {
@@ -90,11 +94,23 @@ export function BusinessStep({
   useEffect(() => {
     if (prefilled.current || readOnly) return
     prefilled.current = true
+    // Details the team filled in when adding the client: save them all as the client's
+    // copy straight away, so the step's progress counts them and the client only confirms.
+    if (fromProfile && business) {
+      const all = initial(business, clientName)
+      const patch = {
+        ...all,
+        hours: all.hours ?? null,
+        preferred_contact: all.preferred_contact as BusinessPatchInput["preferred_contact"],
+      } satisfies BusinessPatchInput
+      save.queue(patch)
+      return
+    }
     const patch: BusinessPatchInput = {}
     if (!business?.business_name && clientName) patch.business_name = clientName
     if (!business?.country_code) patch.country_code = "US"
     if (Object.keys(patch).length) save.queue(patch)
-  }, [business, clientName, readOnly, save])
+  }, [business, clientName, fromProfile, readOnly, save])
 
   /** Text fields: save shortly after typing stops, and at once on blur. */
   const text = (key: keyof Values) => ({
@@ -192,10 +208,10 @@ export function BusinessStep({
           <Field id="b-city" label="City" error={err.city}>
             <Input {...text("city")} autoComplete="address-level2" className={inputClass} />
           </Field>
-          <Field id="b-region" label="State or region" error={err.region}>
+          <Field id="b-region" label={regionLabel(v.country_code)} error={err.region}>
             <Input {...text("region")} autoComplete="address-level1" className={inputClass} />
           </Field>
-          <Field id="b-postal_code" label="ZIP / postal code" error={err.postal_code}>
+          <Field id="b-postal_code" label={postalLabel(v.country_code)} error={err.postal_code}>
             <Input {...text("postal_code")} autoComplete="postal-code" className={inputClass} />
           </Field>
         </div>
@@ -207,11 +223,20 @@ export function BusinessStep({
             value={v.country_code}
             onChange={(e) => set("country_code", e.target.value)}
           >
-            {COUNTRIES.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.name}
-              </option>
-            ))}
+            <optgroup label="Most used">
+              {COMMON_COUNTRIES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="All countries">
+              {COUNTRIES.filter((c) => !COMMON_COUNTRIES.some((x) => x.code === c.code)).map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))}
+            </optgroup>
           </select>
         </Field>
         <Field

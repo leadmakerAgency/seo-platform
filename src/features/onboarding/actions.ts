@@ -1,6 +1,5 @@
 "use server"
 
-import { randomInt } from "node:crypto"
 import { refresh } from "next/cache"
 
 import type { ActionResult } from "@/features/tasks/schemas"
@@ -9,6 +8,7 @@ import type { Permission } from "@/lib/roles"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { APPLY_FIELDS } from "./constants"
 import { fieldErrorsOf, loginSchema, type LoginInput } from "./schemas"
+import { newToken } from "./token"
 
 type Guard = { member: CurrentMember } | { error: string }
 
@@ -22,15 +22,6 @@ async function guard(permission: Permission): Promise<Guard> {
 }
 
 const isUuid = (v: unknown): v is string => typeof v === "string" && /^[0-9a-f-]{36}$/i.test(v)
-const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-
-/** 22 base62 characters from the OS random source (~131 bits; unbiased). */
-function newToken() {
-  let out = ""
-  for (let i = 0; i < 22; i++) out += ALPHABET[randomInt(ALPHABET.length)]
-  return out
-}
-
 function dbError(error: { code?: string; message?: string } | null, fallback: string) {
   if (
     (error?.code === "P0001" || error?.code === "42501") &&

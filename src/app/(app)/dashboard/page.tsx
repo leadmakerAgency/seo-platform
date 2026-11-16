@@ -1,5 +1,6 @@
 import { Plus } from "lucide-react"
 import type { Metadata } from "next"
+import Link from "next/link"
 import { Suspense } from "react"
 
 import { AccessGuard } from "@/components/layout/access-guard"
@@ -8,8 +9,6 @@ import { PageHeader, Section } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
 import { StatStripSkeleton } from "@/components/common/stat-strip"
 import { Skeleton } from "@/components/ui/skeleton"
-import { AddClientDialog } from "@/features/clients/components/add-client-dialog"
-import { getTeamMembers } from "@/features/clients/queries"
 import { AttentionList, type AttentionItem } from "@/features/dashboard/components/attention-list"
 import { ClientsView } from "@/features/dashboard/components/clients-view"
 import { HealthTiles } from "@/features/dashboard/components/health-tiles"
@@ -80,11 +79,17 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
 async function HeaderActions() {
   const member = await getCurrentMember()
   const canCreate = can(member.role, "clients.create")
-  const owners = canCreate ? await getTeamMembers() : []
   return (
     <>
       <FindClientButton />
-      {canCreate && <AddClientDialog owners={owners} defaultOwnerId={member.id} />}
+      {canCreate && (
+        <Button asChild>
+          <Link href="/clients/new">
+            <Plus />
+            Add client
+          </Link>
+        </Button>
+      )}
     </>
   )
 }
@@ -140,7 +145,6 @@ async function ClientListSection({ searchParams }: { searchParams: SearchParams 
   ])
   const { rows, total } = await getClientsPage(params, member.id)
   const canCreate = can(member.role, "clients.create")
-  const owners = canCreate && total === 0 ? await getTeamMembers() : []
 
   return (
     <ClientsView
@@ -149,16 +153,12 @@ async function ClientListSection({ searchParams }: { searchParams: SearchParams 
       params={params}
       emptyAction={
         canCreate ? (
-          <AddClientDialog
-            owners={owners}
-            defaultOwnerId={member.id}
-            trigger={
-              <Button>
-                <Plus />
-                Add your first client
-              </Button>
-            }
-          />
+          <Button asChild>
+            <Link href="/clients/new">
+              <Plus />
+              Add your first client
+            </Link>
+          </Button>
         ) : undefined
       }
     />

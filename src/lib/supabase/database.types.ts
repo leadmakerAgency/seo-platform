@@ -3256,6 +3256,10 @@ export type Database = {
         Args: { p_base_url: string }
         Returns: undefined
       }
+      create_client: {
+        Args: { p: Json; p_link_token?: string; p_slug: string }
+        Returns: Json
+      }
       dfs_backlinks_budget_problem: { Args: never; Returns: string }
       dfs_backlinks_cleanup: { Args: never; Returns: Json }
       dfs_budget_status: { Args: never; Returns: Json }

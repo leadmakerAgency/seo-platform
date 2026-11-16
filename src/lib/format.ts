@@ -1,18 +1,5 @@
-const COUNTRY_NAMES: Record<string, string> = {
-  US: "United States",
-  CA: "Canada",
-  GB: "United Kingdom",
-  IE: "Ireland",
-  AU: "Australia",
-  NZ: "New Zealand",
-}
-
-/** Countries offered in forms and filters, in display order. */
-export const COUNTRIES = Object.entries(COUNTRY_NAMES).map(([code, name]) => ({ code, name }))
-
-export function countryName(code: string): string {
-  return COUNTRY_NAMES[code] ?? code
-}
+/** Countries: the full list lives in ./countries (kept here for older imports). */
+export { COUNTRIES, countryName } from "./countries"
 
 /** Short country label for dense tables ("UK" reads better than "GB"). */
 export function countryShort(code: string): string {

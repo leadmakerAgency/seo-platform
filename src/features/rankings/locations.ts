@@ -3,7 +3,8 @@ import "server-only"
 import { serpLocations } from "@/lib/dataforseo/api"
 import type { Db } from "@/lib/dataforseo/client"
 import { countryName } from "@/lib/format"
-import { LOCATION_TYPES, US_STATES } from "./constants"
+import { regionName as regionFullName } from "@/lib/regions"
+import { LOCATION_TYPES } from "./constants"
 
 const FRESH_DAYS = 30
 
@@ -60,7 +61,7 @@ export async function resolveCity(
   if (!city?.trim()) return null
   const iso = countryIso.toUpperCase()
   const cityName = city.trim()
-  const regionName = region?.trim() ? (iso === "US" ? (US_STATES[region.trim().toUpperCase()] ?? region.trim()) : region.trim()) : null
+  const regionName = regionFullName(iso, region)
 
   const { data } = await db
     .from("dfs_locations")

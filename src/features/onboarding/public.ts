@@ -56,6 +56,8 @@ export type OnboardingData = {
     submitted_at: string | null
   }
   business: OnboardingBusiness | null
+  /** The client hasn't saved business details yet; `business` is what the team filled in. */
+  businessFromProfile: boolean
   google: {
     sc_status: GoogleAccessStatus
     sc_property: string | null
@@ -83,9 +85,10 @@ export type OnboardingData = {
   }[]
 }
 
-type Raw = Omit<OnboardingData, "token" | "expiresAt" | "notUsing"> & {
+type Raw = Omit<OnboardingData, "token" | "expiresAt" | "notUsing" | "businessFromProfile"> & {
   expires_at: string
   not_using: SocialPlatform[]
+  business_from_profile?: boolean
 }
 
 /**
@@ -108,6 +111,7 @@ export async function getOnboarding(link: string): Promise<OnboardingData | null
     expiresAt: raw.expires_at,
     onboarding: raw.onboarding,
     business: raw.business,
+    businessFromProfile: Boolean(raw.business_from_profile),
     google: raw.google,
     website: raw.website,
     accounts: raw.accounts ?? [],

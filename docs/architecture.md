@@ -24,7 +24,8 @@ Browser ──> src/proxy.ts ──> app routes (thin) ──> features/<module>
 | ----------------------------------- | ----------------------------------------------------------------------------------------------------- | ----------- |
 | `/login`, `/setup`, `/no-access`    | Sign in, one-time first-admin setup, waiting for access                                               | Built       |
 | `/auth/confirm`                     | Email confirmation callback (PKCE `code` or `token_hash`)                                             | Built       |
-| `/dashboard`                        | Health tiles, Needs attention, client list, Add client                                                | Built       |
+| `/dashboard`                        | Health tiles, Needs attention, client list                                                            | Built       |
+| `/clients/new`                      | Add client: business, location (every country), services, contact, plan, onboarding link (admins, managers) | Built       |
 | `/tasks`                            | Task list (tabs, tiles, filters), task panel (`?task=1051`), create/edit, comments                    | Built       |
 | `/team`                             | Members, invite links, roles, access, permission matrix, activity log (admin only)                    | Built       |
 | `/welcome`                          | Invited members set their name and password                                                           | Built       |
@@ -83,6 +84,13 @@ All page definitions (title, icon, roles, coming-soon flag, summary) are in `src
   portal can call (anon role). Each checks the token first and only touches that client's
   requests; they never return internal notes, team emails or tasks. The Supabase security
   advisor flags them as "callable by anon": that is intended.
+- `create_client(p, slug, link_token)`: the Add client page saves the client, the team-approved
+  `client_business_profiles` row, `client_onboarding`, the optional onboarding link and the
+  `client.created` history line in one transaction (admins and managers; a taken slug gets
+  `-2`, `-3`…). Until the client saves their own business details, `onboarding_get` returns
+  the team profile (`business_from_profile`) and the wizard saves it as the client's copy on
+  first open. Countries are every ISO 3166-1 code (`src/lib/countries.ts`); US, Canadian and
+  Australian regions are stored as short codes (`src/lib/regions.ts`).
 - `client_health_counts()` gives the dashboard tile counts; `setup_required()` (anon only) tells
   `/setup` whether an admin exists.
 

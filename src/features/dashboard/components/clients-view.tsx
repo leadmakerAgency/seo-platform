@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react"
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { CountryPicker } from "@/components/common/country-picker"
 import { Button } from "@/components/ui/button"
 import {
   Empty,
@@ -34,7 +35,7 @@ import {
 } from "@/components/ui/table"
 import { HealthBadge } from "@/features/clients/components/health-badge"
 import { STAGE_LABELS } from "@/features/clients/constants"
-import { COUNTRIES, displayUrl, formatDate, formatNumber, initials } from "@/lib/format"
+import { displayUrl, formatDate, formatNumber, initials } from "@/lib/format"
 import { clientHref } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 import type { ClientRow } from "../queries"
@@ -349,22 +350,15 @@ function Toolbar({
         />
       </div>
 
-      <Select
-        value={params.country ?? ALL}
-        onValueChange={(v) => onChange({ country: v === ALL ? undefined : v })}
-      >
-        <SelectTrigger className="w-[170px]" aria-label="Country">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value={ALL}>All countries</SelectItem>
-          {COUNTRIES.map((c) => (
-            <SelectItem key={c.code} value={c.code}>
-              {c.name}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="w-[190px]">
+        <CountryPicker
+          value={params.country ?? ""}
+          onChange={(code) => onChange({ country: code || undefined })}
+          allowAny
+          anyLabel="All countries"
+          className={params.country ? "border-primary" : undefined}
+        />
+      </div>
 
       <Select
         value={params.owner ?? ALL}

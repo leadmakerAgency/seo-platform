@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Pencil } from "lucide-react"
 import { useState, useTransition } from "react"
-import { Controller, useForm } from "react-hook-form"
+import { Controller, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -33,9 +33,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { OwnerOption } from "@/features/clients/components/add-client-dialog"
+import type { OwnerOption } from "@/features/clients/types"
 import { STAGE_LABELS } from "@/features/clients/constants"
-import { COUNTRIES } from "@/lib/format"
+import { CountryPicker } from "@/components/common/country-picker"
+import { RegionInput } from "@/components/common/region-field"
+import { regionLabel } from "@/lib/regions"
 import { updateClientDetails } from "../actions"
 import { PACKAGES } from "../constants"
 import type { OverviewDetails } from "../queries"
@@ -91,6 +93,7 @@ export function EditClientDialog({
     defaultValues: valuesOf(details),
   })
   const { errors } = form.formState
+  const country = useWatch({ control: form.control, name: "country" }) ?? "US"
 
   function onOpenChange(next: boolean) {
     setOpen(next)
@@ -153,8 +156,20 @@ export function EditClientDialog({
                 <FieldError errors={[errors.city]} />
               </Field>
               <Field data-invalid={Boolean(errors.region)}>
-                <FieldLabel htmlFor="ec-region">State or region</FieldLabel>
-                <Input id="ec-region" {...form.register("region")} />
+                <FieldLabel htmlFor="ec-region">{regionLabel(country)}</FieldLabel>
+                <Controller
+                  control={form.control}
+                  name="region"
+                  render={({ field }) => (
+                    <RegionInput
+                      id="ec-region"
+                      country={country}
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      invalid={Boolean(errors.region)}
+                    />
+                  )}
+                />
                 <FieldError errors={[errors.region]} />
               </Field>
               <Field data-invalid={Boolean(errors.country)}>
@@ -163,18 +178,14 @@ export function EditClientDialog({
                   control={form.control}
                   name="country"
                   render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger id="ec-country" className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {COUNTRIES.map((c) => (
-                          <SelectItem key={c.code} value={c.code}>
-                            {c.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <CountryPicker
+                      id="ec-country"
+                      value={field.value}
+                      onChange={(code) => {
+                        field.onChange(code)
+                        form.setValue("region", "")
+                      }}
+                    />
                   )}
                 />
               </Field>
