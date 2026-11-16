@@ -35,6 +35,12 @@ function describe(n: NotificationItem) {
   if (n.kind === "dfs_low_balance") {
     return "The DataForSEO balance is low. Top it up so ranking checks keep running"
   }
+  if (n.kind === "backlinks_found") {
+    return `New backlink places for ${n.client?.name ?? "a client"} are ready to review`
+  }
+  if (n.kind === "backlinks_failed") {
+    return `The backlink search for ${n.client?.name ?? "a client"} didn't finish`
+  }
   if (n.kind === "request_answered") {
     const r = n.request
     if (!r) return "A client answered a request"
@@ -55,6 +61,9 @@ function hrefFor(n: NotificationItem) {
   }
   if (n.kind === "research_finished" && n.client) return `${clientHref(n.client.slug, "rankings")}?tab=research`
   if (n.kind === "dfs_low_balance") return "/dashboard"
+  if ((n.kind === "backlinks_found" || n.kind === "backlinks_failed") && n.client) {
+    return `${clientHref(n.client.slug, "backlinks")}?tab=review`
+  }
   if (n.socialAccount?.client) return clientHref(n.socialAccount.client.slug, "connections")
   if (n.request?.client) {
     return `${clientHref(n.request.client.slug, "requests")}?request=${n.request.number}`

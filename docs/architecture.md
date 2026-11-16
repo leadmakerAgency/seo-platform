@@ -43,7 +43,9 @@ Browser ──> src/proxy.ts ──> app routes (thin) ──> features/<module>
 | `/clients/[clientSlug]/rankings`    | Rankings: tracked keywords (`?tab=keywords&show=top10`), Find better keywords (`?tab=research`), Settings | Built       |
 | `/api/webhooks/dataforseo`          | DataForSEO postbacks for SERP tasks (Vault token in the URL, no session)                              | Built       |
 | `/api/cron/rankings`                | Every 10 minutes from pg_cron (Vault token): start due checks, recover tasks, research, daily balance | Built       |
-| `/clients/[clientSlug]/[section]`   | AI visibility, backlinks, content, reviews, report                                                    | Coming soon |
+| `/clients/[clientSlug]/backlinks`   | Backlinks: places to get listed (`?tab=review|approved|rejected|hidden`), Find places, site strength   | Built       |
+| `/api/cron/backlinks`               | Every 15 minutes from pg_cron (Vault token): resume stopped searches, clean up (never starts one)     | Built       |
+| `/clients/[clientSlug]/[section]`   | AI visibility, content, reviews, report                                                               | Coming soon |
 | `/api/clients/search?q=`            | Client search in the sidebar (Ctrl/Cmd+K focuses it)                                                  | Built       |
 | `/api/notifications`                | Latest notifications for the header bell                                                              | Built       |
 
@@ -237,6 +239,35 @@ Plan: `docs/plans/rankings/` (00-overview to 04-page-and-polish). Migrations `00
   `dfs_calls` row with the real cost. `dfs_settings` holds the monthly budget, research runs per
   client per month and the low-balance warning; over budget, new checks and research are refused
   in the database. Check now is limited to once a day per client.
+
+## Backlinks (DataForSEO)
+
+Plan: `docs/plans/backlinks/` (00-overview to 05-later-upgrades). Migrations `0031`–`0034`.
+
+- **The library** (`directories`): one row per place you can get listed on, shared by every
+  client and holding no client data. `site_key` is the place (the domain; a platform tenant such as
+  `peoria.chambermaster.com`; or domain + city path such as `patch.com/arizona/peoria`),
+  `rank_target` is what strength is checked on. Seeded with US core listings (Google Business
+  Profile, Bing Places, Apple, Yelp, BBB, …; industry ones by `core_industries`) and a blocklist.
+  Admins and managers edit (`set_directory`) or block (`block_directory`) a site for everyone.
+- **Find places** (`backlink_runs` → `backlink_run_queries` → `backlink_opportunities` +
+  `backlink_opportunity_hits`): `request_backlink_discovery` (admins, managers and VAs who can see
+  the client; once a day, `backlink_runs_per_client_month`, both budgets) queues a run; the action
+  starts it with `after()`. `src/features/backlinks/discovery.ts` builds up to 30 searches from
+  `backlink_footprints` (no search operators: they cost 5x), runs them on Google Live (desktop,
+  depth 30) or reuses `serp_result_cache` (same search in the same city within 90 days), adds a
+  Maps call for competitor domains, classifies every result (`classify.ts`, `site-key.ts`,
+  `scoring.ts`, pure) and stores places with `dfs_store_backlink_candidates` (idempotent; never
+  changes a place a person decided). Hidden places keep a `filter_reason`.
+- **Review**: `review_backlink_opportunities` (approve, reject with a reason, restore), every row
+  checked against the caller's clients; one history line per call.
+- **Site strength**: `request_strength_check` returns the sites never checked or checked over 30
+  days ago (managers can force), then `bulk_ranks` + `bulk_spam_score` (Backlinks API, Live) and
+  `dfs_store_strength`. `directories.authority` is DataForSEO's 0–100 conversion of the 0–1000
+  Domain Rank. A `40204` answer sets `dfs_settings.backlinks_access = 'denied'` and the button is
+  disabled with the reason.
+- **Money**: Backlinks spend is the `dfs_calls` rows whose `ref` is a run or a strength check;
+  it is capped by `dfs_settings.backlinks_budget_usd` on top of the shared monthly budget.
 
 ## Next widgets for the Dashboard (when their modules exist)
 

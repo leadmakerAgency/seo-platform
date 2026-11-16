@@ -134,8 +134,9 @@ export const CLIENT_SECTIONS: ClientSection[] = [
     title: "Backlinks",
     icon: Link2,
     roles: ["admin", "manager", "va", "viewer"],
-    comingSoon: true,
-    summary: "The directory listings and links built each month, and where each one is up to.",
+    comingSoon: false,
+    summary:
+      "Directories, chambers, associations and local blogs to get listed on, found by Google searches and reviewed by the team.",
   },
   {
     id: "content",

@@ -40,6 +40,10 @@ const PERMISSIONS = {
   "tasks.work": ["admin", "manager", "va", "writer"],
   "work.log": ["admin", "manager", "va", "writer"],
   "rankings.manage": ["admin", "manager"],
+  "backlinks.discover": ["admin", "manager", "va"],
+  "backlinks.strength": ["admin", "manager", "va"],
+  "backlinks.review": ["admin", "manager", "va"],
+  "backlinks.library": ["admin", "manager"],
   "requests.create": ["admin", "manager", "va", "writer"],
   "requests.manage": ["admin", "manager"],
   "connections.manage": ["admin", "manager"],
@@ -62,6 +66,11 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "work.log":
     "Log work done outside the app on a client's Overview (VAs and writers: clients in their tasks)",
   "rankings.manage": "Choose tracked keywords, run keyword research and change ranking settings",
+  "backlinks.discover":
+    "Run Find places: Google searches for directories and listings (VAs: clients in their tasks)",
+  "backlinks.strength": "Check the site strength of backlink places (VAs: clients in their tasks)",
+  "backlinks.review": "Approve and reject backlink places (VAs: clients in their tasks)",
+  "backlinks.library": "Edit or block a site in the directory library for every client",
   "requests.create": "Ask clients for codes, files and approvals (VAs: clients in their tasks)",
   "requests.manage": "Turn on or replace a client's private link",
   "connections.manage": "Connect and disconnect a client's Google and social accounts",

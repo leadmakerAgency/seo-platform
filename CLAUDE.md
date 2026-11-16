@@ -84,4 +84,9 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   `dfs_finalize_runs`, service role). Never show a not-found position as 0, never mix partial
   checks into trends, and never spend without the budget check in the database. Plan:
   `docs/plans/rankings/`.
+- **Backlinks (DataForSEO):** places are written only by `dfs_store_backlink_candidates` (search
+  job) and `review_backlink_opportunities` / `block_directory` / `unblock_directory` (people);
+  strength only by `dfs_store_strength`. Footprints never contain search operators (5x price).
+  Never spend without `request_backlink_discovery` / `request_strength_check` (budgets and limits
+  live there). Never fetch the URLs searches return on the server. Plan: `docs/plans/backlinks/`.
 - The `cn` helper comes from the `cn` package (shadcn's), re-exported by `src/lib/utils.ts`.

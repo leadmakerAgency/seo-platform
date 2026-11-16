@@ -190,6 +190,23 @@ export function describeActivity(entry: ActivityLike): string {
     // Reserved for the AI visibility, Backlinks, Content, Reviews and Report pages.
     case "ai.check_finished":
       return `finished an AI answers check${num(m.mentions) ? `: named in ${num(m.mentions)} answers` : ""}`
+    case "backlink.discovery_finished": {
+      const n = Number(m.new) || 0
+      return `searched Google for backlink places: ${n} new place${n === 1 ? "" : "s"}${Number(m.known) ? `, ${num(m.known)} already known` : ""}`
+    }
+    case "backlink.reviewed": {
+      const n = Number(m.count) || 0
+      const sites = Array.isArray(m.sites) ? (m.sites as unknown[]).map(String) : []
+      const verb = m.decision === "approve" ? "approved" : m.decision === "reject" ? "rejected" : "moved back to review"
+      const what = n === 1 && sites[0] ? sites[0] : `${n} backlink places${sites.length ? ` (${sites.slice(0, 3).join(", ")}${n > 3 ? "…" : ""})` : ""}`
+      return `${verb} ${what}`
+    }
+    case "backlink.strength_checked":
+      return `checked the site strength of ${num(m.count) || 0} backlink places`
+    case "backlink.directory_blocked":
+      return `blocked ${str(m.site) || "a site"} for every client${str(m.reason) ? ` (${str(m.reason)})` : ""}`
+    case "backlink.directory_unblocked":
+      return `unblocked ${str(m.site) || "a site"}`
     case "backlink.live":
       return `confirmed a backlink live on ${str(m.site) || "a directory"}`
     case "article.published":

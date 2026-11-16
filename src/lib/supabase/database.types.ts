@@ -222,6 +222,421 @@ export type Database = {
           },
         ]
       }
+      backlink_footprints: {
+        Row: {
+          active: boolean
+          id: string
+          note: string | null
+          scope: Database["public"]["Enums"]["footprint_scope"]
+          sort: number
+          template: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          id?: string
+          note?: string | null
+          scope: Database["public"]["Enums"]["footprint_scope"]
+          sort?: number
+          template: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          id?: string
+          note?: string | null
+          scope?: Database["public"]["Enums"]["footprint_scope"]
+          sort?: number
+          template?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      backlink_opportunities: {
+        Row: {
+          best_position: number | null
+          client_id: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          directory_id: string
+          filter_reason: string | null
+          first_run_id: string | null
+          found_snippet: string | null
+          found_title: string | null
+          found_url: string | null
+          id: string
+          is_core: boolean
+          is_local: boolean
+          last_run_id: string | null
+          notes: string | null
+          reject_note: string | null
+          reject_reason:
+            | Database["public"]["Enums"]["backlink_reject_reason"]
+            | null
+          relevance: number
+          status: Database["public"]["Enums"]["opportunity_status"]
+          updated_at: string
+        }
+        Insert: {
+          best_position?: number | null
+          client_id: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          directory_id: string
+          filter_reason?: string | null
+          first_run_id?: string | null
+          found_snippet?: string | null
+          found_title?: string | null
+          found_url?: string | null
+          id?: string
+          is_core?: boolean
+          is_local?: boolean
+          last_run_id?: string | null
+          notes?: string | null
+          reject_note?: string | null
+          reject_reason?:
+            | Database["public"]["Enums"]["backlink_reject_reason"]
+            | null
+          relevance?: number
+          status?: Database["public"]["Enums"]["opportunity_status"]
+          updated_at?: string
+        }
+        Update: {
+          best_position?: number | null
+          client_id?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          directory_id?: string
+          filter_reason?: string | null
+          first_run_id?: string | null
+          found_snippet?: string | null
+          found_title?: string | null
+          found_url?: string | null
+          id?: string
+          is_core?: boolean
+          is_local?: boolean
+          last_run_id?: string | null
+          notes?: string | null
+          reject_note?: string | null
+          reject_reason?:
+            | Database["public"]["Enums"]["backlink_reject_reason"]
+            | null
+          relevance?: number
+          status?: Database["public"]["Enums"]["opportunity_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backlink_opportunities_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_opportunities_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_opportunities_directory_id_fkey"
+            columns: ["directory_id"]
+            isOneToOne: false
+            referencedRelation: "directories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_opportunities_first_run_id_fkey"
+            columns: ["first_run_id"]
+            isOneToOne: false
+            referencedRelation: "backlink_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_opportunities_last_run_id_fkey"
+            columns: ["last_run_id"]
+            isOneToOne: false
+            referencedRelation: "backlink_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      backlink_opportunity_hits: {
+        Row: {
+          client_id: string
+          created_at: string
+          footprint_id: string | null
+          id: number
+          opportunity_id: string
+          position: number | null
+          query: string
+          query_id: string
+          url: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          footprint_id?: string | null
+          id?: never
+          opportunity_id: string
+          position?: number | null
+          query: string
+          query_id: string
+          url?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          footprint_id?: string | null
+          id?: never
+          opportunity_id?: string
+          position?: number | null
+          query?: string
+          query_id?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backlink_opportunity_hits_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_opportunity_hits_footprint_id_fkey"
+            columns: ["footprint_id"]
+            isOneToOne: false
+            referencedRelation: "backlink_footprints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_opportunity_hits_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "backlink_opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_opportunity_hits_query_id_fkey"
+            columns: ["query_id"]
+            isOneToOne: false
+            referencedRelation: "backlink_run_queries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      backlink_run_queries: {
+        Row: {
+          cache_id: string | null
+          client_id: string
+          cost_usd: number
+          done_at: string | null
+          error: string | null
+          footprint_id: string | null
+          id: string
+          items_count: number
+          query: string
+          query_norm: string
+          run_id: string
+          scope: Database["public"]["Enums"]["footprint_scope"]
+          status: Database["public"]["Enums"]["discovery_query_status"]
+        }
+        Insert: {
+          cache_id?: string | null
+          client_id: string
+          cost_usd?: number
+          done_at?: string | null
+          error?: string | null
+          footprint_id?: string | null
+          id?: string
+          items_count?: number
+          query: string
+          query_norm: string
+          run_id: string
+          scope: Database["public"]["Enums"]["footprint_scope"]
+          status?: Database["public"]["Enums"]["discovery_query_status"]
+        }
+        Update: {
+          cache_id?: string | null
+          client_id?: string
+          cost_usd?: number
+          done_at?: string | null
+          error?: string | null
+          footprint_id?: string | null
+          id?: string
+          items_count?: number
+          query?: string
+          query_norm?: string
+          run_id?: string
+          scope?: Database["public"]["Enums"]["footprint_scope"]
+          status?: Database["public"]["Enums"]["discovery_query_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backlink_run_queries_cache_id_fkey"
+            columns: ["cache_id"]
+            isOneToOne: false
+            referencedRelation: "serp_result_cache"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_run_queries_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_run_queries_footprint_id_fkey"
+            columns: ["footprint_id"]
+            isOneToOne: false
+            referencedRelation: "backlink_footprints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_run_queries_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "backlink_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      backlink_runs: {
+        Row: {
+          attempts: number
+          client_id: string
+          cost_usd: number
+          counts: Json
+          created_at: string
+          created_by: string | null
+          error: string | null
+          finished_at: string | null
+          heartbeat_at: string | null
+          id: string
+          params: Json
+          queries_done: number
+          queries_total: number
+          started_at: string | null
+          status: Database["public"]["Enums"]["backlink_run_status"]
+          step: number
+        }
+        Insert: {
+          attempts?: number
+          client_id: string
+          cost_usd?: number
+          counts?: Json
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          finished_at?: string | null
+          heartbeat_at?: string | null
+          id?: string
+          params?: Json
+          queries_done?: number
+          queries_total?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["backlink_run_status"]
+          step?: number
+        }
+        Update: {
+          attempts?: number
+          client_id?: string
+          cost_usd?: number
+          counts?: Json
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          finished_at?: string | null
+          heartbeat_at?: string | null
+          id?: string
+          params?: Json
+          queries_done?: number
+          queries_total?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["backlink_run_status"]
+          step?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backlink_runs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_runs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      backlink_strength_checks: {
+        Row: {
+          client_id: string
+          cost_usd: number
+          created_at: string
+          created_by: string | null
+          domains: number
+          error: string | null
+          finished_at: string | null
+          forced: boolean
+          id: string
+          status: Database["public"]["Enums"]["strength_check_status"]
+          targets: string[]
+        }
+        Insert: {
+          client_id: string
+          cost_usd?: number
+          created_at?: string
+          created_by?: string | null
+          domains?: number
+          error?: string | null
+          finished_at?: string | null
+          forced?: boolean
+          id?: string
+          status?: Database["public"]["Enums"]["strength_check_status"]
+          targets?: string[]
+        }
+        Update: {
+          client_id?: string
+          cost_usd?: number
+          created_at?: string
+          created_by?: string | null
+          domains?: number
+          error?: string | null
+          finished_at?: string | null
+          forced?: boolean
+          id?: string
+          status?: Database["public"]["Enums"]["strength_check_status"]
+          targets?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backlink_strength_checks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_strength_checks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_business_profiles: {
         Row: {
           business_name: string | null
@@ -887,6 +1302,10 @@ export type Database = {
       }
       dfs_settings: {
         Row: {
+          backlink_runs_per_client_month: number
+          backlinks_access: string
+          backlinks_access_checked_at: string | null
+          backlinks_budget_usd: number
           id: boolean
           last_balance_at: string | null
           last_balance_usd: number | null
@@ -898,6 +1317,10 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          backlink_runs_per_client_month?: number
+          backlinks_access?: string
+          backlinks_access_checked_at?: string | null
+          backlinks_budget_usd?: number
           id?: boolean
           last_balance_at?: string | null
           last_balance_usd?: number | null
@@ -909,6 +1332,10 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          backlink_runs_per_client_month?: number
+          backlinks_access?: string
+          backlinks_access_checked_at?: string | null
+          backlinks_budget_usd?: number
           id?: boolean
           last_balance_at?: string | null
           last_balance_usd?: number | null
@@ -922,6 +1349,126 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "dfs_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      directories: {
+        Row: {
+          authority: number | null
+          authority_checked_at: string | null
+          authority_raw: number | null
+          authority_source: string | null
+          authority_status: string | null
+          blocked_at: string | null
+          blocked_by: string | null
+          blocked_reason: string | null
+          city: string | null
+          core_countries: string[]
+          core_industries: string[]
+          cost_type: string
+          country_code: string | null
+          domain: string
+          first_seen_at: string
+          geo_scope: string
+          id: string
+          industries: string[]
+          is_core: boolean
+          last_seen_at: string
+          name: string
+          notes: string | null
+          rank_target: string
+          region: string | null
+          site_key: string
+          spam_score: number | null
+          status: Database["public"]["Enums"]["directory_status"]
+          submit_url: string | null
+          type: Database["public"]["Enums"]["directory_type"]
+          type_source: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          authority?: number | null
+          authority_checked_at?: string | null
+          authority_raw?: number | null
+          authority_source?: string | null
+          authority_status?: string | null
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
+          city?: string | null
+          core_countries?: string[]
+          core_industries?: string[]
+          cost_type?: string
+          country_code?: string | null
+          domain: string
+          first_seen_at?: string
+          geo_scope?: string
+          id?: string
+          industries?: string[]
+          is_core?: boolean
+          last_seen_at?: string
+          name: string
+          notes?: string | null
+          rank_target: string
+          region?: string | null
+          site_key: string
+          spam_score?: number | null
+          status?: Database["public"]["Enums"]["directory_status"]
+          submit_url?: string | null
+          type?: Database["public"]["Enums"]["directory_type"]
+          type_source?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          authority?: number | null
+          authority_checked_at?: string | null
+          authority_raw?: number | null
+          authority_source?: string | null
+          authority_status?: string | null
+          blocked_at?: string | null
+          blocked_by?: string | null
+          blocked_reason?: string | null
+          city?: string | null
+          core_countries?: string[]
+          core_industries?: string[]
+          cost_type?: string
+          country_code?: string | null
+          domain?: string
+          first_seen_at?: string
+          geo_scope?: string
+          id?: string
+          industries?: string[]
+          is_core?: boolean
+          last_seen_at?: string
+          name?: string
+          notes?: string | null
+          rank_target?: string
+          region?: string | null
+          site_key?: string
+          spam_score?: number | null
+          status?: Database["public"]["Enums"]["directory_status"]
+          submit_url?: string | null
+          type?: Database["public"]["Enums"]["directory_type"]
+          type_source?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "directories_blocked_by_fkey"
+            columns: ["blocked_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "directories_updated_by_fkey"
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "team_members"
@@ -1914,6 +2461,51 @@ export type Database = {
           },
         ]
       }
+      serp_result_cache: {
+        Row: {
+          competitors: string[]
+          cost_usd: number
+          depth: number
+          device: string
+          engine: string
+          fetched_at: string
+          id: string
+          items: Json
+          items_count: number
+          language_code: string
+          location_code: number
+          query_norm: string
+        }
+        Insert: {
+          competitors?: string[]
+          cost_usd?: number
+          depth: number
+          device: string
+          engine: string
+          fetched_at?: string
+          id?: string
+          items?: Json
+          items_count?: number
+          language_code: string
+          location_code: number
+          query_norm: string
+        }
+        Update: {
+          competitors?: string[]
+          cost_usd?: number
+          depth?: number
+          device?: string
+          engine?: string
+          fetched_at?: string
+          id?: string
+          items?: Json
+          items_count?: number
+          language_code?: string
+          location_code?: number
+          query_norm?: string
+        }
+        Relationships: []
+      }
       serp_tasks: {
         Row: {
           attempts: number
@@ -2626,6 +3218,11 @@ export type Database = {
         Args: { p_keyword_id: string; p_reason?: string }
         Returns: undefined
       }
+      backlink_quota: { Args: { p_client_id: string }; Returns: Json }
+      block_directory: {
+        Args: { p_id: string; p_reason: string }
+        Returns: number
+      }
       client_activity: {
         Args: { p_before?: number; p_client_id: string; p_limit?: number }
         Returns: {
@@ -2659,7 +3256,36 @@ export type Database = {
         Args: { p_base_url: string }
         Returns: undefined
       }
+      dfs_backlinks_budget_problem: { Args: never; Returns: string }
+      dfs_backlinks_cleanup: { Args: never; Returns: Json }
       dfs_budget_status: { Args: never; Returns: Json }
+      dfs_claim_backlink_run: {
+        Args: never
+        Returns: {
+          attempts: number
+          client_id: string
+          cost_usd: number
+          counts: Json
+          created_at: string
+          created_by: string | null
+          error: string | null
+          finished_at: string | null
+          heartbeat_at: string | null
+          id: string
+          params: Json
+          queries_done: number
+          queries_total: number
+          started_at: string | null
+          status: Database["public"]["Enums"]["backlink_run_status"]
+          step: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "backlink_runs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       dfs_claim_rank_run: {
         Args: never
         Returns: {
@@ -2722,9 +3348,23 @@ export type Database = {
       dfs_finalize_runs: { Args: never; Returns: string[] }
       dfs_postback_config: { Args: never; Returns: Json }
       dfs_queue_due_runs: { Args: { p_limit?: number }; Returns: number }
+      dfs_store_backlink_candidates: {
+        Args: { p_items: Json; p_run_id: string }
+        Returns: Json
+      }
       dfs_store_rank: {
         Args: { p_cost?: number; p_rank: Json; p_task_id: string }
         Returns: string
+      }
+      dfs_store_strength: {
+        Args: {
+          p_check_id: string
+          p_cost?: number
+          p_error?: string
+          p_ranks: Json
+          p_spam: Json
+        }
+        Returns: undefined
       }
       keyword_first_ranks: {
         Args: { p_client_id: string }
@@ -2828,6 +3468,10 @@ export type Database = {
         Args: { p_keyword_id: string; p_new_phrase: string }
         Returns: Json
       }
+      request_backlink_discovery: {
+        Args: { p_client_id: string }
+        Returns: string
+      }
       request_keyword_research: {
         Args: {
           p_client_id: string
@@ -2836,14 +3480,37 @@ export type Database = {
         Returns: string
       }
       request_rank_check: { Args: { p_client_id: string }; Returns: string }
+      request_strength_check: {
+        Args: { p_client_id: string; p_force?: boolean; p_ids?: string[] }
+        Returns: Json
+      }
       research_quota: { Args: { p_client_id: string }; Returns: Json }
       reveal_client_login: { Args: { p_login_id: string }; Returns: string }
+      review_backlink_opportunities: {
+        Args: {
+          p_decision: string
+          p_ids: string[]
+          p_note?: string
+          p_reason?: Database["public"]["Enums"]["backlink_reject_reason"]
+        }
+        Returns: number
+      }
       set_candidate_status: {
         Args: {
           p_client_id: string
           p_dismiss: boolean
           p_keyword_norm: string
           p_reason?: string
+        }
+        Returns: undefined
+      }
+      set_directory: {
+        Args: {
+          p_cost_type: string
+          p_id: string
+          p_notes: string
+          p_submit_url: string
+          p_type: Database["public"]["Enums"]["directory_type"]
         }
         Returns: undefined
       }
@@ -2865,10 +3532,12 @@ export type Database = {
         Args: { p_client_id: string; p_keyword_norm: string }
         Returns: Json
       }
+      unblock_directory: { Args: { p_id: string }; Returns: number }
       update_rank_settings: {
         Args: { p_client_id: string; p_data: Json }
         Returns: undefined
       }
+      verify_backlinks_token: { Args: { p_token: string }; Returns: boolean }
       verify_rankings_token: {
         Args: { p_kind: string; p_token: string }
         Returns: boolean
@@ -2880,6 +3549,16 @@ export type Database = {
       ai_tool: "chatgpt" | "perplexity" | "gemini" | "ai_overviews" | "claude"
       alert_severity: "needs_look" | "action_needed"
       app_role: "admin" | "manager" | "va" | "writer" | "viewer"
+      backlink_reject_reason:
+        | "not_relevant"
+        | "competitor"
+        | "paid_only"
+        | "not_accepting"
+        | "duplicate"
+        | "spam"
+        | "broken"
+        | "other"
+      backlink_run_status: "queued" | "running" | "done" | "failed"
       candidate_status: "new" | "tracked" | "dismissed"
       check_scope: "full" | "partial"
       check_status: "running" | "done" | "failed"
@@ -2906,6 +3585,23 @@ export type Database = {
         | "labs"
         | "google_ads"
         | "appendix"
+        | "backlinks"
+      directory_status: "active" | "blocked"
+      directory_type:
+        | "business_directory"
+        | "industry_directory"
+        | "maps"
+        | "chamber"
+        | "association"
+        | "review_site"
+        | "news_blog"
+        | "guest_post"
+        | "social"
+        | "government"
+        | "aggregator"
+        | "other"
+      discovery_query_status: "queued" | "done" | "cached" | "failed"
+      footprint_scope: "geo" | "service" | "industry"
       google_access_status:
         | "todo"
         | "added"
@@ -2925,6 +3621,8 @@ export type Database = {
         | "onboarding_submitted"
         | "research_finished"
         | "dfs_low_balance"
+        | "backlinks_found"
+        | "backlinks_failed"
       onboarding_link_status: "active" | "revoked" | "expired"
       onboarding_status:
         | "not_started"
@@ -2932,6 +3630,11 @@ export type Database = {
         | "submitted"
         | "reviewed"
       onboarding_step_status: "todo" | "in_progress" | "done" | "skipped"
+      opportunity_status:
+        | "pending_review"
+        | "approved"
+        | "rejected"
+        | "filtered"
       package_kind: "seo" | "geo" | "seo_geo" | "custom"
       rank_engine: "google" | "bing" | "google_maps"
       rank_run_status: "queued" | "running" | "done" | "partial" | "failed"
@@ -2953,6 +3656,7 @@ export type Database = {
         | "tiktok"
         | "pinterest"
         | "threads"
+      strength_check_status: "running" | "done" | "failed"
       task_priority: "low" | "normal" | "high"
       task_repeat: "none" | "weekdays" | "weekly" | "monthly"
       task_status: "todo" | "in_progress" | "waiting_on_client" | "done"
@@ -3115,6 +3819,17 @@ export const Constants = {
       ai_tool: ["chatgpt", "perplexity", "gemini", "ai_overviews", "claude"],
       alert_severity: ["needs_look", "action_needed"],
       app_role: ["admin", "manager", "va", "writer", "viewer"],
+      backlink_reject_reason: [
+        "not_relevant",
+        "competitor",
+        "paid_only",
+        "not_accepting",
+        "duplicate",
+        "spam",
+        "broken",
+        "other",
+      ],
+      backlink_run_status: ["queued", "running", "done", "failed"],
       candidate_status: ["new", "tracked", "dismissed"],
       check_scope: ["full", "partial"],
       check_status: ["running", "done", "failed"],
@@ -3143,7 +3858,25 @@ export const Constants = {
         "labs",
         "google_ads",
         "appendix",
+        "backlinks",
       ],
+      directory_status: ["active", "blocked"],
+      directory_type: [
+        "business_directory",
+        "industry_directory",
+        "maps",
+        "chamber",
+        "association",
+        "review_site",
+        "news_blog",
+        "guest_post",
+        "social",
+        "government",
+        "aggregator",
+        "other",
+      ],
+      discovery_query_status: ["queued", "done", "cached", "failed"],
+      footprint_scope: ["geo", "service", "industry"],
       google_access_status: ["todo", "added", "no_access", "not_using", "help"],
       keyword_source: ["manual", "research", "onboarding", "ranked"],
       login_source: ["onboarding", "team"],
@@ -3158,6 +3891,8 @@ export const Constants = {
         "onboarding_submitted",
         "research_finished",
         "dfs_low_balance",
+        "backlinks_found",
+        "backlinks_failed",
       ],
       onboarding_link_status: ["active", "revoked", "expired"],
       onboarding_status: [
@@ -3167,6 +3902,12 @@ export const Constants = {
         "reviewed",
       ],
       onboarding_step_status: ["todo", "in_progress", "done", "skipped"],
+      opportunity_status: [
+        "pending_review",
+        "approved",
+        "rejected",
+        "filtered",
+      ],
       package_kind: ["seo", "geo", "seo_geo", "custom"],
       rank_engine: ["google", "bing", "google_maps"],
       rank_run_status: ["queued", "running", "done", "partial", "failed"],
@@ -3189,6 +3930,7 @@ export const Constants = {
         "pinterest",
         "threads",
       ],
+      strength_check_status: ["running", "done", "failed"],
       task_priority: ["low", "normal", "high"],
       task_repeat: ["none", "weekdays", "weekly", "monthly"],
       task_status: ["todo", "in_progress", "waiting_on_client", "done"],
