@@ -116,6 +116,8 @@ export type CallOptions = {
   body?: unknown
   /** Safe to resend after a timeout (reads, Live lookups). Task posts: false. */
   idempotent?: boolean
+  /** Longer wait for slow calls (Live searches that resolve Google's goto links). */
+  timeoutMs?: number
 }
 
 /** One DataForSEO request. Returns the envelope when the top-level status is 20000. */
@@ -144,7 +146,7 @@ export async function dfsCall<R = Record<string, unknown>>(
           "Content-Type": "application/json",
         },
         body: method === "POST" ? JSON.stringify(opts.body ?? []) : undefined,
-        signal: AbortSignal.timeout(TIMEOUT_MS),
+        signal: AbortSignal.timeout(opts.timeoutMs ?? TIMEOUT_MS),
         cache: "no-store",
       })
       http = res.status
