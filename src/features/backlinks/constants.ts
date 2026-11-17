@@ -67,7 +67,7 @@ export const COST_LABELS: Record<string, string> = {
 }
 
 /** Searches per run, results per search, new places per run. */
-export const MAX_QUERIES = 30
+export const MAX_QUERIES = 60
 export const SEARCH_DEPTH = 30
 export const MAX_NEW_PLACES = 200
 export const MAX_SERVICES = 3

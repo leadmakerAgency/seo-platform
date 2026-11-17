@@ -4,9 +4,8 @@ import { DfsError, type Db } from "@/lib/dataforseo/client"
 import { normalizeHost } from "@/lib/dataforseo/domains"
 import { googleMapsLive, googleOrganicLive, type OrganicRow } from "@/lib/dataforseo/serp-live"
 import type { Json, Tables } from "@/lib/supabase/database.types"
-import { US_STATES } from "@/features/rankings/constants"
+import { countryName } from "@/lib/countries"
 import { regionCode, regionList, regionName } from "@/lib/regions"
-import { ensureRankSettings, syncAndResolve } from "@/features/rankings/setup"
 import { classify, type ClassifyContext, type LibraryEntry } from "./classify"
 import {
   CACHE_DAYS,
@@ -53,15 +52,23 @@ export async function processBacklinkRuns(db: Db, max = 1): Promise<number> {
   return done
 }
 
+/** One place the team chose (backlink_targets), as the search job needs it. */
+type Place = {
+  id: string
+  label: string
+  searchName: string
+  kind: "city" | "region" | "country"
+  locationCode: number
+  countryIso: string
+  city: string | null
+  regionName: string | null
+  regionCode: string | null
+}
+
 type Context = {
   clientId: string
   name: string
-  city: string
-  state: string | null
-  stateCode: string | null
-  countryIso: string
-  locationCode: number
-  locationName: string | null
+  places: Place[]
   languageCode: string
   domain: string | null
   services: string[]
@@ -86,37 +93,44 @@ export function stateOf(
   return { state: r, code: r.length <= 3 ? r.toUpperCase() : null }
 }
 
-async function loadContext(db: Db, clientId: string): Promise<Context> {
-  const [{ data: client, error }, { data: profile }] = await Promise.all([
-    db
-      .from("clients")
-      .select("id, name, city, region, country_code, industry, website, stage")
-      .eq("id", clientId)
-      .single(),
+async function loadContext(db: Db, run: Run): Promise<Context> {
+  const [{ data: client, error }, { data: profile }, { data: targets }] = await Promise.all([
+    db.from("clients").select("id, name, industry, website, stage").eq("id", run.client_id).single(),
     db
       .from("client_business_profiles")
       .select("services, primary_category, other_categories, website")
-      .eq("client_id", clientId)
+      .eq("client_id", run.client_id)
       .maybeSingle(),
+    db
+      .from("backlink_targets")
+      .select("id, label, search_name, kind, location_code, country_iso, city, region_name, region_code")
+      .eq("client_id", run.client_id)
+      .in("id", run.target_ids.length ? run.target_ids : ["00000000-0000-0000-0000-000000000000"]),
   ])
   if (error || !client) throw new StopRun("Client not found.")
   if (client.stage === "paused" || client.stage === "churned") {
     throw new StopRun("This client is paused or has left. Searches are off.")
   }
-  if (!client.city?.trim()) throw new StopRun("Add the client's city in Edit details first.")
-
-  let rank = await ensureRankSettings(db, clientId)
-  if (rank.needsLocationSync || rank.settings.location_code === null) {
-    await syncAndResolve(db, clientId, rank.countryIso)
-    rank = await ensureRankSettings(db, clientId)
+  // Keep the run's order, skipping places removed since.
+  const byId = new Map((targets ?? []).map((t) => [t.id, t]))
+  const places: Place[] = run.target_ids
+    .map((id) => byId.get(id))
+    .filter((t): t is NonNullable<typeof t> => Boolean(t))
+    .map((t) => ({
+      id: t.id,
+      label: t.label,
+      searchName: t.search_name,
+      kind: t.kind as Place["kind"],
+      locationCode: t.location_code,
+      countryIso: t.country_iso,
+      city: t.city,
+      regionName: t.region_name,
+      regionCode: t.region_code,
+    }))
+  if (places.length === 0) {
+    throw new StopRun("The places for this search were removed. Add places and search again.")
   }
-  if (rank.settings.location_code === null) {
-    throw new StopRun(
-      `DataForSEO doesn't know "${client.city}" as a place. Pick the client's location in Rankings → Settings.`,
-    )
-  }
 
-  const { state, code } = stateOf(client.region, client.country_code)
   const services = [
     ...(profile?.services ?? []),
     ...(profile?.services?.length ? [] : [profile?.primary_category ?? "", client.industry ?? ""]),
@@ -126,16 +140,11 @@ async function loadContext(db: Db, clientId: string): Promise<Context> {
     .slice(0, MAX_SERVICES)
   const industry = profile?.primary_category ?? client.industry ?? null
   return {
-    clientId,
+    clientId: client.id,
     name: client.name,
-    city: client.city.trim(),
-    state,
-    stateCode: code,
-    countryIso: client.country_code,
-    locationCode: rank.settings.location_code,
-    locationName: rank.settings.location_name,
-    languageCode: rank.settings.language_code || "en",
-    domain: rank.domain,
+    places,
+    languageCode: "en",
+    domain: normalizeHost(client.website ?? profile?.website ?? null),
     services,
     industry,
     matchText: [
@@ -150,6 +159,42 @@ async function loadContext(db: Db, clientId: string): Promise<Context> {
   }
 }
 
+/** The place a search belongs to; industry searches run from the first place. */
+function placeOf(ctx: Context, targetId: string | null): Place {
+  return ctx.places.find((p) => p.id === targetId) ?? ctx.places[0]
+}
+
+/** How results are judged local, or "another area", for one place. */
+function placeLocality(place: Place, all: Place[]) {
+  const country = place.countryIso.toUpperCase()
+  const local =
+    place.kind === "city"
+      ? (place.city ?? place.searchName)
+      : place.kind === "region"
+        ? (place.regionName ?? place.searchName)
+        : countryName(country)
+  const regionFull = place.kind === "country" ? null : place.regionName
+  const code =
+    place.kind === "country" ? null : regionCode(country, place.regionCode ?? place.regionName)
+  // Other states or provinces of the same country, except ones the client also targets.
+  const targeted = new Set(
+    all
+      .filter((p) => p.countryIso.toUpperCase() === country && p.kind !== "country")
+      .map((p) => regionCode(country, p.regionCode ?? p.regionName)?.toUpperCase())
+      .filter(Boolean),
+  )
+  const list = place.kind === "country" ? null : regionList(country)
+  const otherStates = (list ?? [])
+    .filter((r) => !targeted.has(r.code.toUpperCase()))
+    .map((r) => ({ code: r.code, name: r.name }))
+  return {
+    city: local.toLowerCase(),
+    state: regionFull ? regionFull.toLowerCase() : null,
+    stateCode: code && code.length <= 3 ? code.toLowerCase() : null,
+    otherStates,
+  }
+}
+
 async function budgetProblem(db: Db): Promise<string | null> {
   const { data } = await db.rpc("dfs_backlinks_budget_problem")
   return (data as string | null) ?? null
@@ -159,6 +204,7 @@ async function cached(
   db: Db,
   engine: "google_organic" | "google_maps",
   queryNorm: string,
+  locationCode: number,
   ctx: Context,
 ) {
   const since = new Date(Date.now() - CACHE_DAYS * 86_400_000).toISOString()
@@ -167,7 +213,7 @@ async function cached(
     .select("id, items_count")
     .eq("engine", engine)
     .eq("query_norm", queryNorm)
-    .eq("location_code", ctx.locationCode)
+    .eq("location_code", locationCode)
     .eq("language_code", ctx.languageCode)
     .eq("device", DEVICE)
     .gte("depth", SEARCH_DEPTH)
@@ -182,6 +228,7 @@ async function saveCache(
   db: Db,
   engine: "google_organic" | "google_maps",
   queryNorm: string,
+  locationCode: number,
   ctx: Context,
   items: OrganicRow[],
   competitors: string[],
@@ -193,7 +240,7 @@ async function saveCache(
       {
         engine,
         query_norm: queryNorm,
-        location_code: ctx.locationCode,
+        location_code: locationCode,
         language_code: ctx.languageCode,
         device: DEVICE,
         depth: SEARCH_DEPTH,
@@ -211,9 +258,10 @@ async function saveCache(
   return data.id
 }
 
-/** One search: from the cache when another client in the same city ran it lately, else Live. */
+/** One search, run from its place: from the cache when anyone ran it there lately, else Live. */
 async function runQuery(db: Db, run: Run, q: QueryRow, ctx: Context): Promise<void> {
-  const hit = await cached(db, "google_organic", q.query_norm, ctx)
+  const locationCode = placeOf(ctx, q.target_id).locationCode
+  const hit = await cached(db, "google_organic", q.query_norm, locationCode, ctx)
   if (hit) {
     await db
       .from("backlink_run_queries")
@@ -232,7 +280,7 @@ async function runQuery(db: Db, run: Run, q: QueryRow, ctx: Context): Promise<vo
       db,
       {
         keyword: q.query,
-        locationCode: ctx.locationCode,
+        locationCode,
         languageCode: ctx.languageCode,
         depth: SEARCH_DEPTH,
       },
@@ -242,6 +290,7 @@ async function runQuery(db: Db, run: Run, q: QueryRow, ctx: Context): Promise<vo
       db,
       "google_organic",
       q.query_norm,
+      locationCode,
       ctx,
       res.items,
       res.competitors,
@@ -269,12 +318,12 @@ async function runQuery(db: Db, run: Run, q: QueryRow, ctx: Context): Promise<vo
   }
 }
 
-/** Business domains from Google Maps for the main service (cached per city). */
-async function mapsCompetitors(db: Db, run: Run, ctx: Context): Promise<string[]> {
+/** Business domains from Google Maps for the main service in one place (cached per place). */
+async function mapsCompetitors(db: Db, run: Run, ctx: Context, place: Place): Promise<string[]> {
   const service = cleanTerm(ctx.services[0])
   if (!service) return []
-  const queryNorm = normQuery(`${service} ${ctx.city} ${ctx.stateCode ?? ctx.state ?? ""}`)
-  const hit = await cached(db, "google_maps", queryNorm, ctx)
+  const queryNorm = normQuery(`${service} ${place.searchName}`)
+  const hit = await cached(db, "google_maps", queryNorm, place.locationCode, ctx)
   if (hit) {
     const { data } = await db
       .from("serp_result_cache")
@@ -288,13 +337,13 @@ async function mapsCompetitors(db: Db, run: Run, ctx: Context): Promise<string[]
       db,
       {
         keyword: queryNorm,
-        locationCode: ctx.locationCode,
+        locationCode: place.locationCode,
         languageCode: ctx.languageCode,
         depth: SEARCH_DEPTH,
       },
       { clientId: run.client_id, ref: run.id },
     )
-    await saveCache(db, "google_maps", queryNorm, ctx, [], res.competitors, res.cost)
+    await saveCache(db, "google_maps", queryNorm, place.locationCode, ctx, [], res.competitors, res.cost)
     return res.competitors
   } catch (e) {
     if (e instanceof DfsError && (e.kind === "funds" || e.kind === "auth")) throw e
@@ -311,7 +360,7 @@ type Hit = {
   url: string
 }
 
-type Place = {
+type Found = {
   sk: SiteKey
   name: string | null
   type: DirectoryType
@@ -324,6 +373,10 @@ type Place = {
   foundSnippet: string | null
   hits: Map<string, Hit>
   footprints: Set<string>
+  /** The places whose searches found it. */
+  targets: Set<string>
+  /** The first city place it was local for (fills the directory's city). */
+  localPlace: Place | null
 }
 
 const TYPE_PRIORITY: DirectoryType[] = [
@@ -370,7 +423,7 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
 
   try {
     // 1. Context.
-    ctx = await loadContext(db, run.client_id)
+    ctx = await loadContext(db, run)
 
     // 2. The searches (once per run).
     let { data: queries } = await db.from("backlink_run_queries").select("*").eq("run_id", run.id)
@@ -382,16 +435,18 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
       const built = buildQueries(
         (fps ?? []) as Footprint[],
         {
-          city: ctx.city,
-          state: ctx.state,
-          stateCode: ctx.stateCode,
+          places: ctx.places.map((p) => ({
+            id: p.id,
+            searchName: p.searchName,
+            region: p.kind === "country" ? null : p.regionName,
+          })),
           services: ctx.services,
           industry: ctx.industry,
         },
         MAX_QUERIES,
       )
       if (built.queries.length === 0)
-        throw new StopRun("No searches could be built. Check the client's city.")
+        throw new StopRun("No searches could be built. Check the places' search words.")
       const { error } = await db.from("backlink_run_queries").upsert(
         built.queries.map((b) => ({
           run_id: run.id,
@@ -400,8 +455,9 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
           scope: b.scope,
           query: b.query,
           query_norm: b.queryNorm,
+          target_id: b.targetId,
         })),
-        { onConflict: "run_id,query_norm", ignoreDuplicates: true },
+        { onConflict: "run_id,target_id,query_norm", ignoreDuplicates: true },
       )
       if (error) throw new Error(`Could not save the searches: ${error.message}`)
       counts.skipped_footprints = built.skipped
@@ -410,11 +466,12 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
       await step(2, {
         queries_total: queries.length,
         params: {
-          city: ctx.city,
-          state: ctx.state,
-          state_code: ctx.stateCode,
-          location_code: ctx.locationCode,
-          location_name: ctx.locationName,
+          places: ctx.places.map((p) => ({
+            id: p.id,
+            label: p.label,
+            search_name: p.searchName,
+            location_code: p.locationCode,
+          })),
           language_code: ctx.languageCode,
           services: ctx.services,
           industry: ctx.industry,
@@ -438,15 +495,16 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
       await step(3, { queries_done: count ?? 0 })
     }
 
-    // 4. Competitors from Google Maps.
-    const competitors = new Set(
-      (await mapsCompetitors(db, run, ctx)).map((d) => registrableDomain(d)),
-    )
+    // 4. Competitors from Google Maps, in each place.
+    const competitors = new Set<string>()
+    for (const place of ctx.places) {
+      for (const d of await mapsCompetitors(db, run, ctx, place)) competitors.add(registrableDomain(d))
+    }
 
     // 5. Parse every finished search.
     const { data: finished } = await db
       .from("backlink_run_queries")
-      .select("id, footprint_id, query, status, cache:serp_result_cache(items, competitors)")
+      .select("id, footprint_id, target_id, query, status, cache:serp_result_cache(items, competitors)")
       .eq("run_id", run.id)
       .in("status", ["done", "cached"])
     const all = queries.length
@@ -456,7 +514,7 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
     counts.failed = failed
 
     const rows: {
-      q: { id: string; footprint_id: string | null; query: string }
+      q: { id: string; footprint_id: string | null; target_id: string | null; query: string }
       item: OrganicRow
       sk: SiteKey
     }[] = []
@@ -495,34 +553,31 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
     )
     if (ctx.domain) agencyDomains.delete(registrableDomain(ctx.domain))
 
-    const otherStates =
-      ctx.countryIso.toUpperCase() === "US"
-        ? Object.entries(US_STATES)
-            .filter(([code]) => code !== ctx!.stateCode)
-            .map(([code, name]) => ({ code, name }))
-        : []
-    const cctx: ClassifyContext = {
-      city: ctx.city,
-      state: ctx.state,
-      stateCode: ctx.stateCode,
-      otherStates,
-      clientDomain: ctx.domain ? registrableDomain(ctx.domain) : null,
-      agencyDomains,
-      competitorDomains: competitors,
-      serviceTerms: [
-        ...new Set(
-          [...ctx.services, ctx.industry ?? ""]
-            .map(cleanTerm)
-            .filter((s): s is string => Boolean(s)),
-        ),
-      ],
-      library,
-      blockedRoots,
-    }
+    const serviceTerms = [
+      ...new Set(
+        [...ctx.services, ctx.industry ?? ""].map(cleanTerm).filter((x): x is string => Boolean(x)),
+      ),
+    ]
+    const clientDomain = ctx.domain ? registrableDomain(ctx.domain) : null
+    const contexts = new Map<string, ClassifyContext>(
+      ctx.places.map((place) => [
+        place.id,
+        {
+          ...placeLocality(place, ctx!.places),
+          clientDomain,
+          agencyDomains,
+          competitorDomains: competitors,
+          serviceTerms,
+          library,
+          blockedRoots,
+        },
+      ]),
+    )
 
-    const places = new Map<string, Place>()
+    const places = new Map<string, Found>()
     for (const { q, item, sk } of rows) {
-      const c = classify(item, sk, cctx)
+      const place = placeOf(ctx, q.target_id)
+      const c = classify(item, sk, contexts.get(place.id)!)
       const p =
         places.get(sk.siteKey) ??
         ({
@@ -538,13 +593,17 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
           foundSnippet: item.desc,
           hits: new Map(),
           footprints: new Set(),
-        } satisfies Place)
+          targets: new Set(),
+          localPlace: null,
+        } satisfies Found)
       if (TYPE_PRIORITY.indexOf(c.type) < TYPE_PRIORITY.indexOf(p.type)) p.type = c.type
       if (!c.filterReason) {
         p.visible = true
         p.filterReason = null
       } else if (!p.visible) p.filterReason ??= c.filterReason
       p.isLocal ||= c.isLocal
+      if (q.target_id) p.targets.add(q.target_id)
+      if (c.isLocal && !p.localPlace && place.kind === "city") p.localPlace = place
       if (item.p < p.bestPosition) {
         p.bestPosition = item.p
         p.foundUrl = item.url
@@ -592,10 +651,10 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
       rank_target: p.sk.rankTarget,
       name: (p.foundTitle ?? p.sk.siteKey).split(/\s[|\-–—:]\s/)[0]?.slice(0, 120) || p.sk.siteKey,
       type: p.type,
-      geo_scope: p.isLocal ? "city" : "unknown",
-      country_code: p.isLocal ? ctx!.countryIso : null,
-      region: p.isLocal ? ctx!.stateCode : null,
-      city: p.isLocal ? ctx!.city : null,
+      geo_scope: p.localPlace ? "city" : "unknown",
+      country_code: p.localPlace?.countryIso ?? null,
+      region: p.localPlace?.regionCode ?? null,
+      city: p.localPlace?.city ?? null,
       industries:
         ctx!.industry && p.type === "industry_directory"
           ? [cleanTerm(ctx!.industry)].filter(Boolean)
@@ -609,10 +668,12 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
       best_position: p.bestPosition,
       is_local: p.isLocal,
       relevance,
+      target_ids: [...p.targets],
       hits: [...p.hits.values()],
     }))
 
-    // Core listings for the client's country (industry ones only when they match).
+    // Core listings for the countries of the places searched (industry ones only when they match).
+    const countries = new Set(ctx.places.map((p) => p.countryIso.toUpperCase()))
     const { data: core } = await db
       .from("directories")
       .select(
@@ -621,7 +682,7 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
       .eq("is_core", true)
       .eq("status", "active")
     const coreItems = (core ?? [])
-      .filter((d) => d.core_countries.includes(ctx!.countryIso.toUpperCase()))
+      .filter((d) => d.core_countries.some((c) => countries.has(c)))
       .filter(
         (d) =>
           d.core_industries.length === 0 ||

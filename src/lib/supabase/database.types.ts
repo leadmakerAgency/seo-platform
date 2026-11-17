@@ -276,6 +276,7 @@ export type Database = {
             | null
           relevance: number
           status: Database["public"]["Enums"]["opportunity_status"]
+          target_ids: string[]
           updated_at: string
         }
         Insert: {
@@ -301,6 +302,7 @@ export type Database = {
             | null
           relevance?: number
           status?: Database["public"]["Enums"]["opportunity_status"]
+          target_ids?: string[]
           updated_at?: string
         }
         Update: {
@@ -326,6 +328,7 @@ export type Database = {
             | null
           relevance?: number
           status?: Database["public"]["Enums"]["opportunity_status"]
+          target_ids?: string[]
           updated_at?: string
         }
         Relationships: [
@@ -446,6 +449,7 @@ export type Database = {
           run_id: string
           scope: Database["public"]["Enums"]["footprint_scope"]
           status: Database["public"]["Enums"]["discovery_query_status"]
+          target_id: string | null
         }
         Insert: {
           cache_id?: string | null
@@ -461,6 +465,7 @@ export type Database = {
           run_id: string
           scope: Database["public"]["Enums"]["footprint_scope"]
           status?: Database["public"]["Enums"]["discovery_query_status"]
+          target_id?: string | null
         }
         Update: {
           cache_id?: string | null
@@ -476,6 +481,7 @@ export type Database = {
           run_id?: string
           scope?: Database["public"]["Enums"]["footprint_scope"]
           status?: Database["public"]["Enums"]["discovery_query_status"]
+          target_id?: string | null
         }
         Relationships: [
           {
@@ -506,6 +512,13 @@ export type Database = {
             referencedRelation: "backlink_runs"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "backlink_run_queries_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "backlink_targets"
+            referencedColumns: ["id"]
+          },
         ]
       }
       backlink_runs: {
@@ -526,6 +539,7 @@ export type Database = {
           started_at: string | null
           status: Database["public"]["Enums"]["backlink_run_status"]
           step: number
+          target_ids: string[]
         }
         Insert: {
           attempts?: number
@@ -544,6 +558,7 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["backlink_run_status"]
           step?: number
+          target_ids?: string[]
         }
         Update: {
           attempts?: number
@@ -562,6 +577,7 @@ export type Database = {
           started_at?: string | null
           status?: Database["public"]["Enums"]["backlink_run_status"]
           step?: number
+          target_ids?: string[]
         }
         Relationships: [
           {
@@ -630,6 +646,75 @@ export type Database = {
           },
           {
             foreignKeyName: "backlink_strength_checks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      backlink_targets: {
+        Row: {
+          active: boolean
+          city: string | null
+          client_id: string
+          country_iso: string
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          label: string
+          location_code: number
+          location_name: string
+          region_code: string | null
+          region_name: string | null
+          search_name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          city?: string | null
+          client_id: string
+          country_iso: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          label: string
+          location_code: number
+          location_name: string
+          region_code?: string | null
+          region_name?: string | null
+          search_name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          city?: string | null
+          client_id?: string
+          country_iso?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          label?: string
+          location_code?: number
+          location_name?: string
+          region_code?: string | null
+          region_name?: string | null
+          search_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backlink_targets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_targets_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "team_members"
@@ -3189,6 +3274,16 @@ export type Database = {
       }
     }
     Functions: {
+      add_backlink_target: {
+        Args: {
+          p_client_id: string
+          p_label: string
+          p_location_code: number
+          p_region_code?: string
+          p_search_name: string
+        }
+        Returns: string
+      }
       add_client_login: {
         Args: {
           p_client_id: string
@@ -3282,6 +3377,7 @@ export type Database = {
           started_at: string | null
           status: Database["public"]["Enums"]["backlink_run_status"]
           step: number
+          target_ids: string[]
         }[]
         SetofOptions: {
           from: "*"
@@ -3467,13 +3563,14 @@ export type Database = {
         Returns: Database["public"]["Enums"]["request_status"]
       }
       rankings_cron_status: { Args: never; Returns: Json }
+      remove_backlink_target: { Args: { p_id: string }; Returns: undefined }
       remove_client_login: { Args: { p_login_id: string }; Returns: undefined }
       replace_keyword: {
         Args: { p_keyword_id: string; p_new_phrase: string }
         Returns: Json
       }
       request_backlink_discovery: {
-        Args: { p_client_id: string }
+        Args: { p_client_id: string; p_target_ids: string[] }
         Returns: string
       }
       request_keyword_research: {
@@ -3537,6 +3634,10 @@ export type Database = {
         Returns: Json
       }
       unblock_directory: { Args: { p_id: string }; Returns: number }
+      update_backlink_target: {
+        Args: { p_active: boolean; p_id: string; p_search_name: string }
+        Returns: undefined
+      }
       update_rank_settings: {
         Args: { p_client_id: string; p_data: Json }
         Returns: undefined

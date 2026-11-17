@@ -5,6 +5,7 @@ import { useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -24,9 +25,11 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { formatNumber } from "@/lib/format"
+import { cn } from "@/lib/utils"
 import { checkSiteStrength, findPlaces, reviewPlaces } from "../actions"
-import { REJECT_LABELS, REJECT_REASONS, type RejectReason } from "../constants"
-import { usd } from "./bits"
+import { REJECT_LABELS, REJECT_REASONS, SEARCH_COST_USD, type RejectReason } from "../constants"
+import type { Target } from "../queries"
+import { formatDayTime, usd } from "./bits"
 
 function WithReason({ reason, children }: { reason: string | null; children: ReactNode }) {
   if (!reason) return <>{children}</>
@@ -42,37 +45,147 @@ function WithReason({ reason, children }: { reason: string | null; children: Rea
   )
 }
 
+/**
+ * Find places: pick which of the client's places to search, see the number of searches and
+ * the cost first. The database checks the same limits (24 h per place, 60 searches a run).
+ */
 export function FindPlacesButton({
   clientId,
+  targets,
+  perPlace,
+  fixed,
+  maxSearches,
   disabledReason,
-  hint,
   variant = "default",
 }: {
   clientId: string
+  targets: Target[]
+  perPlace: number
+  fixed: number
+  maxSearches: number
   disabledReason: string | null
-  /** Shown in the tooltip when enabled ("About 25 searches, about $0.15"). */
-  hint?: string
   variant?: "default" | "outline"
 }) {
+  const [open, setOpen] = useState(false)
+  const [picked, setPicked] = useState<Set<string>>(new Set())
   const [pending, startTransition] = useTransition()
-  const button = (
-    <Button
-      variant={variant}
-      disabled={pending || Boolean(disabledReason)}
-      title={!disabledReason ? hint : undefined}
-      onClick={() =>
-        startTransition(async () => {
-          const r = await findPlaces(clientId)
-          if (!r.ok) toast.error(r.error)
-          else toast.success("Searching Google now. Places appear here in a minute or two.")
-        })
+  const active = targets.filter((t) => t.active)
+  const available = active.filter((t) => !t.searchableAt)
+  const reason =
+    disabledReason ??
+    (active.length === 0
+      ? "Add a place first."
+      : available.length === 0
+        ? "Every place was searched in the last 24 hours."
+        : null)
+
+  const estimate = (n: number) => (n === 0 ? 0 : n * perPlace + fixed)
+  const searches = estimate(picked.size)
+  const tooMany = searches > maxSearches
+
+  function onOpenChange(next: boolean) {
+    if (next) {
+      // Pre-tick every place that can be searched, as many as fit in one search.
+      const ids = new Set<string>()
+      for (const t of available) {
+        if (estimate(ids.size + 1) > maxSearches) break
+        ids.add(t.id)
       }
-    >
-      <Search className={pending ? "animate-pulse" : undefined} />
-      Find places
-    </Button>
+      setPicked(ids)
+    }
+    setOpen(next)
+  }
+
+  function start() {
+    startTransition(async () => {
+      const r = await findPlaces(clientId, [...picked])
+      if (!r.ok) {
+        toast.error(r.error)
+        return
+      }
+      setOpen(false)
+      toast.success("Searching Google now. Places appear here in a minute or two.")
+    })
+  }
+
+  return (
+    <>
+      <WithReason reason={reason}>
+        <Button variant={variant} disabled={Boolean(reason)} onClick={() => onOpenChange(true)}>
+          <Search />
+          Find places
+        </Button>
+      </WithReason>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[520px]">
+          <DialogHeader>
+            <DialogTitle>Find places</DialogTitle>
+            <DialogDescription>
+              Google is searched from each ticked place for directories, chambers, associations,
+              best-of lists and local sites. The core listings are added too.
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="flex max-h-[45svh] flex-col divide-y overflow-y-auto rounded-lg border">
+            {active.map((t) => {
+              const blocked = Boolean(t.searchableAt)
+              return (
+                <li key={t.id}>
+                  <label
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 text-sm",
+                      blocked ? "opacity-60" : "cursor-pointer hover:bg-muted/60",
+                    )}
+                  >
+                    <Checkbox
+                      checked={picked.has(t.id)}
+                      disabled={blocked || pending}
+                      onCheckedChange={(v) =>
+                        setPicked((s) => {
+                          const next = new Set(s)
+                          if (v) next.add(t.id)
+                          else next.delete(t.id)
+                          return next
+                        })
+                      }
+                    />
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate font-medium">{t.label}</span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {blocked
+                          ? `Searched lately. Again from ${formatDayTime(t.searchableAt!)}`
+                          : t.lastSearchedAt
+                            ? `“${t.searchName}” · searched before`
+                            : `“${t.searchName}” · not searched yet`}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                      ~{perPlace} searches
+                    </span>
+                  </label>
+                </li>
+              )
+            })}
+          </ul>
+          <p className={cn("text-sm tabular-nums", tooMany ? "text-danger" : "text-muted-foreground")}>
+            {picked.size === 0
+              ? "Tick at least one place."
+              : tooMany
+                ? `That's about ${formatNumber(searches)} searches; one search can do ${maxSearches}. Untick a place.`
+                : `About ${formatNumber(searches)} Google searches, at most ${usd(searches * SEARCH_COST_USD)}. Searches run lately for the same place are reused for free.`}
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={start} disabled={pending || picked.size === 0 || tooMany}>
+              <Search className={pending ? "animate-pulse" : undefined} />
+              {pending ? "Starting…" : `Search ${picked.size === 1 ? "1 place" : `${picked.size} places`}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
-  return <WithReason reason={disabledReason}>{button}</WithReason>
 }
 
 export function CheckStrengthButton({

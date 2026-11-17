@@ -250,7 +250,12 @@ Plan: `docs/plans/rankings/` (00-overview to 04-page-and-polish). Migrations `00
 
 ## Backlinks (DataForSEO)
 
-Plan: `docs/plans/backlinks/` (00-overview to 05-later-upgrades). Migrations `0031`–`0034`.
+Plan: `docs/plans/backlinks/` (00-overview to 06-target-places). Migrations `0031`–`0034`, `0036`.
+
+- **Places to be found in** (`backlink_targets`, migration `0036`): the team adds the cities,
+  regions or countries where the client wants customers (each a DataForSEO location code from
+  `dfs_locations`, with editable search words). Find places searches only these; the client's
+  own city is not used. `add_backlink_target` / `update_backlink_target` / `remove_backlink_target`.
 
 - **The library** (`directories`): one row per place you can get listed on, shared by every
   client and holding no client data. `site_key` is the place (the domain; a platform tenant such as
@@ -259,12 +264,14 @@ Plan: `docs/plans/backlinks/` (00-overview to 05-later-upgrades). Migrations `00
   Profile, Bing Places, Apple, Yelp, BBB, …; industry ones by `core_industries`) and a blocklist.
   Admins and managers edit (`set_directory`) or block (`block_directory`) a site for everyone.
 - **Find places** (`backlink_runs` → `backlink_run_queries` → `backlink_opportunities` +
-  `backlink_opportunity_hits`): `request_backlink_discovery` (admins, managers and VAs who can see
-  the client; once a day, `backlink_runs_per_client_month`, both budgets) queues a run; the action
-  starts it with `after()`. `src/features/backlinks/discovery.ts` builds up to 30 searches from
-  `backlink_footprints` (no search operators: they cost 5x), runs them on Google Live (desktop,
-  depth 30) or reuses `serp_result_cache` (same search in the same city within 90 days), adds a
-  Maps call for competitor domains, classifies every result (`classify.ts`, `site-key.ts`,
+  `backlink_opportunity_hits`): `request_backlink_discovery(client, target_ids)` (admins, managers and VAs who can see
+  the client; each place once a day, at most 60 searches a run via `private.backlink_search_estimate`,
+  `backlink_runs_per_client_month`, both budgets) queues a run for the ticked places; the action
+  starts it with `after()`. `src/features/backlinks/discovery.ts` builds up to 12 searches per place
+  plus 4 industry searches from `backlink_footprints` (`{place}` = the place's search words; no
+  search operators: they cost 5x), runs each from its place's location code on Google Live
+  (desktop, depth 30) or reuses `serp_result_cache` (same search, same place, within 90 days), adds
+  a Maps call per place for competitor domains, classifies every result (`classify.ts`, `site-key.ts`,
   `scoring.ts`, pure) and stores places with `dfs_store_backlink_candidates` (idempotent; never
   changes a place a person decided). Hidden places keep a `filter_reason`.
 - **Review**: `review_backlink_opportunities` (approve, reject with a reason, restore), every row

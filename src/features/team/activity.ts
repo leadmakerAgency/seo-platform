@@ -190,6 +190,10 @@ export function describeActivity(entry: ActivityLike): string {
     // Reserved for the AI visibility, Backlinks, Content, Reviews and Report pages.
     case "ai.check_finished":
       return `finished an AI answers check${num(m.mentions) ? `: named in ${num(m.mentions)} answers` : ""}`
+    case "backlink.target_added":
+      return `added ${str(m.place) || "a place"} to the places for backlinks`
+    case "backlink.target_removed":
+      return `removed ${str(m.place) || "a place"} from the places for backlinks`
     case "backlink.discovery_finished": {
       const n = Number(m.new) || 0
       return `searched Google for backlink places: ${n} new place${n === 1 ? "" : "s"}${Number(m.known) ? `, ${num(m.known)} already known` : ""}`

@@ -8,7 +8,13 @@ import { displayHost } from "./site-key"
 
 /** Reads for the Backlinks page. Everything goes through RLS (VAs see only their clients). */
 
-export type PlaceHit = { query: string; position: number | null; url: string | null }
+export type PlaceHit = {
+  query: string
+  position: number | null
+  url: string | null
+  /** The place the search was for (null: an industry search). */
+  targetId: string | null
+}
 
 export type Place = {
   id: string
@@ -31,6 +37,8 @@ export type Place = {
   checkedAt: string | null
   hits: PlaceHit[]
   searches: number
+  /** The client's places whose searches found it. */
+  targetIds: string[]
   rejectReason: RejectReason | null
   rejectNote: string | null
   decidedAt: string | null
@@ -58,11 +66,25 @@ export type RunInfo = {
   error: string | null
   counts: Record<string, unknown>
   params: {
-    location_name?: string | null
-    city?: string
-    state_code?: string | null
+    places?: { id: string; label: string; search_name: string }[]
     services?: string[]
   }
+}
+
+/** A place the client wants to be found in (backlink_targets, via backlink_quota). */
+export type Target = {
+  id: string
+  label: string
+  kind: "city" | "region" | "country"
+  countryIso: string
+  locationName: string
+  searchName: string
+  active: boolean
+  lastSearchedAt: string | null
+  /** Set while the place was searched in the last 24 hours. */
+  searchableAt: string | null
+  /** Places found for it (not counting hidden ones). */
+  places: number
 }
 
 export type Quota = {
@@ -71,8 +93,19 @@ export type Quota = {
   nextSearchAt: string | null
   budgetProblem: string | null
   access: "unknown" | "ok" | "denied"
-  openRun: { id: string; status: string; queries_done: number; queries_total: number } | null
+  openRun: {
+    id: string
+    status: string
+    queries_done: number
+    queries_total: number
+    target_ids: string[]
+  } | null
   strengthRunning: boolean
+  targets: Target[]
+  /** Searches one place adds to a run, searches every run makes once, and the cap. */
+  perPlace: number
+  fixed: number
+  maxSearches: number
 }
 
 export type BacklinksData = {
@@ -109,7 +142,7 @@ export async function getBacklinksData(clientId: string): Promise<BacklinksData>
       supabase
         .from("backlink_opportunities")
         .select(
-          "id, status, filter_reason, is_core, is_local, found_url, found_title, found_snippet, best_position, relevance, reject_reason, reject_note, decided_at, notes, created_at, directory:directories!inner(id, site_key, name, type, type_source, status, blocked_reason, submit_url, cost_type, notes, authority, authority_status, spam_score, authority_checked_at)",
+          "id, status, filter_reason, is_core, is_local, target_ids, found_url, found_title, found_snippet, best_position, relevance, reject_reason, reject_note, decided_at, notes, created_at, directory:directories!inner(id, site_key, name, type, type_source, status, blocked_reason, submit_url, cost_type, notes, authority, authority_status, spam_score, authority_checked_at)",
         )
         .eq("client_id", clientId)
         .order("created_at")
@@ -118,7 +151,7 @@ export async function getBacklinksData(clientId: string): Promise<BacklinksData>
     all((from, to) =>
       supabase
         .from("backlink_opportunity_hits")
-        .select("opportunity_id, footprint_id, query, position, url")
+        .select("opportunity_id, footprint_id, query, position, url, run_query:backlink_run_queries(target_id)")
         .eq("client_id", clientId)
         .order("id")
         .range(from, to),
@@ -138,7 +171,8 @@ export async function getBacklinksData(clientId: string): Promise<BacklinksData>
   const hitsBy = new Map<string, { list: PlaceHit[]; footprints: Set<string> }>()
   for (const h of hits) {
     const entry = hitsBy.get(h.opportunity_id) ?? { list: [], footprints: new Set<string>() }
-    entry.list.push({ query: h.query, position: h.position, url: h.url })
+    const rq = h.run_query as { target_id: string | null } | null
+    entry.list.push({ query: h.query, position: h.position, url: h.url, targetId: rq?.target_id ?? null })
     entry.footprints.add(h.footprint_id ?? h.query)
     hitsBy.set(h.opportunity_id, entry)
   }
@@ -184,6 +218,7 @@ export async function getBacklinksData(clientId: string): Promise<BacklinksData>
       checkedAt: d.authority_checked_at,
       hits: list,
       searches: h?.footprints.size ?? 0,
+      targetIds: o.target_ids ?? [],
       rejectReason: o.reject_reason,
       rejectNote: o.reject_note,
       decidedAt: o.decided_at,
@@ -230,6 +265,21 @@ export async function getBacklinksData(clientId: string): Promise<BacklinksData>
           access: (q.access as Quota["access"]) ?? "unknown",
           openRun: (q.open_run as Quota["openRun"]) ?? null,
           strengthRunning: Boolean(q.strength_running),
+          targets: ((q.targets as Record<string, unknown>[] | null) ?? []).map((t) => ({
+            id: String(t.id),
+            label: String(t.label),
+            kind: t.kind as Target["kind"],
+            countryIso: String(t.country_iso),
+            locationName: String(t.location_name),
+            searchName: String(t.search_name),
+            active: Boolean(t.active),
+            lastSearchedAt: (t.last_searched_at as string | null) ?? null,
+            searchableAt: (t.searchable_at as string | null) ?? null,
+            places: Number(t.places ?? 0),
+          })),
+          perPlace: Number(q.per_place ?? 12),
+          fixed: Number(q.fixed ?? 0),
+          maxSearches: Number(q.max_searches ?? 60),
         }
       : null,
   }

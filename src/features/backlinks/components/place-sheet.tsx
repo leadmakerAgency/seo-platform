@@ -55,6 +55,7 @@ export function PlaceSheet({
   canForce,
   canLibrary,
   strengthBlocked,
+  placeLabels,
   onOpenChange,
 }: {
   place: Place | null
@@ -64,6 +65,7 @@ export function PlaceSheet({
   canForce: boolean
   canLibrary: boolean
   strengthBlocked: string | null
+  placeLabels: Record<string, string>
   onOpenChange: (open: boolean) => void
 }) {
   const [rejectOpen, setRejectOpen] = useState(false)
@@ -190,6 +192,11 @@ export function PlaceSheet({
                       <li key={i} className="flex items-start justify-between gap-3 px-3 py-2">
                         <span className="min-w-0">
                           <span className="block">&ldquo;{h.query}&rdquo;</span>
+                          <span className="block text-xs text-muted-foreground">
+                            {h.targetId && placeLabels[h.targetId]
+                              ? `Searched from ${placeLabels[h.targetId]}`
+                              : "Industry search"}
+                          </span>
                           {h.url && (
                             <a
                               href={h.url}
@@ -211,7 +218,7 @@ export function PlaceSheet({
                   !place.isCore && <p className="text-muted-foreground">No search details saved.</p>
                 )}
                 {place.isLocal && (
-                  <p className="text-muted-foreground">Mentions the client&apos;s city.</p>
+                  <p className="text-muted-foreground">Mentions a place it was searched for.</p>
                 )}
               </section>
 

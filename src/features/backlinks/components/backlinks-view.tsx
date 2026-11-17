@@ -54,6 +54,8 @@ export function BacklinksView({
   canForce,
   canLibrary,
   strengthBlocked,
+  placeLabels,
+  initialPlace,
 }: {
   /** Every place of this client; the view picks the tab's rows. */
   places: Place[]
@@ -66,9 +68,16 @@ export function BacklinksView({
   canForce: boolean
   canLibrary: boolean
   strengthBlocked: string | null
+  /** The client's places (backlink_targets) by id, for "Found for" and the filter. */
+  placeLabels: Record<string, string>
+  /** ?place=<id> from the URL. */
+  initialPlace: string | null
 }) {
   const [query, setQuery] = useState("")
   const [type, setType] = useState<DirectoryType | "all">("all")
+  const [placeFilter, setPlaceFilter] = useState<string>(
+    initialPlace && placeLabels[initialPlace] ? initialPlace : "all",
+  )
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "score", dir: -1 })
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [openId, setOpenId] = useState<string | null>(null)
@@ -79,12 +88,17 @@ export function BacklinksView({
   const status = TAB_STATUS[tab]
   const inTab = useMemo(() => places.filter((p) => p.status === status), [places, status])
   const types = useMemo(() => [...new Set(inTab.map((p) => p.type))].sort(), [inTab])
+  const placeIds = useMemo(
+    () => Object.keys(placeLabels).filter((id) => inTab.some((p) => p.targetIds.includes(id))),
+    [inTab, placeLabels],
+  )
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase()
     const filtered = inTab.filter(
       (p) =>
         (type === "all" || p.type === type) &&
+        (placeFilter === "all" || p.targetIds.includes(placeFilter)) &&
         (!q ||
           p.name.toLowerCase().includes(q) ||
           p.site.includes(q) ||
@@ -111,14 +125,19 @@ export function BacklinksView({
       if (typeof va === "string" && typeof vb === "string") return va.localeCompare(vb) * sort.dir
       return ((va as number) - (vb as number)) * sort.dir
     })
-  }, [inTab, query, type, sort])
+  }, [inTab, query, type, placeFilter, sort])
 
   const visible = rows.slice(0, shown)
   const selectedIds = [...selected].filter((id) => rows.some((r) => r.id === id))
   const allSelected = visible.length > 0 && visible.every((r) => selected.has(r.id))
   const open = places.find((p) => p.id === openId) ?? null
   const ranked =
-    tab === "review" && sort.key === "score" && sort.dir === -1 && type === "all" && !query.trim()
+    tab === "review" &&
+    sort.key === "score" &&
+    sort.dir === -1 &&
+    type === "all" &&
+    placeFilter === "all" &&
+    !query.trim()
 
   function toggle(id: string) {
     setSelected((s) => {
@@ -181,7 +200,7 @@ export function BacklinksView({
   }
 
   const reviewable = canReview && tab !== "hidden"
-  const columns = 8 + (canReview ? 1 : 0)
+  const columns = 9 + (canReview ? 1 : 0)
 
   return (
     <div className="flex flex-col gap-4">
@@ -210,6 +229,21 @@ export function BacklinksView({
               {types.map((t) => (
                 <SelectItem key={t} value={t}>
                   {TYPE_LABELS[t]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        {placeIds.length > 1 && (
+          <Select value={placeFilter} onValueChange={setPlaceFilter}>
+            <SelectTrigger size="sm" className="w-52" aria-label="Found for which place">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Every place</SelectItem>
+              {placeIds.map((id) => (
+                <SelectItem key={id} value={id}>
+                  {placeLabels[id]}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -291,6 +325,7 @@ export function BacklinksView({
               <th className="w-10 px-2 py-2 text-right font-medium">#</th>
               {header("name", "Site")}
               <th className="px-3 py-2 text-left font-medium">Type</th>
+              <th className="px-3 py-2 text-left font-medium">Found for</th>
               <th className="px-3 py-2 text-left font-medium">
                 {tab === "hidden"
                   ? "Why hidden"
@@ -360,6 +395,9 @@ export function BacklinksView({
                 <td className="px-3 py-2 align-top">
                   <TypeTag type={p.type} />
                 </td>
+                <td className="max-w-[200px] px-3 py-2 align-top">
+                  <FoundFor place={p} labels={placeLabels} />
+                </td>
                 <td className="max-w-[280px] px-3 py-2 align-top text-[13px] text-muted-foreground">
                   {tab === "hidden" && p.filterReason
                     ? FILTER_LABELS[p.filterReason]
@@ -417,6 +455,7 @@ export function BacklinksView({
         canForce={canForce}
         canLibrary={canLibrary}
         strengthBlocked={strengthBlocked}
+        placeLabels={placeLabels}
         onOpenChange={(o) => !o && setOpenId(null)}
       />
       {rejectIds && (
@@ -442,4 +481,28 @@ function emptyText(tab: Tab) {
     default:
       return "Nothing waiting for review."
   }
+}
+
+/** The client's places whose searches found this site ("Core listing" for core ones). */
+function FoundFor({ place, labels }: { place: Place; labels: Record<string, string> }) {
+  const names = place.targetIds.map((id) => labels[id]).filter(Boolean)
+  if (names.length === 0) {
+    return (
+      <span className="text-[13px] text-muted-foreground">
+        {place.isCore ? "Every place" : place.hits.length ? "Industry search" : "—"}
+      </span>
+    )
+  }
+  return (
+    <span className="flex flex-wrap gap-1">
+      {names.slice(0, 3).map((n) => (
+        <span key={n} className="rounded-sm bg-muted px-1.5 py-px text-[11px] text-muted-foreground">
+          {n}
+        </span>
+      ))}
+      {names.length > 3 && (
+        <span className="text-[11px] text-muted-foreground">+{names.length - 3}</span>
+      )}
+    </span>
+  )
 }

@@ -88,7 +88,9 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   job) and `review_backlink_opportunities` / `block_directory` / `unblock_directory` (people);
   strength only by `dfs_store_strength`. Footprints never contain search operators (5x price).
   Never spend without `request_backlink_discovery` / `request_strength_check` (budgets and limits
-  live there). Never fetch the URLs searches return on the server. Plan: `docs/plans/backlinks/`.
+  live there). Never fetch the URLs searches return on the server. Searches come only from the
+  client's `backlink_targets` (places the team added), never the client's own city; keep
+  `buildQueries` limits and `private.backlink_search_estimate` in step. Plan: `docs/plans/backlinks/`.
 - **Clients and countries:** create clients only through `createClient` → `public.create_client`
   (one transaction with the profile and onboarding link); `/clients/new` is a route, so
   `slugify` never returns `new`. Countries come only from `src/lib/countries.ts` (every ISO

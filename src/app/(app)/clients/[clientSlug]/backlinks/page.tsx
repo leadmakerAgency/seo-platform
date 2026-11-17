@@ -13,7 +13,8 @@ import {
   FindPlacesButton,
 } from "@/features/backlinks/components/backlink-dialogs"
 import { BacklinksView } from "@/features/backlinks/components/backlinks-view"
-import { formatDay, formatDayTime, usd } from "@/features/backlinks/components/bits"
+import { formatDay, usd } from "@/features/backlinks/components/bits"
+import { TargetsPanel } from "@/features/backlinks/components/targets-panel"
 import {
   MAX_QUERIES,
   SEARCH_COST_USD,
@@ -31,6 +32,7 @@ import { hasDataForSeo } from "@/lib/env.server"
 import { formatNumber } from "@/lib/format"
 import { clientHref, findClientSection } from "@/lib/navigation"
 import { can } from "@/lib/roles"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = { title: "Backlinks" }
@@ -78,26 +80,32 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
   const workable = places.filter((p) => p.status === "pending_review" || p.status === "approved")
   const unchecked = workable.filter((p) => !p.checkedAt).length
   const openRun = quota?.openRun ?? null
-  const where =
-    lastRun?.params.location_name?.split(",").slice(0, 2).join(", ") ||
-    client.location ||
-    "the client's city"
+  const targets = quota?.targets ?? []
+  const activeTargets = targets.filter((t) => t.active)
+  const labels = Object.fromEntries(targets.map((t) => [t.id, t.label]))
+  const listOf = (names: string[]) =>
+    names.length <= 3 ? names.join(", ") : `${names.slice(0, 3).join(", ")} and ${names.length - 3} more`
 
   const findBlocked = !configured
     ? "DataForSEO isn't connected yet."
-    : !client.city
-      ? "Add the client's city in Edit details first."
-      : client.stage === "paused" || client.stage === "churned"
-        ? "This client is paused or has left."
-        : openRun
-          ? "A search is running now."
-          : quota?.budgetProblem
-            ? quota.budgetProblem
-            : quota && quota.used >= quota.limit
-              ? `This client has used its ${quota.limit} searches this month.`
-              : quota?.nextSearchAt
-                ? `Searched in the last 24 hours. Next search after ${formatDayTime(quota.nextSearchAt)}.`
-                : null
+    : client.stage === "paused" || client.stage === "churned"
+      ? "This client is paused or has left."
+      : openRun
+        ? "A search is running now."
+        : quota?.budgetProblem
+          ? quota.budgetProblem
+          : quota && quota.used >= quota.limit
+            ? `This client has used its ${quota.limit} searches this month.`
+            : null
+
+  // Suggestions for the first place: the client's city and the areas they serve.
+  const supabase = await createSupabaseServerClient()
+  const { data: profile } = await supabase
+    .from("client_business_profiles")
+    .select("service_areas")
+    .eq("client_id", client.id)
+    .maybeSingle()
+  const suggestions = [...new Set([client.city ?? "", ...(profile?.service_areas ?? [])].map((s) => s.trim()).filter(Boolean))].slice(0, 6)
   const strengthBlocked = !configured
     ? "DataForSEO isn't connected yet."
     : quota?.access === "denied"
@@ -109,7 +117,9 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
           : null
 
   const describe = [
-    `Places to get listed, found by Google searches from ${where}`,
+    activeTargets.length
+      ? `Places to get listed, found by Google searches in ${listOf(activeTargets.map((t) => t.label))}`
+      : "Places to get listed, found by Google searches in the places you choose",
     lastRun?.finishedAt
       ? `last search ${formatDay(lastRun.createdAt)} (${formatNumber(Number(lastRun.counts.searches ?? lastRun.queriesTotal))} searches, ${usd(lastRun.cost)})`
       : null,
@@ -136,8 +146,20 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
             : undefined,
   }))
 
-  const hint = `Up to ${MAX_QUERIES} Google searches, about ${usd(MAX_QUERIES * SEARCH_COST_USD * 0.8)}`
   const counts = lastRun?.counts ?? {}
+  const findButton = (variant: "default" | "outline" = "default") =>
+    canDiscover && quota ? (
+      <FindPlacesButton
+        clientId={client.id}
+        targets={targets}
+        perPlace={quota.perPlace}
+        fixed={quota.fixed}
+        maxSearches={quota.maxSearches}
+        disabledReason={findBlocked}
+        variant={variant}
+      />
+    ) : null
+  const runPlaces = (openRun?.target_ids ?? []).map((id) => labels[id]).filter(Boolean)
 
   return (
     <>
@@ -154,19 +176,28 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
                 disabledReason={strengthBlocked}
               />
             )}
-            {canDiscover && (
-              <FindPlacesButton clientId={client.id} disabledReason={findBlocked} hint={hint} />
-            )}
+            {findButton()}
           </>
         }
       />
 
       {!configured && <SetupNotice isAdmin={isAdmin} />}
 
+      <TargetsPanel
+        clientId={client.id}
+        targets={targets}
+        defaultCountry={client.country_code}
+        suggestions={suggestions}
+        canEdit={canDiscover}
+        nowIso={new Date().toISOString()}
+      />
+
       {openRun && (
         <div className="flex flex-col gap-2 rounded-lg border bg-card px-4 py-3 text-sm">
           <p>
-            <span className="font-medium">Searching Google</span>
+            <span className="font-medium">
+              Searching Google{runPlaces.length ? ` for ${listOf(runPlaces)}` : ""}
+            </span>
             <span className="text-muted-foreground">
               {openRun.queries_total > 0
                 ? ` · ${formatNumber(openRun.queries_done)} of ${formatNumber(openRun.queries_total)} searches done`
@@ -196,13 +227,13 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
             ? `, ${formatNumber(Number(counts.known))} already known`
             : ""}
           {Number(counts.cached ?? 0) > 0
-            ? ` · ${formatNumber(Number(counts.cached))} searches reused from another client in the same city`
+            ? ` · ${formatNumber(Number(counts.cached))} searches reused from recent searches for the same place`
             : ""}
           {Number(counts.failed ?? 0) > 0
             ? ` · ${formatNumber(Number(counts.failed))} searches failed`
             : ""}
           {counts.no_services
-            ? " · no services in the business profile, so only city searches ran"
+            ? " · no services in the business profile, so only place searches ran"
             : ""}
           .
         </p>
@@ -214,14 +245,12 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
           <div className="flex flex-col gap-1">
             <p className="font-medium">No places yet</p>
             <p className="max-w-[68ch] text-muted-foreground">
-              {!client.city
-                ? "Add the client's city in Edit details on the Overview, then search."
-                : `Find places runs up to ${MAX_QUERIES} Google searches from ${where} for directories, the chamber of commerce, associations, best-of lists and local blogs (about ${usd(MAX_QUERIES * SEARCH_COST_USD * 0.8)}), and adds the core listings every business needs. They land here for review.`}
+              {activeTargets.length === 0
+                ? "First add the places where the client wants to be found (above). Then Find places searches Google from each of them for directories, chambers of commerce, associations, best-of lists and local blogs, and adds the core listings every business needs."
+                : `Find places searches Google from the places above (about ${quota?.perPlace ?? 12} searches each, roughly ${usd((quota?.perPlace ?? 12) * SEARCH_COST_USD)} per place, ${MAX_QUERIES} at most per search) for directories, chambers of commerce, associations, best-of lists and local blogs, and adds the core listings every business needs. They land here for review.`}
             </p>
           </div>
-          {canDiscover && (
-            <FindPlacesButton clientId={client.id} disabledReason={findBlocked} hint={hint} />
-          )}
+          {activeTargets.length > 0 && findButton()}
         </div>
       ) : (
         <>
@@ -237,6 +266,8 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
             canForce={canLibrary}
             canLibrary={canLibrary}
             strengthBlocked={strengthBlocked}
+            placeLabels={labels}
+            initialPlace={one(search.place) ?? null}
           />
           <HowScoresWork />
         </>
@@ -261,8 +292,8 @@ function HowScoresWork() {
         <p>
           <span className="text-foreground">Relevance</span> is set by the search: the kind of site
           (chambers and local directories first, then associations, best-of lists, blogs), whether
-          it mentions the client&apos;s city, how many different searches found it and how high it
-          ranked. Core listings never go below {Math.round(CORE_FLOOR * 100)}%.
+          it mentions the place it was found for, how many different searches found it and how high
+          it ranked. Core listings never go below {Math.round(CORE_FLOOR * 100)}%.
         </p>
         <p>
           <span className="text-foreground">Site strength</span> is DataForSEO&apos;s Domain Rank on
@@ -272,8 +303,8 @@ function HowScoresWork() {
         </p>
         <p>
           The search hides results that are the client&apos;s own site, another client&apos;s site,
-          a competitor from the map results, a business rather than a directory, a different state,
-          or an article with nothing local. They are in Hidden with the reason, and each can be
+          a competitor from the map results, a business rather than a directory, a different state or
+          province than the places you chose, or an article with nothing local. They are in Hidden with the reason, and each can be
           brought back.
         </p>
       </div>
