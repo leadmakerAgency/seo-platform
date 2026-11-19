@@ -3,6 +3,7 @@ import "server-only"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import type { Tables } from "@/lib/supabase/database.types"
 import type { DirectoryType, FilterReason, OpportunityStatus, RejectReason } from "./constants"
+import { snapshotOf, type BriefSnapshot } from "./brief"
 import { scoreOf } from "./scoring"
 import { displayHost } from "./site-key"
 
@@ -39,6 +40,15 @@ export type Place = {
   searches: number
   /** The client's places whose searches found it. */
   targetIds: string[]
+  /** search = found by Find places; core / brief = the Basics tab. */
+  source: "search" | "core" | "brief"
+  matchedTopic: string | null
+  topicFit: number | null
+  aiFit: number | null
+  aiVerdict: string | null
+  aiReason: string | null
+  /** 1–30 in Review. */
+  shortlistRank: number | null
   rejectReason: RejectReason | null
   rejectNote: string | null
   decidedAt: string | null
@@ -96,12 +106,18 @@ export type Quota = {
   openRun: {
     id: string
     status: string
+    kind: "search" | "rerank"
+    step: number
     queries_done: number
     queries_total: number
     target_ids: string[]
   } | null
   strengthRunning: boolean
   targets: Target[]
+  briefVersion: number | null
+  /** What the brief still needs before Find places can run (empty = ready). */
+  briefMissing: string[]
+  aiBudgetProblem: string | null
   /** Searches one place adds to a run, searches every run makes once, and the cap. */
   perPlace: number
   fixed: number
@@ -109,6 +125,7 @@ export type Quota = {
 }
 
 export type BacklinksData = {
+  brief: BriefSnapshot | null
   places: Place[]
   lastRun: RunInfo | null
   quota: Quota | null
@@ -137,12 +154,12 @@ async function all<T>(
 export async function getBacklinksData(clientId: string): Promise<BacklinksData> {
   const supabase = await createSupabaseServerClient()
 
-  const [opps, hits, { data: runs }, { data: quota }, { data: client }] = await Promise.all([
+  const [opps, hits, { data: runs }, { data: quota }, { data: client }, { data: briefRow }] = await Promise.all([
     all((from, to) =>
       supabase
         .from("backlink_opportunities")
         .select(
-          "id, status, filter_reason, is_core, is_local, target_ids, found_url, found_title, found_snippet, best_position, relevance, reject_reason, reject_note, decided_at, notes, created_at, directory:directories!inner(id, site_key, name, type, type_source, status, blocked_reason, submit_url, cost_type, notes, authority, authority_status, spam_score, authority_checked_at)",
+          "id, status, filter_reason, is_core, is_local, target_ids, source, matched_topic, topic_fit, rule_score, ai_fit, ai_verdict, ai_reason, shortlist_rank, found_url, found_title, found_snippet, best_position, relevance, reject_reason, reject_note, decided_at, notes, created_at, directory:directories!inner(id, site_key, name, type, type_source, status, blocked_reason, submit_url, cost_type, notes, authority, authority_status, spam_score, authority_checked_at)",
         )
         .eq("client_id", clientId)
         .order("created_at")
@@ -166,6 +183,7 @@ export async function getBacklinksData(clientId: string): Promise<BacklinksData>
       .limit(1),
     supabase.rpc("backlink_quota", { p_client_id: clientId }),
     supabase.from("clients").select("backlinks_target").eq("id", clientId).maybeSingle(),
+    supabase.from("backlink_briefs").select("*").eq("client_id", clientId).maybeSingle(),
   ])
 
   const hitsBy = new Map<string, { list: PlaceHit[]; footprints: Set<string> }>()
@@ -196,7 +214,7 @@ export async function getBacklinksData(clientId: string): Promise<BacklinksData>
     }
     const h = hitsBy.get(o.id)
     const list = (h?.list ?? []).sort((a, b) => (a.position ?? 999) - (b.position ?? 999))
-    const relevance = Number(o.relevance)
+    const relevance = o.rule_score !== null ? Number(o.rule_score) : Number(o.relevance)
     return {
       id: o.id,
       status: o.status,
@@ -219,6 +237,13 @@ export async function getBacklinksData(clientId: string): Promise<BacklinksData>
       hits: list,
       searches: h?.footprints.size ?? 0,
       targetIds: o.target_ids ?? [],
+      source: (o.source ?? (o.is_core ? "core" : "search")) as Place["source"],
+      matchedTopic: o.matched_topic,
+      topicFit: o.topic_fit !== null ? Number(o.topic_fit) : null,
+      aiFit: o.ai_fit,
+      aiVerdict: o.ai_verdict,
+      aiReason: o.ai_reason,
+      shortlistRank: o.shortlist_rank,
       rejectReason: o.reject_reason,
       rejectNote: o.reject_note,
       decidedAt: o.decided_at,
@@ -235,11 +260,15 @@ export async function getBacklinksData(clientId: string): Promise<BacklinksData>
       },
     }
   })
-  places.sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))
+  places.sort(
+    (a, b) =>
+      (a.shortlistRank ?? 999) - (b.shortlistRank ?? 999) || b.score - a.score || a.name.localeCompare(b.name),
+  )
 
   const r = runs?.[0]
   const q = quota as Record<string, unknown> | null
   return {
+    brief: snapshotOf(briefRow),
     places,
     target: client?.backlinks_target ?? 20,
     lastRun: r
@@ -280,6 +309,9 @@ export async function getBacklinksData(clientId: string): Promise<BacklinksData>
           perPlace: Number(q.per_place ?? 12),
           fixed: Number(q.fixed ?? 0),
           maxSearches: Number(q.max_searches ?? 60),
+          briefVersion: q.brief_version === null || q.brief_version === undefined ? null : Number(q.brief_version),
+          briefMissing: Array.isArray(q.brief_missing) ? (q.brief_missing as string[]) : [],
+          aiBudgetProblem: (q.ai_budget_problem as string | null) ?? null,
         }
       : null,
   }

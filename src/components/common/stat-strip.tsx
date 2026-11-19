@@ -29,7 +29,7 @@ export function StatStrip({ items, label }: { items: StatItem[]; label: string }
       aria-label={label}
       className={cn(
         "grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border",
-        items.length === 3 ? "lg:grid-cols-3" : "lg:grid-cols-4",
+        items.length === 3 ? "lg:grid-cols-3" : items.length >= 6 ? "md:grid-cols-3 lg:grid-cols-6" : "lg:grid-cols-4",
       )}
     >
       {items.map((item) => (

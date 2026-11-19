@@ -42,6 +42,7 @@ const STATUS_TAG: Record<
   { label: string; tone: "warning" | "success" | "danger" | "neutral" }
 > = {
   pending_review: { label: "Pending review", tone: "warning" },
+  reserve: { label: "More (outside the top 30)", tone: "neutral" },
   approved: { label: "Approved", tone: "success" },
   rejected: { label: "Rejected", tone: "danger" },
   filtered: { label: "Hidden", tone: "neutral" },
@@ -183,6 +184,21 @@ export function PlaceSheet({
                 <h3 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                   Why it was chosen
                 </h3>
+                {place.aiReason && (
+                  <div className="rounded-lg border bg-muted/40 px-3 py-2">
+                    <p>{place.aiReason}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Claude&apos;s review{place.aiFit !== null ? ` · fit ${place.aiFit} of 5` : ""}
+                      {place.shortlistRank ? ` · #${place.shortlistRank} of the top 30` : ""}
+                    </p>
+                  </div>
+                )}
+                {place.matchedTopic && (
+                  <p className="text-muted-foreground">Matches the topic &ldquo;{place.matchedTopic}&rdquo;.</p>
+                )}
+                {place.source === "brief" && (
+                  <p>Named in the strategy brief as a site the buyers trust.</p>
+                )}
                 {place.isCore && (
                   <p>A core listing: every business in the client&apos;s country should have it.</p>
                 )}

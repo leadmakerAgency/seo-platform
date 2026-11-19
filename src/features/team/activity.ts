@@ -192,6 +192,10 @@ export function describeActivity(entry: ActivityLike): string {
       return `finished an AI answers check${num(m.mentions) ? `: named in ${num(m.mentions)} answers` : ""}`
     case "backlink.target_added":
       return `added ${str(m.place) || "a place"} to the places for backlinks`
+    case "backlink.brief_saved":
+      return `saved the backlink strategy brief (version ${num(m.version) || 1})`
+    case "backlink.reranked":
+      return `re-ranked the backlink places: ${num(m.review) || 0} in the top 30`
     case "backlink.target_removed":
       return `removed ${str(m.place) || "a place"} from the places for backlinks`
     case "backlink.discovery_finished": {

@@ -44,6 +44,12 @@ only). The 10-minute job (`rankings-tick` in pg_cron) and the postbacks use toke
 Vault and the `app_base_url` secret set up for Zernio, and need `SUPABASE_SECRET_KEY`. Nothing
 else is set up by hand. The budget lives on any client's Rankings → Settings (admins).
 
+**Claude API (Backlinks top 30): `ANTHROPIC_API_KEY`.** An API key from the Claude Console. Type
+**Encrypted**, scope **Run Time**, and in `.env.local` locally. Optional: without it, Find places
+picks the top 30 by its rule score instead of Claude's review. Each review uses Claude Haiku 5.5 and
+costs well under $0.01; spend is recorded in `ai_calls` and capped by `dfs_settings.ai_monthly_budget_usd`
+(default $20 a month).
+
 **Client onboarding link (optional settings).** Links work straight away on the app domain
 (`https://<app>/onboard/<client>-<code>`). For the subdomain later: add `connect.leadmaker.agency`
 under the app's Settings → Domains in DigitalOcean (CNAME at your DNS provider), then set

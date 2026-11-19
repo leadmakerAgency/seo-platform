@@ -10,15 +10,16 @@ import { classify, type ClassifyContext, type LibraryEntry } from "./classify"
 import {
   CACHE_DAYS,
   MAX_NEW_PLACES,
-  MAX_QUERIES,
   MAX_SERVICES,
   SEARCH_CONCURRENCY,
   SEARCH_DEPTH,
   type DirectoryType,
   type FilterReason,
 } from "./constants"
-import { buildQueries, cleanTerm, normQuery, type Footprint } from "./footprints"
-import { relevanceOf } from "./scoring"
+import { snapshotOf } from "./brief"
+import { cleanTerm, normQuery } from "./footprints"
+import { ruleScore, topicMatch } from "./scoring"
+import { applyShortlist } from "./shortlist"
 import { registrableDomain, siteKeyOf, type SiteKey } from "./site-key"
 
 /**
@@ -101,11 +102,18 @@ async function loadContext(db: Db, run: Run): Promise<Context> {
       .select("services, primary_category, other_categories, website")
       .eq("client_id", run.client_id)
       .maybeSingle(),
-    db
-      .from("backlink_targets")
-      .select("id, label, search_name, kind, location_code, country_iso, city, region_name, region_code")
-      .eq("client_id", run.client_id)
-      .in("id", run.target_ids.length ? run.target_ids : ["00000000-0000-0000-0000-000000000000"]),
+    run.kind === "rerank"
+      ? db
+          .from("backlink_targets")
+          .select("id, label, search_name, kind, location_code, country_iso, city, region_name, region_code")
+          .eq("client_id", run.client_id)
+          .eq("active", true)
+          .order("created_at")
+      : db
+          .from("backlink_targets")
+          .select("id, label, search_name, kind, location_code, country_iso, city, region_name, region_code")
+          .eq("client_id", run.client_id)
+          .in("id", run.target_ids.length ? run.target_ids : ["00000000-0000-0000-0000-000000000000"]),
   ])
   if (error || !client) throw new StopRun("Client not found.")
   if (client.stage === "paused" || client.stage === "churned") {
@@ -113,7 +121,8 @@ async function loadContext(db: Db, run: Run): Promise<Context> {
   }
   // Keep the run's order, skipping places removed since.
   const byId = new Map((targets ?? []).map((t) => [t.id, t]))
-  const places: Place[] = run.target_ids
+  const order = run.kind === "rerank" ? (targets ?? []).map((t) => t.id) : run.target_ids
+  const places: Place[] = order
     .map((id) => byId.get(id))
     .filter((t): t is NonNullable<typeof t> => Boolean(t))
     .map((t) => ({
@@ -127,7 +136,7 @@ async function loadContext(db: Db, run: Run): Promise<Context> {
       regionName: t.region_name,
       regionCode: t.region_code,
     }))
-  if (places.length === 0) {
+  if (places.length === 0 && run.kind !== "rerank") {
     throw new StopRun("The places for this search were removed. Add places and search again.")
   }
 
@@ -425,47 +434,56 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
     // 1. Context.
     ctx = await loadContext(db, run)
 
-    // 2. The searches (once per run).
+    const brief = snapshotOf((run.params as Rec | null)?.brief)
+    if (!brief) {
+      throw new StopRun("This search was started before the strategy brief. Fill in the brief and run Find places again.")
+    }
+    const shortlistCtx = {
+      clientId: run.client_id,
+      clientName: ctx.name,
+      domain: ctx.domain,
+      services: ctx.services,
+      industry: ctx.industry,
+      places: ctx.places.map((p) => ({ label: p.label, countryIso: p.countryIso })),
+      matchText: ctx.matchText,
+    }
+
+    // Re-rank: no searches, just the top 30 again with the current brief.
+    if (run.kind === "rerank") {
+      await step(4)
+      const sl = await applyShortlist(db, run, brief, shortlistCtx)
+      counts.shortlist = sl
+      const cost = await runCost(db, run.id)
+      await db
+        .from("backlink_runs")
+        .update({
+          status: "done",
+          step: 6,
+          counts: counts as Json,
+          cost_usd: cost,
+          error: null,
+          finished_at: new Date().toISOString(),
+          heartbeat_at: new Date().toISOString(),
+        })
+        .eq("id", run.id)
+      await db.from("activity_log").insert({
+        actor_id: run.created_by,
+        client_id: run.client_id,
+        action: "backlink.reranked",
+        meta: { review: sl.review, more: sl.more, hidden: sl.hidden, ai: sl.ai } as Json,
+      })
+      return
+    }
+
+    // 2. The searches were planned from the brief and saved with the run.
     let { data: queries } = await db.from("backlink_run_queries").select("*").eq("run_id", run.id)
-    if (!queries?.length) {
-      const { data: fps } = await db
-        .from("backlink_footprints")
-        .select("id, template, scope, sort")
-        .eq("active", true)
-      const built = buildQueries(
-        (fps ?? []) as Footprint[],
-        {
-          places: ctx.places.map((p) => ({
-            id: p.id,
-            searchName: p.searchName,
-            region: p.kind === "country" ? null : p.regionName,
-          })),
-          services: ctx.services,
-          industry: ctx.industry,
-        },
-        MAX_QUERIES,
-      )
-      if (built.queries.length === 0)
-        throw new StopRun("No searches could be built. Check the places' search words.")
-      const { error } = await db.from("backlink_run_queries").upsert(
-        built.queries.map((b) => ({
-          run_id: run.id,
-          client_id: run.client_id,
-          footprint_id: b.footprintId,
-          scope: b.scope,
-          query: b.query,
-          query_norm: b.queryNorm,
-          target_id: b.targetId,
-        })),
-        { onConflict: "run_id,target_id,query_norm", ignoreDuplicates: true },
-      )
-      if (error) throw new Error(`Could not save the searches: ${error.message}`)
-      counts.skipped_footprints = built.skipped
-      counts.no_services = ctx.services.length === 0
-      queries = (await db.from("backlink_run_queries").select("*").eq("run_id", run.id)).data ?? []
+    if (!queries?.length) throw new StopRun("This search has no planned searches. Run Find places again.")
+    counts.no_services = ctx.services.length === 0
+    if (run.step < 2) {
       await step(2, {
         queries_total: queries.length,
         params: {
+          ...((run.params as Rec | null) ?? {}),
           places: ctx.places.map((p) => ({
             id: p.id,
             label: p.label,
@@ -494,6 +512,30 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
         .neq("status", "queued")
       await step(3, { queries_done: count ?? 0 })
     }
+
+    // Searches DataForSEO couldn't answer are tried once more (failed ones aren't charged).
+    if (!counts.retried) {
+      const { data: failedRows } = await db
+        .from("backlink_run_queries")
+        .select("*")
+        .eq("run_id", run.id)
+        .eq("status", "failed")
+      counts.retried = failedRows?.length ?? 0
+      if (failedRows?.length) {
+        await db
+          .from("backlink_run_queries")
+          .update({ status: "queued", error: null, done_at: null })
+          .in("id", failedRows.map((q) => q.id))
+        const again = failedRows.map((q) => ({ ...q, status: "queued" as const }))
+        for (let i = 0; i < again.length; i += SEARCH_CONCURRENCY) {
+          const problem = await budgetProblem(db)
+          if (problem) throw new StopRun(problem)
+          await Promise.all(again.slice(i, i + SEARCH_CONCURRENCY).map((q) => runQuery(db, run, q, ctx!)))
+        }
+        await step(3)
+      }
+    }
+    queries = (await db.from("backlink_run_queries").select("*").eq("run_id", run.id)).data ?? queries
 
     // 4. Competitors from Google Maps, in each place.
     const competitors = new Set<string>()
@@ -553,6 +595,7 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
     )
     if (ctx.domain) agencyDomains.delete(registrableDomain(ctx.domain))
 
+    for (const c of brief.competitors) competitors.add(registrableDomain(c.split("/")[0]))
     const serviceTerms = [
       ...new Set(
         [...ctx.services, ctx.industry ?? ""].map(cleanTerm).filter((x): x is string => Boolean(x)),
@@ -570,6 +613,8 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
           serviceTerms,
           library,
           blockedRoots,
+          local: brief.reach === "local",
+          excludeTerms: brief.exclude_terms,
         },
       ]),
     )
@@ -624,16 +669,18 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
       places.set(sk.siteKey, p)
     }
 
-    const scored = [...places.values()].map((p) => ({
-      p,
-      relevance: relevanceOf({
+    const scored = [...places.values()].map((p) => {
+      const tm = topicMatch(`${p.foundTitle ?? ""} ${p.foundSnippet ?? ""} ${p.foundUrl} ${p.sk.siteKey}`, brief, ctx!.services)
+      const relevance = ruleScore({
         type: p.type,
+        brief,
+        topicFit: tm.fit,
         isLocal: p.isLocal,
         searches: p.footprints.size || p.hits.size,
         bestPosition: p.bestPosition,
-        isCore: library.get(p.sk.siteKey)?.isCore ?? false,
-      }),
-    }))
+      })
+      return { p, relevance, tm }
+    })
     scored.sort((a, b) => Number(b.p.visible) - Number(a.p.visible) || b.relevance - a.relevance)
     const kept = scored.slice(0, MAX_NEW_PLACES)
     counts.places = places.size
@@ -645,7 +692,7 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
         hidden[s.p.filterReason] = (hidden[s.p.filterReason] ?? 0) + 1
     counts.hidden = hidden
 
-    const items = kept.map(({ p, relevance }) => ({
+    const items = kept.map(({ p, relevance, tm }) => ({
       site_key: p.sk.siteKey,
       domain: p.sk.domain,
       rank_target: p.sk.rankTarget,
@@ -659,63 +706,26 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
         ctx!.industry && p.type === "industry_directory"
           ? [cleanTerm(ctx!.industry)].filter(Boolean)
           : [],
-      status: p.visible ? "pending_review" : "filtered",
+      status: p.visible ? "reserve" : "filtered",
       filter_reason: p.visible ? null : p.filterReason,
       is_core: false,
+      source: "search",
       found_url: p.foundUrl,
       found_title: p.foundTitle,
       found_snippet: p.foundSnippet,
       best_position: p.bestPosition,
       is_local: p.isLocal,
       relevance,
+      rule_score: relevance,
+      topic_fit: tm.fit,
+      matched_topic: tm.topic,
       target_ids: [...p.targets],
       hits: [...p.hits.values()],
     }))
 
-    // Core listings for the countries of the places searched (industry ones only when they match).
-    const countries = new Set(ctx.places.map((p) => p.countryIso.toUpperCase()))
-    const { data: core } = await db
-      .from("directories")
-      .select(
-        "site_key, domain, rank_target, name, type, submit_url, core_countries, core_industries",
-      )
-      .eq("is_core", true)
-      .eq("status", "active")
-    const coreItems = (core ?? [])
-      .filter((d) => d.core_countries.some((c) => countries.has(c)))
-      .filter(
-        (d) =>
-          d.core_industries.length === 0 ||
-          d.core_industries.some((t) => ctx!.matchText.includes(t)),
-      )
-      .map((d) => ({
-        site_key: d.site_key,
-        domain: d.domain,
-        rank_target: d.rank_target,
-        name: d.name,
-        type: d.type,
-        status: "pending_review",
-        filter_reason: null,
-        is_core: true,
-        found_url: d.submit_url,
-        found_title: d.name,
-        found_snippet: null,
-        best_position: null,
-        is_local: false,
-        relevance: relevanceOf({
-          type: d.type,
-          isLocal: false,
-          searches: 0,
-          bestPosition: null,
-          isCore: true,
-        }),
-        hits: [],
-      }))
-    counts.core = coreItems.length
-
     let fresh = 0
     let known = 0
-    const payload = [...coreItems, ...items]
+    const payload = items
     for (let i = 0; i < payload.length; i += STORE_CHUNK) {
       const { data, error } = await db.rpc("dfs_store_backlink_candidates", {
         p_run_id: run.id,
@@ -728,6 +738,10 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
     }
     counts.new = fresh
     counts.known = known
+
+    // 5b. The top 30 (rules, site strength, Claude's review) and the Basics.
+    await step(5, { counts: counts as Json })
+    counts.shortlist = await applyShortlist(db, run, brief, shortlistCtx)
 
     // 6. Done.
     const cost = await runCost(db, run.id)

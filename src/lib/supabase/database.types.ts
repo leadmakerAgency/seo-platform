@@ -131,6 +131,59 @@ export type Database = {
           },
         ]
       }
+      ai_calls: {
+        Row: {
+          client_id: string | null
+          cost_usd: number
+          created_at: string
+          error: string | null
+          feature: string
+          id: number
+          input_tokens: number
+          model: string
+          ms: number | null
+          ok: boolean
+          output_tokens: number
+          ref: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          cost_usd?: number
+          created_at?: string
+          error?: string | null
+          feature: string
+          id?: never
+          input_tokens?: number
+          model: string
+          ms?: number | null
+          ok?: boolean
+          output_tokens?: number
+          ref?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          cost_usd?: number
+          created_at?: string
+          error?: string | null
+          feature?: string
+          id?: never
+          input_tokens?: number
+          model?: string
+          ms?: number | null
+          ok?: boolean
+          output_tokens?: number
+          ref?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_calls_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_checks: {
         Row: {
           checked_at: string | null
@@ -222,30 +275,117 @@ export type Database = {
           },
         ]
       }
+      backlink_briefs: {
+        Row: {
+          adjacent_topics: string[]
+          audience: string | null
+          buyer: string
+          client_id: string
+          competitors: string[]
+          core_topics: string[]
+          created_at: string
+          exclude_terms: string[]
+          notes: string | null
+          offering: string
+          reach: string
+          site_types: string[]
+          trusted_sites: string[]
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          adjacent_topics?: string[]
+          audience?: string | null
+          buyer: string
+          client_id: string
+          competitors?: string[]
+          core_topics: string[]
+          created_at?: string
+          exclude_terms?: string[]
+          notes?: string | null
+          offering: string
+          reach: string
+          site_types?: string[]
+          trusted_sites?: string[]
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          adjacent_topics?: string[]
+          audience?: string | null
+          buyer?: string
+          client_id?: string
+          competitors?: string[]
+          core_topics?: string[]
+          created_at?: string
+          exclude_terms?: string[]
+          notes?: string | null
+          offering?: string
+          reach?: string
+          site_types?: string[]
+          trusted_sites?: string[]
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backlink_briefs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_briefs_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       backlink_footprints: {
         Row: {
           active: boolean
+          buyer: string[]
           id: string
           note: string | null
+          offering: string[]
+          priority: number
+          reach: string[]
           scope: Database["public"]["Enums"]["footprint_scope"]
+          site_type: string | null
           sort: number
           template: string
           updated_at: string
         }
         Insert: {
           active?: boolean
+          buyer?: string[]
           id?: string
           note?: string | null
+          offering?: string[]
+          priority?: number
+          reach?: string[]
           scope: Database["public"]["Enums"]["footprint_scope"]
+          site_type?: string | null
           sort?: number
           template: string
           updated_at?: string
         }
         Update: {
           active?: boolean
+          buyer?: string[]
           id?: string
           note?: string | null
+          offering?: string[]
+          priority?: number
+          reach?: string[]
           scope?: Database["public"]["Enums"]["footprint_scope"]
+          site_type?: string | null
           sort?: number
           template?: string
           updated_at?: string
@@ -254,6 +394,9 @@ export type Database = {
       }
       backlink_opportunities: {
         Row: {
+          ai_fit: number | null
+          ai_reason: string | null
+          ai_verdict: string | null
           best_position: number | null
           client_id: string
           created_at: string
@@ -269,17 +412,25 @@ export type Database = {
           is_core: boolean
           is_local: boolean
           last_run_id: string | null
+          matched_topic: string | null
           notes: string | null
           reject_note: string | null
           reject_reason:
             | Database["public"]["Enums"]["backlink_reject_reason"]
             | null
           relevance: number
+          rule_score: number | null
+          shortlist_rank: number | null
+          source: string
           status: Database["public"]["Enums"]["opportunity_status"]
           target_ids: string[]
+          topic_fit: number | null
           updated_at: string
         }
         Insert: {
+          ai_fit?: number | null
+          ai_reason?: string | null
+          ai_verdict?: string | null
           best_position?: number | null
           client_id: string
           created_at?: string
@@ -295,17 +446,25 @@ export type Database = {
           is_core?: boolean
           is_local?: boolean
           last_run_id?: string | null
+          matched_topic?: string | null
           notes?: string | null
           reject_note?: string | null
           reject_reason?:
             | Database["public"]["Enums"]["backlink_reject_reason"]
             | null
           relevance?: number
+          rule_score?: number | null
+          shortlist_rank?: number | null
+          source?: string
           status?: Database["public"]["Enums"]["opportunity_status"]
           target_ids?: string[]
+          topic_fit?: number | null
           updated_at?: string
         }
         Update: {
+          ai_fit?: number | null
+          ai_reason?: string | null
+          ai_verdict?: string | null
           best_position?: number | null
           client_id?: string
           created_at?: string
@@ -321,14 +480,19 @@ export type Database = {
           is_core?: boolean
           is_local?: boolean
           last_run_id?: string | null
+          matched_topic?: string | null
           notes?: string | null
           reject_note?: string | null
           reject_reason?:
             | Database["public"]["Enums"]["backlink_reject_reason"]
             | null
           relevance?: number
+          rule_score?: number | null
+          shortlist_rank?: number | null
+          source?: string
           status?: Database["public"]["Enums"]["opportunity_status"]
           target_ids?: string[]
+          topic_fit?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -524,6 +688,7 @@ export type Database = {
       backlink_runs: {
         Row: {
           attempts: number
+          brief_version: number | null
           client_id: string
           cost_usd: number
           counts: Json
@@ -533,6 +698,7 @@ export type Database = {
           finished_at: string | null
           heartbeat_at: string | null
           id: string
+          kind: string
           params: Json
           queries_done: number
           queries_total: number
@@ -543,6 +709,7 @@ export type Database = {
         }
         Insert: {
           attempts?: number
+          brief_version?: number | null
           client_id: string
           cost_usd?: number
           counts?: Json
@@ -552,6 +719,7 @@ export type Database = {
           finished_at?: string | null
           heartbeat_at?: string | null
           id?: string
+          kind?: string
           params?: Json
           queries_done?: number
           queries_total?: number
@@ -562,6 +730,7 @@ export type Database = {
         }
         Update: {
           attempts?: number
+          brief_version?: number | null
           client_id?: string
           cost_usd?: number
           counts?: Json
@@ -571,6 +740,7 @@ export type Database = {
           finished_at?: string | null
           heartbeat_at?: string | null
           id?: string
+          kind?: string
           params?: Json
           queries_done?: number
           queries_total?: number
@@ -1387,6 +1557,7 @@ export type Database = {
       }
       dfs_settings: {
         Row: {
+          ai_monthly_budget_usd: number
           backlink_runs_per_client_month: number
           backlinks_access: string
           backlinks_access_checked_at: string | null
@@ -1402,6 +1573,7 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          ai_monthly_budget_usd?: number
           backlink_runs_per_client_month?: number
           backlinks_access?: string
           backlinks_access_checked_at?: string | null
@@ -1417,6 +1589,7 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          ai_monthly_budget_usd?: number
           backlink_runs_per_client_month?: number
           backlinks_access?: string
           backlinks_access_checked_at?: string | null
@@ -1452,8 +1625,11 @@ export type Database = {
           blocked_by: string | null
           blocked_reason: string | null
           city: string | null
+          core_buyer: string[]
           core_countries: string[]
           core_industries: string[]
+          core_offering: string[]
+          core_reach: string[]
           cost_type: string
           country_code: string | null
           domain: string
@@ -1486,8 +1662,11 @@ export type Database = {
           blocked_by?: string | null
           blocked_reason?: string | null
           city?: string | null
+          core_buyer?: string[]
           core_countries?: string[]
           core_industries?: string[]
+          core_offering?: string[]
+          core_reach?: string[]
           cost_type?: string
           country_code?: string | null
           domain: string
@@ -1520,8 +1699,11 @@ export type Database = {
           blocked_by?: string | null
           blocked_reason?: string | null
           city?: string | null
+          core_buyer?: string[]
           core_countries?: string[]
           core_industries?: string[]
+          core_offering?: string[]
+          core_reach?: string[]
           cost_type?: string
           country_code?: string | null
           domain?: string
@@ -3355,6 +3537,11 @@ export type Database = {
         Args: { p: Json; p_link_token?: string; p_slug: string }
         Returns: Json
       }
+      dfs_ai_budget_problem: { Args: never; Returns: string }
+      dfs_apply_shortlist: {
+        Args: { p_items: Json; p_run_id: string }
+        Returns: Json
+      }
       dfs_backlinks_budget_problem: { Args: never; Returns: string }
       dfs_backlinks_cleanup: { Args: never; Returns: Json }
       dfs_budget_status: { Args: never; Returns: Json }
@@ -3362,6 +3549,7 @@ export type Database = {
         Args: never
         Returns: {
           attempts: number
+          brief_version: number | null
           client_id: string
           cost_usd: number
           counts: Json
@@ -3371,6 +3559,7 @@ export type Database = {
           finished_at: string | null
           heartbeat_at: string | null
           id: string
+          kind: string
           params: Json
           queries_done: number
           queries_total: number
@@ -3569,10 +3758,20 @@ export type Database = {
         Args: { p_keyword_id: string; p_new_phrase: string }
         Returns: Json
       }
-      request_backlink_discovery: {
-        Args: { p_client_id: string; p_target_ids: string[] }
-        Returns: string
-      }
+      request_backlink_discovery:
+        | {
+            Args: { p_client_id: string; p_target_ids: string[] }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_brief_version: number
+              p_client_id: string
+              p_queries: Json
+              p_target_ids: string[]
+            }
+            Returns: string
+          }
       request_keyword_research: {
         Args: {
           p_client_id: string
@@ -3585,6 +3784,7 @@ export type Database = {
         Args: { p_client_id: string; p_force?: boolean; p_ids?: string[] }
         Returns: Json
       }
+      rerank_backlinks: { Args: { p_client_id: string }; Returns: string }
       research_quota: { Args: { p_client_id: string }; Returns: Json }
       reveal_client_login: { Args: { p_login_id: string }; Returns: string }
       review_backlink_opportunities: {
@@ -3594,6 +3794,10 @@ export type Database = {
           p_note?: string
           p_reason?: Database["public"]["Enums"]["backlink_reject_reason"]
         }
+        Returns: number
+      }
+      save_backlink_brief: {
+        Args: { p: Json; p_client_id: string }
         Returns: number
       }
       set_candidate_status: {
@@ -3705,8 +3909,13 @@ export type Database = {
         | "government"
         | "aggregator"
         | "other"
+        | "marketplace"
+        | "podcast"
+        | "community"
+        | "sponsorship"
+        | "resource_page"
       discovery_query_status: "queued" | "done" | "cached" | "failed"
-      footprint_scope: "geo" | "service" | "industry"
+      footprint_scope: "geo" | "service" | "industry" | "topic" | "buyer"
       google_access_status:
         | "todo"
         | "added"
@@ -3740,6 +3949,7 @@ export type Database = {
         | "approved"
         | "rejected"
         | "filtered"
+        | "reserve"
       package_kind: "seo" | "geo" | "seo_geo" | "custom"
       rank_engine: "google" | "bing" | "google_maps"
       rank_run_status: "queued" | "running" | "done" | "partial" | "failed"
@@ -3979,9 +4189,14 @@ export const Constants = {
         "government",
         "aggregator",
         "other",
+        "marketplace",
+        "podcast",
+        "community",
+        "sponsorship",
+        "resource_page",
       ],
       discovery_query_status: ["queued", "done", "cached", "failed"],
-      footprint_scope: ["geo", "service", "industry"],
+      footprint_scope: ["geo", "service", "industry", "topic", "buyer"],
       google_access_status: ["todo", "added", "no_access", "not_using", "help"],
       keyword_source: ["manual", "research", "onboarding", "ranked"],
       login_source: ["onboarding", "team"],
@@ -4012,6 +4227,7 @@ export const Constants = {
         "approved",
         "rejected",
         "filtered",
+        "reserve",
       ],
       package_kind: ["seo", "geo", "seo_geo", "custom"],
       rank_engine: ["google", "bing", "google_maps"],

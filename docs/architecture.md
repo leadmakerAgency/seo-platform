@@ -250,7 +250,27 @@ Plan: `docs/plans/rankings/` (00-overview to 04-page-and-polish). Migrations `00
 
 ## Backlinks (DataForSEO)
 
-Plan: `docs/plans/backlinks/` (00-overview to 06-target-places). Migrations `0031`–`0034`, `0036`.
+Plan: `docs/plans/backlinks/` (00-overview to 07-strategy-brief). Migrations `0031`–`0034`, `0036`–`0038`.
+
+- **Strategy brief** (`backlink_briefs`, `/clients/[slug]/backlinks/strategy`, migration `0038`): reach
+  (local/national/global), buyer (B2B/B2C/both), offering (services/software/products), audience,
+  1–5 core + up to 12 adjacent topics, trusted sites, competitors, exclude terms, kinds of sites.
+  Saved by `save_backlink_brief` (admins, managers; versioned). Find places needs it (plus a city or
+  region place for local clients, a country for national/global) — `private.backlink_brief_missing`.
+- **Search plan**: `search-plan.ts` builds up to 60 searches from the brief × the ticked places ×
+  `backlink_footprints` (which reach/buyer/offering/site type each serves; `{place}`, `{topic}`,
+  `{service}`, `{industry}`). The action sends the plan to `request_backlink_discovery(client,
+  target_ids, queries, brief_version)`, which checks it and saves the run + its queries in one
+  transaction; the job runs them as saved (failed searches retried once).
+- **Top 30** (`shortlist.ts`): undecided searched places are re-scored from the brief (topic match,
+  site-type weight by reach/buyer, local only for local clients), the best ~80 get a strength check,
+  then Claude (`src/lib/ai/claude.ts`, Haiku 5.5, structured output, cost in `ai_calls`, monthly
+  `ai_monthly_budget_usd`) reviews them against the brief and picks up to 30 with a reason each.
+  `dfs_apply_shortlist` applies it: picks → Review (`pending_review`, `shortlist_rank`), kept →
+  More (`reserve`), misfits → Hidden (`ai_rejected` / `competitor`). Review never holds more than 30.
+  Without `ANTHROPIC_API_KEY` the rule score × strength picks. `rerank_backlinks` redoes it without
+  searches. Basics tab = core listings that fit the brief (`directories.core_reach/buyer/offering`)
+  plus the brief's trusted sites (`source` core / brief).
 
 - **Places to be found in** (`backlink_targets`, migration `0036`): the team adds the cities,
   regions or countries where the client wants customers (each a DataForSEO location code from

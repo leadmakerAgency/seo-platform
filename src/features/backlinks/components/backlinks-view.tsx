@@ -32,7 +32,7 @@ import {
   TYPE_LABELS,
   type DirectoryType,
   type Tab,
-  TAB_STATUS,
+  tabOf,
 } from "../constants"
 import type { Place } from "../queries"
 import { CheckStrengthButton, RejectDialog } from "./backlink-dialogs"
@@ -85,8 +85,7 @@ export function BacklinksView({
   const [rejectIds, setRejectIds] = useState<string[] | null>(null)
   const [pending, startTransition] = useTransition()
 
-  const status = TAB_STATUS[tab]
-  const inTab = useMemo(() => places.filter((p) => p.status === status), [places, status])
+  const inTab = useMemo(() => places.filter((p) => tabOf(p) === tab), [places, tab])
   const types = useMemo(() => [...new Set(inTab.map((p) => p.type))].sort(), [inTab])
   const placeIds = useMemo(
     () => Object.keys(placeLabels).filter((id) => inTab.some((p) => p.targetIds.includes(id))),
@@ -148,7 +147,7 @@ export function BacklinksView({
     })
   }
 
-  function bulk(decision: "approve" | "restore") {
+  function bulk(decision: "approve" | "restore" | "promote") {
     const ids = selectedIds
     startTransition(async () => {
       const r = await reviewPlaces(ids, decision)
@@ -157,7 +156,7 @@ export function BacklinksView({
         return
       }
       toast.success(
-        `${decision === "approve" ? "Approved" : "Moved back to review:"} ${formatNumber(r.data.changed)} ${r.data.changed === 1 ? "place" : "places"}.`,
+        `${decision === "approve" ? "Approved" : decision === "promote" ? "Moved to the top 30:" : "Moved back:"} ${formatNumber(r.data.changed)} ${r.data.changed === 1 ? "place" : "places"}.`,
       )
       setSelected(new Set())
     })
@@ -274,7 +273,12 @@ export function BacklinksView({
               <X /> Reject…
             </Button>
           )}
-          {tab !== "review" && (
+          {tab === "more" && (
+            <Button size="sm" variant="outline" onClick={() => bulk("promote")} disabled={pending}>
+              <RotateCcw /> Move to the top 30
+            </Button>
+          )}
+          {(tab === "approved" || tab === "rejected" || tab === "hidden") && (
             <Button size="sm" variant="outline" onClick={() => bulk("restore")} disabled={pending}>
               <RotateCcw /> Back to review
             </Button>
@@ -362,7 +366,7 @@ export function BacklinksView({
                   </td>
                 )}
                 <td className="px-2 py-2 text-right align-top text-muted-foreground tabular-nums">
-                  {i + 1}
+                  {tab === "review" && p.shortlistRank ? p.shortlistRank : i + 1}
                 </td>
                 <td className="max-w-[280px] px-3 py-2 align-top">
                   <button
@@ -399,11 +403,16 @@ export function BacklinksView({
                   <FoundFor place={p} labels={placeLabels} />
                 </td>
                 <td className="max-w-[280px] px-3 py-2 align-top text-[13px] text-muted-foreground">
-                  {tab === "hidden" && p.filterReason
-                    ? FILTER_LABELS[p.filterReason]
-                    : tab === "rejected" && p.rejectReason
-                      ? `${REJECT_LABELS[p.rejectReason]}${p.rejectNote ? `: ${p.rejectNote}` : ""}`
-                      : whyChosen(p)}
+                  {tab === "hidden" && p.filterReason ? (
+                    <>
+                      {FILTER_LABELS[p.filterReason]}
+                      {p.aiReason && <span className="block text-xs">{p.aiReason}</span>}
+                    </>
+                  ) : tab === "rejected" && p.rejectReason ? (
+                    `${REJECT_LABELS[p.rejectReason]}${p.rejectNote ? `: ${p.rejectNote}` : ""}`
+                  ) : (
+                    <WhyCell place={p} />
+                  )}
                 </td>
                 <td className="px-3 py-2 align-top">
                   <Strength place={p} />
@@ -503,6 +512,24 @@ function FoundFor({ place, labels }: { place: Place; labels: Record<string, stri
       {names.length > 3 && (
         <span className="text-[11px] text-muted-foreground">+{names.length - 3}</span>
       )}
+    </span>
+  )
+}
+
+/** Claude's one-line reason when there is one, else how the search found the place. */
+function WhyCell({ place }: { place: Place }) {
+  return (
+    <span className="flex flex-col gap-0.5">
+      {place.aiReason ? (
+        <span className="text-foreground">{place.aiReason}</span>
+      ) : (
+        <span>{whyChosen(place)}</span>
+      )}
+      <span className="flex flex-wrap gap-x-2 text-xs">
+        {place.matchedTopic && <span>Matches: {place.matchedTopic}</span>}
+        {place.aiFit !== null && <span>Fit {place.aiFit}/5</span>}
+        {place.aiReason && place.hits.length > 0 && <span>{whyChosen(place)}</span>}
+      </span>
     </span>
   )
 }

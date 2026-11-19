@@ -8,12 +8,15 @@ import { PermissionError, requirePermission } from "@/lib/auth"
 import type { Db } from "@/lib/dataforseo/client"
 import { hasDataForSeo } from "@/lib/env.server"
 import type { Permission } from "@/lib/roles"
+import type { Json } from "@/lib/supabase/database.types"
 import { createSupabaseAdminClient, hasSupabaseSecretKey } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { syncCountryLocations } from "@/features/rankings/locations"
 import { countryName, isCountryCode } from "@/lib/countries"
 import { countryShort } from "@/lib/format"
 import { regionCode, regionList } from "@/lib/regions"
+import { briefSchema, snapshotOf, type BriefInput } from "./brief"
+import { buildSearchPlan, SEARCH_COST, type PlanFootprint, type PlanPlace } from "./search-plan"
 import { DIRECTORY_TYPES, REJECT_REASONS, type DirectoryType, type RejectReason } from "./constants"
 import { processBacklinkRuns } from "./discovery"
 import { runStrengthCheck } from "./strength"
@@ -43,7 +46,84 @@ function dbError(error: { code?: string; message?: string } | null, fallback: st
   return fallback
 }
 
-/** Find places for the places the team ticked (the database checks limits, 24 h and budgets). */
+/** The planned searches for the ticked places, from the saved brief (no side effects). */
+async function planFor(clientId: string, targetIds: string[]) {
+  const supabase = await createSupabaseServerClient()
+  const [{ data: briefRow }, { data: targets }, { data: fps }, { data: client }, { data: profile }] = await Promise.all([
+    supabase.from("backlink_briefs").select("*").eq("client_id", clientId).maybeSingle(),
+    supabase
+      .from("backlink_targets")
+      .select("id, label, search_name, kind, region_name, active")
+      .eq("client_id", clientId)
+      .in("id", targetIds.length ? targetIds : ["00000000-0000-0000-0000-000000000000"]),
+    supabase
+      .from("backlink_footprints")
+      .select("id, template, scope, reach, buyer, offering, site_type, priority")
+      .eq("active", true),
+    supabase.from("clients").select("industry").eq("id", clientId).maybeSingle(),
+    supabase.from("client_business_profiles").select("services, primary_category").eq("client_id", clientId).maybeSingle(),
+  ])
+  const brief = snapshotOf(briefRow)
+  if (!brief) return { error: "Fill in the strategy brief first." } as const
+  const byId = new Map((targets ?? []).filter((t) => t.active).map((t) => [t.id, t]))
+  const places: PlanPlace[] = targetIds
+    .map((id) => byId.get(id))
+    .filter((t): t is NonNullable<typeof t> => Boolean(t))
+    .map((t) => ({
+      id: t.id,
+      label: t.label,
+      searchName: t.search_name,
+      kind: t.kind as PlanPlace["kind"],
+      regionName: t.region_name,
+    }))
+  const services = profile?.services?.length
+    ? profile.services
+    : [profile?.primary_category ?? "", client?.industry ?? ""].filter(Boolean)
+  const plan = buildSearchPlan({
+    footprints: (fps ?? []) as PlanFootprint[],
+    brief,
+    places,
+    services,
+    industry: profile?.primary_category ?? client?.industry ?? null,
+  })
+  return { brief, places, plan } as const
+}
+
+export type PlanPreview = {
+  count: number
+  cost: number
+  groups: Record<string, number>
+  perPlace: Record<string, number>
+  dropped: number
+  queries: { place: string; query: string; group: string }[]
+}
+
+/** For the Find places dialog: what the ticked places would search, and the cost. */
+export async function previewSearchPlan(
+  clientId: string,
+  targetIds: string[],
+): Promise<{ ok: true; data: PlanPreview } | { ok: false; error: string }> {
+  const denied = await guard("backlinks.discover")
+  if (denied) return { ok: false, error: denied }
+  if (!isUuid(clientId)) return { ok: false, error: "Unknown client." }
+  const ids = [...new Set(targetIds)].filter(isUuid).slice(0, 25)
+  const r = await planFor(clientId, ids)
+  if ("error" in r) return { ok: false, error: r.error! }
+  const labels = new Map(r.places.map((p) => [p.id, p.label]))
+  return {
+    ok: true,
+    data: {
+      count: r.plan.queries.length,
+      cost: r.plan.queries.length * SEARCH_COST,
+      groups: r.plan.groups,
+      perPlace: r.plan.perPlace,
+      dropped: r.plan.dropped,
+      queries: r.plan.queries.map((q) => ({ place: labels.get(q.target_id) ?? "", query: q.query, group: q.group })),
+    },
+  }
+}
+
+/** Find places: build the plan from the brief, the database checks and saves it (≤ 60). */
 export async function findPlaces(clientId: string, targetIds: string[]): Promise<ActionResult> {
   const denied = await guard("backlinks.discover")
   if (denied) return { ok: false, error: denied }
@@ -51,12 +131,44 @@ export async function findPlaces(clientId: string, targetIds: string[]): Promise
   const ids = [...new Set(targetIds)].filter(isUuid).slice(0, 25)
   if (ids.length === 0) return { ok: false, error: "Tick at least one place to search." }
   if (!hasDataForSeo() || !hasSupabaseSecretKey()) return { ok: false, error: NOT_CONNECTED }
+  const r = await planFor(clientId, ids)
+  if ("error" in r) return { ok: false, error: r.error! }
+  if (r.plan.queries.length === 0) {
+    return { ok: false, error: "Nothing to search with this brief. Check its topics and kinds of sites." }
+  }
   const supabase = await createSupabaseServerClient()
   const { error } = await supabase.rpc("request_backlink_discovery", {
     p_client_id: clientId,
     p_target_ids: ids,
+    p_queries: r.plan.queries.map(({ footprint_id, scope, target_id, query }) => ({
+      footprint_id,
+      scope,
+      target_id,
+      query,
+    })) as unknown as Json,
+    p_brief_version: r.brief.version,
   })
   if (error) return { ok: false, error: dbError(error, "Couldn't start the search. Try again.") }
+  startJob()
+  refresh()
+  return { ok: true }
+}
+
+/** Redo the top 30 from the saved results with the current brief (AI review only, no searches). */
+export async function rerankPlaces(clientId: string): Promise<ActionResult> {
+  const denied = await guard("backlinks.discover")
+  if (denied) return { ok: false, error: denied }
+  if (!isUuid(clientId)) return { ok: false, error: "Unknown client." }
+  if (!hasSupabaseSecretKey()) return { ok: false, error: NOT_CONNECTED }
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.rpc("rerank_backlinks", { p_client_id: clientId })
+  if (error) return { ok: false, error: dbError(error, "Couldn't re-rank. Try again.") }
+  startJob()
+  refresh()
+  return { ok: true }
+}
+
+function startJob() {
   after(async () => {
     try {
       await processBacklinkRuns(createSupabaseAdminClient() as Db, 1)
@@ -64,8 +176,30 @@ export async function findPlaces(clientId: string, targetIds: string[]): Promise
       console.error("[backlinks] search could not start", e)
     }
   })
+}
+
+/** Save the strategy brief (admins and account managers). */
+export async function saveBrief(
+  clientId: string,
+  input: BriefInput,
+): Promise<ActionResult<{ version: number }> & { fieldErrors?: Record<string, string> }> {
+  const denied = await guard("backlinks.strategy")
+  if (denied) return { ok: false, error: denied }
+  if (!isUuid(clientId)) return { ok: false, error: "Unknown client." }
+  const parsed = briefSchema.safeParse(input)
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {}
+    for (const issue of parsed.error.issues) fieldErrors[String(issue.path[0])] ??= issue.message
+    return { ok: false, error: "Check the highlighted fields.", fieldErrors }
+  }
+  const supabase = await createSupabaseServerClient()
+  const { data, error } = await supabase.rpc("save_backlink_brief", {
+    p_client_id: clientId,
+    p: parsed.data as unknown as Json,
+  })
+  if (error) return { ok: false, error: dbError(error, "Couldn't save the brief. Try again.") }
   refresh()
-  return { ok: true }
+  return { ok: true, data: { version: Number(data ?? 1) } }
 }
 
 // ---------------------------------------------------------------------------
@@ -239,7 +373,7 @@ export async function removeTarget(targetId: string): Promise<ActionResult> {
 
 export async function reviewPlaces(
   ids: string[],
-  decision: "approve" | "reject" | "restore",
+  decision: "approve" | "reject" | "restore" | "promote",
   reason?: RejectReason | null,
   note?: string | null,
 ): Promise<ActionResult<{ changed: number }>> {
@@ -247,7 +381,7 @@ export async function reviewPlaces(
   if (denied) return { ok: false, error: denied }
   const clean = [...new Set(ids)].filter(isUuid)
   if (clean.length === 0) return { ok: false, error: "Pick at least one place." }
-  if (!["approve", "reject", "restore"].includes(decision))
+  if (!["approve", "reject", "restore", "promote"].includes(decision))
     return { ok: false, error: "Unknown decision." }
   if (decision === "reject" && (!reason || !REJECT_REASONS.includes(reason))) {
     return { ok: false, error: "Pick a reason for rejecting." }

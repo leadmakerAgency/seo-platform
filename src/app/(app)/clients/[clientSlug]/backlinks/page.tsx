@@ -1,30 +1,26 @@
 import { CircleAlert, Link2, Plug } from "lucide-react"
 import type { Metadata } from "next"
+import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
 import { StatStrip, StatStripSkeleton, type StatItem } from "@/components/common/stat-strip"
 import { AccessGuard } from "@/components/layout/access-guard"
 import { PageHeader } from "@/components/layout/page-header"
+import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   CheckStrengthButton,
   FindPlacesButton,
+  RerankButton,
 } from "@/features/backlinks/components/backlink-dialogs"
+import { BUYER_META, OFFERING_META, REACH_META, topicCount } from "@/features/backlinks/brief"
 import { BacklinksView } from "@/features/backlinks/components/backlinks-view"
 import { formatDay, usd } from "@/features/backlinks/components/bits"
 import { TargetsPanel } from "@/features/backlinks/components/targets-panel"
-import {
-  MAX_QUERIES,
-  SEARCH_COST_USD,
-  TAB_LABELS,
-  TAB_STATUS,
-  TABS,
-  type Tab,
-} from "@/features/backlinks/constants"
+import { REVIEW_CAP, TAB_LABELS, TABS, tabOf, type Tab } from "@/features/backlinks/constants"
 import { getBacklinksData } from "@/features/backlinks/queries"
-import { CORE_FLOOR, UNKNOWN_STRENGTH } from "@/features/backlinks/scoring"
 import { getClientBySlug } from "@/features/clients/queries"
 import { OverviewRefresher } from "@/features/overview/components/overview-refresher"
 import { getCurrentMember } from "@/lib/auth"
@@ -76,8 +72,11 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
   const { quota, lastRun, places } = data
   const base = clientHref(client.slug, "backlinks")
 
-  const count = (t: Tab) => places.filter((p) => p.status === TAB_STATUS[t]).length
+  const count = (t: Tab) => places.filter((p) => tabOf(p) === t).length
   const workable = places.filter((p) => p.status === "pending_review" || p.status === "approved")
+  const brief = data.brief
+  const canStrategy = can(member.role, "backlinks.strategy")
+  const briefMissing = quota?.briefMissing ?? []
   const unchecked = workable.filter((p) => !p.checkedAt).length
   const openRun = quota?.openRun ?? null
   const targets = quota?.targets ?? []
@@ -92,11 +91,20 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
       ? "This client is paused or has left."
       : openRun
         ? "A search is running now."
-        : quota?.budgetProblem
-          ? quota.budgetProblem
-          : quota && quota.used >= quota.limit
-            ? `This client has used its ${quota.limit} searches this month.`
-            : null
+        : briefMissing.length
+          ? `${briefMissing.join(". ")}.`
+          : quota?.budgetProblem
+            ? quota.budgetProblem
+            : quota && quota.used >= quota.limit
+              ? `This client has used its ${quota.limit} searches this month.`
+              : null
+  const rerankBlocked = !brief
+    ? "Fill in the strategy brief first."
+    : openRun
+      ? "A search is running now."
+      : !places.some((p) => p.source === "search" && (p.status === "pending_review" || p.status === "reserve"))
+        ? "Nothing found yet to rank."
+        : null
 
   // Suggestions for the first place: the client's city and the areas they serve.
   const supabase = await createSupabaseServerClient()
@@ -136,14 +144,16 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
     tone: t === "review" ? "warning" : t === "approved" ? "success" : undefined,
     note:
       t === "review"
-        ? unchecked > 0
-          ? `${formatNumber(unchecked)} not checked for strength`
-          : undefined
-        : t === "approved"
-          ? `Plan: ${formatNumber(data.target)} a month`
-          : t === "hidden"
-            ? "Filtered out by the search"
-            : undefined,
+        ? `At most ${REVIEW_CAP}, best first${unchecked > 0 ? ` · ${formatNumber(unchecked)} not checked for strength` : ""}`
+        : t === "more"
+          ? "Kept, outside the top 30"
+          : t === "basics"
+            ? "Listings every client like this needs"
+            : t === "approved"
+              ? `Plan: ${formatNumber(data.target)} a month`
+              : t === "hidden"
+                ? "Filtered out, with the reason"
+                : undefined,
   }))
 
   const counts = lastRun?.counts ?? {}
@@ -152,8 +162,6 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
       <FindPlacesButton
         clientId={client.id}
         targets={targets}
-        perPlace={quota.perPlace}
-        fixed={quota.fixed}
         maxSearches={quota.maxSearches}
         disabledReason={findBlocked}
         variant={variant}
@@ -176,12 +184,49 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
                 disabledReason={strengthBlocked}
               />
             )}
+            {canDiscover && brief && <RerankButton clientId={client.id} disabledReason={rerankBlocked} />}
             {findButton()}
           </>
         }
       />
 
       {!configured && <SetupNotice isAdmin={isAdmin} />}
+
+      <section className="flex flex-col gap-3 rounded-lg border bg-card p-4" aria-labelledby="strategy-title">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-1">
+            <h2 id="strategy-title" className="text-[15px] leading-[22px] font-semibold">
+              Strategy brief
+            </h2>
+            {brief ? (
+              <p className="text-sm text-muted-foreground">
+                {REACH_META[brief.reach].label} · {BUYER_META[brief.buyer].label} · {OFFERING_META[brief.offering].label} ·{" "}
+                {topicCount(brief)} topics ({brief.core_topics.join(", ")}
+                {brief.adjacent_topics.length ? `, plus ${brief.adjacent_topics.slice(0, 4).join(", ")}${brief.adjacent_topics.length > 4 ? "…" : ""}` : ""})
+              </p>
+            ) : (
+              <p className="max-w-[72ch] text-sm text-muted-foreground">
+                Before searching, describe how this client should be found: local or national, who buys, and
+                10–15 topics including neighbouring ones the buyers read about. Searches and the top 30 are
+                built from it.
+              </p>
+            )}
+          </div>
+          <Button asChild variant={brief ? "outline" : "default"} size="sm">
+            <Link href={`${base}/strategy`}>{brief ? (canStrategy ? "Edit brief" : "View brief") : canStrategy ? "Write the brief" : "View brief"}</Link>
+          </Button>
+        </div>
+        {briefMissing.length > 0 && (
+          <ul className="flex flex-col gap-1 text-[13px] text-warning">
+            {briefMissing.map((m) => (
+              <li key={m} className="flex items-center gap-1.5">
+                <CircleAlert className="size-3.5 shrink-0" aria-hidden />
+                {m}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <TargetsPanel
         clientId={client.id}
@@ -196,16 +241,22 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
         <div className="flex flex-col gap-2 rounded-lg border bg-card px-4 py-3 text-sm">
           <p>
             <span className="font-medium">
-              Searching Google{runPlaces.length ? ` for ${listOf(runPlaces)}` : ""}
+              {openRun.kind === "rerank"
+                ? "Picking the top 30 again with the brief"
+                : openRun.step >= 4
+                  ? "Picking the top 30 (site strength and Claude's review)"
+                  : `Searching Google${runPlaces.length ? ` for ${listOf(runPlaces)}` : ""}`}
             </span>
             <span className="text-muted-foreground">
-              {openRun.queries_total > 0
-                ? ` · ${formatNumber(openRun.queries_done)} of ${formatNumber(openRun.queries_total)} searches done`
-                : " · starting"}
-              . Usually a minute or two; this page updates by itself.
+              {openRun.kind === "search" && openRun.step < 4
+                ? openRun.queries_total > 0
+                  ? ` · ${formatNumber(openRun.queries_done)} of ${formatNumber(openRun.queries_total)} searches done`
+                  : " · starting"
+                : ""}
+              . Usually a few minutes; this page updates by itself.
             </span>
           </p>
-          {openRun.queries_total > 0 && (
+          {openRun.kind === "search" && openRun.step < 4 && openRun.queries_total > 0 && (
             <Progress
               value={(openRun.queries_done / openRun.queries_total) * 100}
               aria-label="Search progress"
@@ -235,7 +286,8 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
           {counts.no_services
             ? " · no services in the business profile, so only place searches ran"
             : ""}
-          .
+          .{" "}
+          <ShortlistNote counts={counts} />
         </p>
       )}
 
@@ -245,12 +297,14 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
           <div className="flex flex-col gap-1">
             <p className="font-medium">No places yet</p>
             <p className="max-w-[68ch] text-muted-foreground">
-              {activeTargets.length === 0
-                ? "First add the places where the client wants to be found (above). Then Find places searches Google from each of them for directories, chambers of commerce, associations, best-of lists and local blogs, and adds the core listings every business needs."
-                : `Find places searches Google from the places above (about ${quota?.perPlace ?? 12} searches each, roughly ${usd((quota?.perPlace ?? 12) * SEARCH_COST_USD)} per place, ${MAX_QUERIES} at most per search) for directories, chambers of commerce, associations, best-of lists and local blogs, and adds the core listings every business needs. They land here for review.`}
+              {!brief
+                ? "First write the strategy brief, then add the places where the client wants to be found. Find places then searches Google with searches built from both, and picks the best 30."
+                : activeTargets.length === 0
+                  ? "Add the places where the client wants to be found (above). Find places then searches Google from each of them with searches built from the brief."
+                  : `Find places searches Google from the places above with searches built from the brief (${quota?.maxSearches ?? 60} at most, about $0.006 each; the dialog shows the exact list and cost first). The best ${REVIEW_CAP} land in Review with a reason each; the rest go to More.`}
             </p>
           </div>
-          {activeTargets.length > 0 && findButton()}
+          {brief && activeTargets.length > 0 && findButton()}
         </div>
       ) : (
         <>
@@ -278,34 +332,52 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
   )
 }
 
+function ShortlistNote({ counts }: { counts: Record<string, unknown> }) {
+  const sl = counts.shortlist as
+    | { review?: number; more?: number; hidden?: number; ai?: string; aiNote?: string | null; strengthChecked?: number }
+    | undefined
+  if (!sl) return null
+  return (
+    <>
+      Top {formatNumber(sl.review ?? 0)} in Review, {formatNumber(sl.more ?? 0)} in More
+      {sl.ai === "used" ? ", picked with Claude's review" : `, picked by the rules${sl.aiNote ? ` (Claude's review skipped: ${sl.aiNote})` : ""}`}
+      {sl.strengthChecked ? ` · ${formatNumber(sl.strengthChecked)} sites checked for strength` : ""}.
+    </>
+  )
+}
+
 function HowScoresWork() {
   return (
     <details className="group rounded-lg border bg-card px-4 py-3 text-sm">
       <summary className="cursor-pointer font-medium marker:text-muted-foreground">
-        How scores work
+        How the top 30 is picked
       </summary>
       <div className="mt-3 flex max-w-[72ch] flex-col gap-2 text-muted-foreground">
         <p>
-          <span className="text-foreground">Score (0–100)</span> = 75% relevance + 25% site
-          strength. A spam score of 60 or more halves it.
+          <span className="text-foreground">1. Searches from the brief.</span> Each search is built from the
+          strategy brief (reach, buyer, what the client sells, topics, kinds of sites) and run from one of the
+          places you chose.
         </p>
         <p>
-          <span className="text-foreground">Relevance</span> is set by the search: the kind of site
-          (chambers and local directories first, then associations, best-of lists, blogs), whether
-          it mentions the place it was found for, how many different searches found it and how high
-          it ranked. Core listings never go below {Math.round(CORE_FLOOR * 100)}%.
+          <span className="text-foreground">2. Rule score.</span> Every site found gets a score from the brief:
+          how well it matches the core or adjacent topics, how much that kind of site is worth for this client
+          (local clients: chambers, local news, directories; national B2B: review platforms, marketplaces, niche
+          publications), whether it mentions the place (local clients only), how many searches found it and how
+          high. Competitors, the brief&apos;s exclude terms and blocked sites are hidden with the reason.
         </p>
         <p>
-          <span className="text-foreground">Site strength</span> is DataForSEO&apos;s Domain Rank on
-          a 0–100 scale (its own conversion of 0–1000; it is not Ahrefs DR). Until a site is checked
-          it counts as {Math.round(UNKNOWN_STRENGTH * 100)}. Strong is 60+, Good 35–59, Fair 15–34,
-          Weak under 15. A check is kept for 30 days and shared by every client.
+          <span className="text-foreground">3. Site strength.</span> The best ~80 are checked with DataForSEO&apos;s
+          Domain Rank (0–100, not Ahrefs DR) and spam score; strength counts for 25% of the score and spam 60+
+          halves it. A check is kept 30 days and shared by every client.
         </p>
         <p>
-          The search hides results that are the client&apos;s own site, another client&apos;s site,
-          a competitor from the map results, a business rather than a directory, a different state or
-          province than the places you chose, or an article with nothing local. They are in Hidden with the reason, and each can be
-          brought back.
+          <span className="text-foreground">4. Claude&apos;s review.</span> Claude reads the brief and those ~80 sites,
+          drops competitors, link sellers, spam and misfits (they go to Hidden with its reason), and picks up to{" "}
+          {REVIEW_CAP} with one line on why each matters to the client&apos;s buyers. Without Claude the score picks them.
+        </p>
+        <p>
+          Review never holds more than {REVIEW_CAP} places. Approving or rejecting makes room; &ldquo;Move to the top
+          30&rdquo; brings one up from More. Re-rank redoes steps 2–4 with the current brief, without new searches.
         </p>
       </div>
     </details>

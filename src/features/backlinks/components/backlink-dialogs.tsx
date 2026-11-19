@@ -1,6 +1,6 @@
 "use client"
 
-import { Gauge, Search } from "lucide-react"
+import { Gauge, RotateCw, Search } from "lucide-react"
 import { useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
@@ -26,8 +26,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { formatNumber } from "@/lib/format"
 import { cn } from "@/lib/utils"
-import { checkSiteStrength, findPlaces, reviewPlaces } from "../actions"
-import { REJECT_LABELS, REJECT_REASONS, SEARCH_COST_USD, type RejectReason } from "../constants"
+import { checkSiteStrength, findPlaces, previewSearchPlan, rerankPlaces, reviewPlaces, type PlanPreview } from "../actions"
+import { REJECT_LABELS, REJECT_REASONS, type RejectReason } from "../constants"
 import type { Target } from "../queries"
 import { formatDayTime, usd } from "./bits"
 
@@ -46,28 +46,29 @@ function WithReason({ reason, children }: { reason: string | null; children: Rea
 }
 
 /**
- * Find places: pick which of the client's places to search, see the number of searches and
- * the cost first. The database checks the same limits (24 h per place, 60 searches a run).
+ * Find places: pick which of the client's places to search. The server builds the exact
+ * searches from the strategy brief and shows them with the cost before anything is spent.
+ * The database checks the same limits (24 h per place, 60 searches a run).
  */
 export function FindPlacesButton({
   clientId,
   targets,
-  perPlace,
-  fixed,
   maxSearches,
   disabledReason,
   variant = "default",
 }: {
   clientId: string
   targets: Target[]
-  perPlace: number
-  fixed: number
   maxSearches: number
   disabledReason: string | null
   variant?: "default" | "outline"
 }) {
   const [open, setOpen] = useState(false)
   const [picked, setPicked] = useState<Set<string>>(new Set())
+  const [plan, setPlan] = useState<PlanPreview | null>(null)
+  const [planError, setPlanError] = useState<string | null>(null)
+  const [showAll, setShowAll] = useState(false)
+  const [loading, startLoading] = useTransition()
   const [pending, startTransition] = useTransition()
   const active = targets.filter((t) => t.active)
   const available = active.filter((t) => !t.searchableAt)
@@ -79,22 +80,32 @@ export function FindPlacesButton({
         ? "Every place was searched in the last 24 hours."
         : null)
 
-  const estimate = (n: number) => (n === 0 ? 0 : n * perPlace + fixed)
-  const searches = estimate(picked.size)
-  const tooMany = searches > maxSearches
+  function load(ids: Set<string>) {
+    setPicked(ids)
+    if (ids.size === 0) {
+      setPlan(null)
+      return
+    }
+    startLoading(async () => {
+      const r = await previewSearchPlan(clientId, [...ids])
+      if (!r.ok) {
+        setPlanError(r.error)
+        setPlan(null)
+      } else {
+        setPlanError(null)
+        setPlan(r.data)
+      }
+    })
+  }
 
   function onOpenChange(next: boolean) {
-    if (next) {
-      // Pre-tick every place that can be searched, as many as fit in one search.
-      const ids = new Set<string>()
-      for (const t of available) {
-        if (estimate(ids.size + 1) > maxSearches) break
-        ids.add(t.id)
-      }
-      setPicked(ids)
-    }
+    if (next) load(new Set(available.map((t) => t.id)))
+    setShowAll(false)
     setOpen(next)
   }
+
+  const count = plan?.count ?? 0
+  const tooMany = (plan?.dropped ?? 0) > 0 || count > maxSearches
 
   function start() {
     startTransition(async () => {
@@ -104,8 +115,16 @@ export function FindPlacesButton({
         return
       }
       setOpen(false)
-      toast.success("Searching Google now. Places appear here in a minute or two.")
+      toast.success("Searching Google now. The top 30 appear here in a few minutes.")
     })
+  }
+
+  const GROUP_LABELS: Record<string, string> = {
+    place: "place searches",
+    topic: "topic searches",
+    service: "service searches",
+    buyer: "buyer searches",
+    industry: "industry searches",
   }
 
   return (
@@ -117,15 +136,15 @@ export function FindPlacesButton({
         </Button>
       </WithReason>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[520px]">
+        <DialogContent className="max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-[560px]">
           <DialogHeader>
             <DialogTitle>Find places</DialogTitle>
             <DialogDescription>
-              Google is searched from each ticked place for directories, chambers, associations,
-              best-of lists and local sites. The core listings are added too.
+              Google is searched from each ticked place with searches built from the strategy brief.
+              The best 30 results go to Review with a reason each; the rest go to More.
             </DialogDescription>
           </DialogHeader>
-          <ul className="flex max-h-[45svh] flex-col divide-y overflow-y-auto rounded-lg border">
+          <ul className="flex max-h-[30svh] flex-col divide-y overflow-y-auto rounded-lg border">
             {active.map((t) => {
               const blocked = Boolean(t.searchableAt)
               return (
@@ -139,14 +158,12 @@ export function FindPlacesButton({
                     <Checkbox
                       checked={picked.has(t.id)}
                       disabled={blocked || pending}
-                      onCheckedChange={(v) =>
-                        setPicked((s) => {
-                          const next = new Set(s)
-                          if (v) next.add(t.id)
-                          else next.delete(t.id)
-                          return next
-                        })
-                      }
+                      onCheckedChange={(v) => {
+                        const next = new Set(picked)
+                        if (v) next.add(t.id)
+                        else next.delete(t.id)
+                        load(next)
+                      }}
                     />
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span className="truncate font-medium">{t.label}</span>
@@ -158,26 +175,57 @@ export function FindPlacesButton({
                             : `“${t.searchName}” · not searched yet`}
                       </span>
                     </span>
-                    <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-                      ~{perPlace} searches
-                    </span>
+                    {plan && picked.has(t.id) && (
+                      <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                        {plan.perPlace[t.id] ?? 0} searches
+                      </span>
+                    )}
                   </label>
                 </li>
               )
             })}
           </ul>
-          <p className={cn("text-sm tabular-nums", tooMany ? "text-danger" : "text-muted-foreground")}>
-            {picked.size === 0
-              ? "Tick at least one place."
-              : tooMany
-                ? `That's about ${formatNumber(searches)} searches; one search can do ${maxSearches}. Untick a place.`
-                : `About ${formatNumber(searches)} Google searches, at most ${usd(searches * SEARCH_COST_USD)}. Searches run lately for the same place are reused for free.`}
-          </p>
+          <div className={cn("flex flex-col gap-1 text-sm", tooMany ? "text-danger" : "text-muted-foreground")}>
+            {picked.size === 0 ? (
+              <p>Tick at least one place.</p>
+            ) : loading && !plan ? (
+              <p>Working out the searches…</p>
+            ) : planError ? (
+              <p className="text-danger">{planError}</p>
+            ) : plan ? (
+              <>
+                <p className="tabular-nums">
+                  {tooMany
+                    ? `That's more than ${maxSearches} searches. Untick a place.`
+                    : `${formatNumber(count)} Google searches, at most ${usd(plan.cost)}, plus about $0.03 for site strength and under $0.01 for Claude's review. Searches run lately for the same place are free.`}
+                </p>
+                <p className="text-xs">
+                  {Object.entries(plan.groups)
+                    .filter(([, n]) => n > 0)
+                    .map(([g, n]) => `${n} ${GROUP_LABELS[g] ?? g}`)
+                    .join(" · ")}
+                  {" · "}
+                  <button type="button" className="text-brand hover:underline" onClick={() => setShowAll((x) => !x)}>
+                    {showAll ? "Hide the searches" : "See every search"}
+                  </button>
+                </p>
+                {showAll && (
+                  <ul className="mt-1 max-h-48 overflow-y-auto rounded-lg border bg-muted/30 px-3 py-2 text-xs text-foreground">
+                    {plan.queries.map((q, i) => (
+                      <li key={i} className="py-0.5">
+                        &ldquo;{q.query}&rdquo; <span className="text-muted-foreground">· from {q.place}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            ) : null}
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={start} disabled={pending || picked.size === 0 || tooMany}>
+            <Button onClick={start} disabled={pending || loading || picked.size === 0 || !plan || count === 0 || tooMany}>
               <Search className={pending ? "animate-pulse" : undefined} />
               {pending ? "Starting…" : `Search ${picked.size === 1 ? "1 place" : `${picked.size} places`}`}
             </Button>
@@ -185,6 +233,30 @@ export function FindPlacesButton({
         </DialogContent>
       </Dialog>
     </>
+  )
+}
+
+/** Redo the top 30 from the saved results with the current brief (no searches). */
+export function RerankButton({ clientId, disabledReason }: { clientId: string; disabledReason: string | null }) {
+  const [pending, startTransition] = useTransition()
+  return (
+    <WithReason reason={disabledReason}>
+      <Button
+        variant="outline"
+        disabled={pending || Boolean(disabledReason)}
+        title="Picks the top 30 again from the places already found, using the current strategy brief. No new searches."
+        onClick={() =>
+          startTransition(async () => {
+            const r = await rerankPlaces(clientId)
+            if (!r.ok) toast.error(r.error)
+            else toast.success("Re-ranking with the brief. The top 30 update in a minute.")
+          })
+        }
+      >
+        <RotateCw className={pending ? "animate-spin" : undefined} />
+        Re-rank
+      </Button>
+    </WithReason>
   )
 }
 

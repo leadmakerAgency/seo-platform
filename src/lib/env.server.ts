@@ -86,3 +86,8 @@ export function getGoogleReportingEmail(): string | null {
 export function getAgencyAccessEmail(): string {
   return process.env.AGENCY_ACCESS_EMAIL?.trim() || "seo@leadmaker.agency"
 }
+
+/** Claude API (Backlinks top 30 review). Optional: without it the rules pick the top 30. */
+export function hasAnthropicKey() {
+  return Boolean(process.env.ANTHROPIC_API_KEY)
+}

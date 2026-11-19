@@ -26,6 +26,10 @@ export type ClassifyContext = {
   library: Map<string, LibraryEntry>
   /** Root domains blocked for every client (google.com, youtube.com…). */
   blockedRoots: Set<string>
+  /** Local clients only: hide articles with nothing local. National/global clients want articles. */
+  local?: boolean
+  /** The brief's exclude terms ("free", "jobs"): results mentioning one are hidden. */
+  excludeTerms?: string[]
 }
 
 export type Classified = {
@@ -97,6 +101,15 @@ const NEWS_WORDS =
   /\b(news|blog|magazine|times|gazette|herald|journal|tribune|press|daily|weekly|patch|chronicle|observer|courier|post)\b/
 const GUEST_WORDS =
   /\b(write for us|guest (post|posting|blog|article)|contribute|submit (a |an )?(guest )?(post|article)|become a contributor)\b/
+const PODCAST_WORDS = /\b(podcast|podcasts|episode|episodes|listen on)\b/
+const COMMUNITY_WORDS = /\b(forum|forums|community|communities|discussion board|members area|meetup|subreddit)\b/
+const SPONSOR_WORDS =
+  /\b(sponsor|sponsors|sponsorship|sponsorships|become a sponsor|events? calendar|submit (an |your )?event|community calendar|fundraiser)\b/
+const RESOURCE_WORDS = /\b(resources|useful links|helpful links|recommended (tools|sites|links)|resource (page|list|guide))\b/
+const MARKETPLACE_WORDS = /\b(marketplace|alternatives? to|software (directory|reviews)|compare .{0,30}(software|tools|apps)|app directory)\b/
+/** A business pitching its own service ("we", "our team", "get a free quote"): a competitor. */
+const PITCH_WORDS =
+  /\b(our (team|services|agency|company|clients|experts)|we (build|design|develop|offer|provide|help|are a)|hire us|contact us today|get a (free )?quote|free consultation|book a (call|consultation))\b/
 const ARTICLE_WORDS =
   /\b(how (to|much|do|does)|what (is|are)|why|cost(s)?|price(s)?|tips|guide|diy|vs\.?|ideas|\d{4} prices)\b/
 
@@ -151,6 +164,13 @@ export function classify(row: ResultRow, sk: SiteKey, ctx: ClassifyContext): Cla
 
   if (/\.(pdf|docx?|xlsx?|pptx?)$/.test(path)) return hide("pdf")
   if (
+    ctx.excludeTerms?.some((t) => {
+      const w = words(t)
+      return w.length > 1 && (has(title, w) || has(desc, w))
+    })
+  )
+    return hide("excluded_term")
+  if (
     ctx.clientDomain &&
     (sk.domain === ctx.clientDomain ||
       sk.host === ctx.clientDomain ||
@@ -172,9 +192,14 @@ export function classify(row: ResultRow, sk: SiteKey, ctx: ClassifyContext): Cla
   )
   if (type === "other" && serviceWord && !DIRECTORY_WORDS.test(text))
     return hide("looks_like_business")
-  if ((type === "other" || type === "news_blog") && !isLocal && ARTICLE_WORDS.test(title))
-    return hide("not_local_article")
-  if (type === "other" && !isLocal && !directoryish) return hide("not_local_article")
+  // A firm that sells the client's own service, writing its own "top companies" list.
+  if (serviceWord && PITCH_WORDS.test(`${title} ${desc}`) && !KNOWN_DIRECTORIES.has(sk.domain))
+    return hide("competitor")
+  if (ctx.local !== false) {
+    if ((type === "other" || type === "news_blog") && !isLocal && ARTICLE_WORDS.test(title))
+      return hide("not_local_article")
+    if (type === "other" && !isLocal && !directoryish) return hide("not_local_article")
+  }
   return { type, filterReason: null, isLocal }
 }
 
@@ -186,6 +211,10 @@ function typeFrom(sk: SiteKey, text: string, title: string, ctx: ClassifyContext
     return DIRECTORY_WORDS.test(text) ? "business_directory" : "government"
   }
   if (GUEST_WORDS.test(text)) return "guest_post"
+  if (PODCAST_WORDS.test(text) || /^podcasts?\./.test(sk.host)) return "podcast"
+  if (SPONSOR_WORDS.test(text)) return "sponsorship"
+  if (MARKETPLACE_WORDS.test(text)) return "marketplace"
+  if (COMMUNITY_WORDS.test(text) || /^(forums?|community)\./.test(sk.host)) return "community"
   if (/\b(association|assn|alliance|guild|society|federation|council)\b/.test(text))
     return "association"
   const service = ctx.serviceTerms.some((t) => has(text, words(t)))
@@ -195,6 +224,7 @@ function typeFrom(sk: SiteKey, text: string, title: string, ctx: ClassifyContext
       : "business_directory"
   }
   if (REVIEW_WORDS.test(title)) return "review_site"
+  if (RESOURCE_WORDS.test(title) || /\/resources?(\/|$)/.test(text)) return "resource_page"
   if (NEWS_WORDS.test(words(sk.host)) || NEWS_WORDS.test(title)) return "news_blog"
   return "other"
 }

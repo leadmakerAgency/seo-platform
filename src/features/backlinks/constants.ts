@@ -18,6 +18,8 @@ export type FilterReason =
   | "other_state"
   | "not_local_article"
   | "pdf"
+  | "ai_rejected"
+  | "excluded_term"
 
 export const TYPE_LABELS: Record<DirectoryType, string> = {
   business_directory: "Business directory",
@@ -32,6 +34,11 @@ export const TYPE_LABELS: Record<DirectoryType, string> = {
   government: "Government",
   aggregator: "Data aggregator",
   other: "Other",
+  marketplace: "Marketplace",
+  podcast: "Podcast",
+  community: "Forum / community",
+  sponsorship: "Sponsorship / event",
+  resource_page: "Resource page",
 }
 
 export const DIRECTORY_TYPES = Object.keys(TYPE_LABELS) as DirectoryType[]
@@ -39,12 +46,14 @@ export const DIRECTORY_TYPES = Object.keys(TYPE_LABELS) as DirectoryType[]
 export const FILTER_LABELS: Record<FilterReason, string> = {
   own_site: "The client's own website",
   agency_client: "Another client's website",
-  competitor: "A competitor (in the map results)",
+  competitor: "A competitor",
   looks_like_business: "Looks like a business, not a directory",
   blocked: "Site blocked for all clients",
-  other_state: "Mentions a different state",
+  other_state: "Mentions a different state or province",
   not_local_article: "An article with nothing local",
   pdf: "A document, not a site",
+  ai_rejected: "Not a fit (Claude's review)",
+  excluded_term: "Excluded by the brief",
 }
 
 export const REJECT_LABELS: Record<RejectReason, string> = {
@@ -96,18 +105,25 @@ export function spamBand(spam: number | null): Band | null {
   return null
 }
 
-export const TABS = ["review", "approved", "rejected", "hidden"] as const
+export const TABS = ["review", "more", "basics", "approved", "rejected", "hidden"] as const
 export type Tab = (typeof TABS)[number]
 
-export const TAB_STATUS: Record<Tab, OpportunityStatus> = {
-  review: "pending_review",
-  approved: "approved",
-  rejected: "rejected",
-  hidden: "filtered",
+/** Review holds at most this many searched places at once (the top 30). */
+export const REVIEW_CAP = 30
+
+/** Which tab a place shows in. Basics: core listings and the brief's trusted sites. */
+export function tabOf(p: { status: OpportunityStatus; source: string }): Tab {
+  if (p.status === "approved") return "approved"
+  if (p.status === "rejected") return "rejected"
+  if (p.status === "filtered") return "hidden"
+  if (p.status === "reserve") return "more"
+  return p.source === "search" ? "review" : "basics"
 }
 
 export const TAB_LABELS: Record<Tab, string> = {
-  review: "Pending review",
+  review: "Top 30 to review",
+  more: "More",
+  basics: "Basics",
   approved: "Approved",
   rejected: "Rejected",
   hidden: "Hidden",
