@@ -1,4 +1,4 @@
-import type { Brief } from "./brief"
+import { hasLocal, hasWide, type Brief } from "./brief"
 import type { FootprintScope } from "./constants"
 import { cleanTerm, normQuery } from "./footprints"
 
@@ -56,10 +56,12 @@ const ADJACENT_TEMPLATES = 2
 const BUYER_MAX = 6
 const INDUSTRY_MAX = 4
 
+const overlaps = (a: readonly string[], b: readonly string[]) => a.some((x) => b.includes(x))
+
 const applies = (f: PlanFootprint, b: Brief) =>
-  f.reach.includes(b.reach) &&
-  f.buyer.includes(b.buyer) &&
-  f.offering.includes(b.offering) &&
+  overlaps(f.reach, b.reach) &&
+  overlaps(f.buyer, b.buyer) &&
+  overlaps(f.offering, b.offering) &&
   (!f.site_type || (b.site_types as string[]).includes(f.site_type)) &&
   !/\{(city|state_code)\}/.test(f.template)
 
@@ -145,43 +147,50 @@ export function buildSearchPlan(input: {
     }
   }
 
-  if (places.length > 0) {
-    if (brief.reach === "local") {
-      // Local: each place's own searches first, then topics in each place, then the rest once.
-      // One of each kind of site first (directory, chamber, local news, sponsorship…), then more.
-      const firstOfKind = geo.filter((f, i) => geo.findIndex((g) => g.site_type === f.site_type) === i)
-      const placeOrder = [...firstOfKind, ...geo.filter((f) => !firstOfKind.includes(f))]
-      for (const place of places) {
-        let n = 0
-        for (const f of placeOrder) {
-          if (n >= PLACE_PER_PLACE) break
-          if (push(f, place, "place", fill(f.template, valuesFor(place)))) n++
-        }
+  // Local customers: each city/region's own searches and topics there. National/global
+  // customers: topic searches from each country. Both ticked: both, sharing the 60 searches.
+  const local = hasLocal(brief)
+  const wide = hasWide(brief)
+  const mixed = local && wide
+  let localPlaces = local ? places.filter((p) => p.kind !== "country") : []
+  let markets = wide ? places.filter((p) => p.kind === "country") : []
+  if (local && !wide && localPlaces.length === 0) localPlaces = places
+  if (wide && !local && markets.length === 0) markets = places
+  if (mixed && markets.length === 0 && localPlaces.length === 0) markets = places
+  const anchor = markets[0] ?? localPlaces[0]
+
+  if (anchor) {
+    // 1. Each local place's own searches: one of each kind of site first (directory,
+    //    chamber, local news, sponsorship…), then more.
+    const firstOfKind = geo.filter((f, i) => geo.findIndex((g) => g.site_type === f.site_type) === i)
+    const placeOrder = [...firstOfKind, ...geo.filter((f) => !firstOfKind.includes(f))]
+    for (const place of localPlaces) {
+      let n = 0
+      for (const f of placeOrder) {
+        if (n >= (mixed ? 4 : PLACE_PER_PLACE)) break
+        if (push(f, place, "place", fill(f.template, valuesFor(place)))) n++
       }
-      for (const place of places) topicRound(place, topicPlaced, core, 3)
-      for (const place of places) {
-        let n = 0
-        for (const f of service) {
-          for (const s of services) {
-            if (n >= SERVICE_PER_PLACE) break
-            if (push(f, place, "service", fill(f.template, { ...valuesFor(place), service: s }))) n++
-          }
-        }
-      }
-      buyerRound(places[0])
-      for (const place of places) topicRound(place, topicPlaced, adjacent, 1)
-      topicRound(places[0], topicFree, core, 1)
-      industryRound(places[0])
-    } else {
-      // National / global: topics anywhere, searched from each country (the first one first).
-      const markets = places.filter((p) => p.kind === "country")
-      const list = markets.length ? markets : places
-      topicRound(list[0], topicFree, core, CORE_TEMPLATES)
-      buyerRound(list[0])
-      topicRound(list[0], topicFree, adjacent, ADJACENT_TEMPLATES)
-      industryRound(list[0])
-      for (const market of list.slice(1)) topicRound(market, topicFree, core, 2)
     }
+    // 2. Core topics in each local place, then core topics from the first country.
+    for (const place of localPlaces) topicRound(place, topicPlaced, core, mixed ? 2 : 3)
+    if (markets.length) topicRound(markets[0], topicFree, core, mixed ? 3 : CORE_TEMPLATES)
+    // 3. The client's services in each local place.
+    for (const place of localPlaces) {
+      let n = 0
+      for (const f of service) {
+        for (const s of services) {
+          if (n >= SERVICE_PER_PLACE) break
+          if (push(f, place, "service", fill(f.template, { ...valuesFor(place), service: s }))) n++
+        }
+      }
+    }
+    // 4. What the buyers read, then adjacent topics, then the industry, then more countries.
+    buyerRound(anchor)
+    if (markets.length) topicRound(markets[0], topicFree, adjacent, ADJACENT_TEMPLATES)
+    for (const place of localPlaces) topicRound(place, topicPlaced, adjacent, 1)
+    if (!markets.length && localPlaces.length) topicRound(localPlaces[0], topicFree, core, 1)
+    industryRound(anchor)
+    for (const market of markets.slice(1)) topicRound(market, topicFree, core, 2)
   }
 
   const groups: Record<PlanGroup, number> = { place: 0, topic: 0, service: 0, buyer: 0, industry: 0 }

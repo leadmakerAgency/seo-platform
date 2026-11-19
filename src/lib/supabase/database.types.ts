@@ -279,15 +279,15 @@ export type Database = {
         Row: {
           adjacent_topics: string[]
           audience: string | null
-          buyer: string
+          buyer: string[]
           client_id: string
           competitors: string[]
           core_topics: string[]
           created_at: string
           exclude_terms: string[]
           notes: string | null
-          offering: string
-          reach: string
+          offering: string[]
+          reach: string[]
           site_types: string[]
           trusted_sites: string[]
           updated_at: string
@@ -297,15 +297,15 @@ export type Database = {
         Insert: {
           adjacent_topics?: string[]
           audience?: string | null
-          buyer: string
+          buyer: string[]
           client_id: string
           competitors?: string[]
           core_topics: string[]
           created_at?: string
           exclude_terms?: string[]
           notes?: string | null
-          offering: string
-          reach: string
+          offering: string[]
+          reach: string[]
           site_types?: string[]
           trusted_sites?: string[]
           updated_at?: string
@@ -315,15 +315,15 @@ export type Database = {
         Update: {
           adjacent_topics?: string[]
           audience?: string | null
-          buyer?: string
+          buyer?: string[]
           client_id?: string
           competitors?: string[]
           core_topics?: string[]
           created_at?: string
           exclude_terms?: string[]
           notes?: string | null
-          offering?: string
-          reach?: string
+          offering?: string[]
+          reach?: string[]
           site_types?: string[]
           trusted_sites?: string[]
           updated_at?: string

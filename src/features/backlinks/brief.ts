@@ -7,7 +7,7 @@ import { z } from "zod"
  */
 
 export const REACHES = ["local", "national", "global"] as const
-export const BUYERS = ["b2b", "b2c", "both"] as const
+export const BUYERS = ["b2b", "b2c"] as const
 export const OFFERINGS = ["services", "software", "products"] as const
 export const SITE_TYPES = [
   "directories",
@@ -43,10 +43,11 @@ export const REACH_META: Record<Reach, { label: string; help: string }> = {
   },
 }
 
+/** Pick one or more of each. Tick two when the client has both kinds of customers. */
+
 export const BUYER_META: Record<Buyer, { label: string; help: string }> = {
   b2b: { label: "Businesses (B2B)", help: "Buyers are companies: review platforms, trade publications, associations, conferences." },
   b2c: { label: "Consumers (B2C)", help: "Buyers are people: review sites, community forums, lifestyle and local blogs." },
-  both: { label: "Both", help: "Sells to businesses and to people." },
 }
 
 export const OFFERING_META: Record<Offering, { label: string; help: string }> = {
@@ -69,29 +70,42 @@ export const SITE_TYPE_LABELS: Record<SiteType, string> = {
   resource_pages: "Resource pages",
 }
 
-/** Site types switched on by default for a reach / buyer / offering. */
-export function defaultSiteTypes(reach: Reach, buyer: Buyer, offering: Offering): SiteType[] {
+type Mix = { reach: readonly Reach[]; buyer: readonly Buyer[]; offering: readonly Offering[] }
+
+/** Local customers at all, national/global customers at all, and only local. */
+export const hasLocal = (b: Pick<Mix, "reach">) => b.reach.includes("local")
+export const hasWide = (b: Pick<Mix, "reach">) => b.reach.some((r) => r !== "local")
+export const onlyLocal = (b: Pick<Mix, "reach">) => hasLocal(b) && !hasWide(b)
+
+/** The labels of the ticked values, in the form's order: "Local + National". */
+export function mixLabel<T extends string>(values: readonly T[], all: readonly T[], meta: Record<T, { label: string }>) {
+  return all.filter((v) => values.includes(v)).map((v) => meta[v].label).join(" + ")
+}
+
+/** Site types switched on by default for the ticked reach / buyer / offering (the union). */
+export function defaultSiteTypes(mix: Mix): SiteType[] {
   const set = new Set<SiteType>(["review_platforms", "niche_blogs", "associations", "resource_pages"])
-  if (reach === "local") {
+  if (hasLocal(mix)) {
     for (const t of ["directories", "local_news", "sponsorships", "communities"] as const) set.add(t)
-  } else {
-    for (const t of ["guest_posts", "podcasts"] as const) set.add(t)
-    if (buyer !== "b2c") set.add("sponsorships")
-    if (buyer !== "b2b") set.add("communities")
   }
-  if (offering !== "services" || reach !== "local") set.add("marketplaces")
+  if (hasWide(mix)) {
+    for (const t of ["guest_posts", "podcasts"] as const) set.add(t)
+    if (mix.buyer.includes("b2b")) set.add("sponsorships")
+    if (mix.buyer.includes("b2c")) set.add("communities")
+  }
+  if (mix.offering.some((o) => o !== "services") || hasWide(mix)) set.add("marketplaces")
   return SITE_TYPES.filter((t) => set.has(t))
 }
 
 /** Sites buyers often trust when researching, by offering and buyer (ideas, never automatic). */
-export function trustedSiteIdeas(reach: Reach, buyer: Buyer, offering: Offering): string[] {
+export function trustedSiteIdeas(mix: Mix): string[] {
   const out: string[] = []
-  if (offering === "services" && buyer !== "b2c")
+  if (mix.offering.includes("services") && mix.buyer.includes("b2b"))
     out.push("clutch.co", "goodfirms.co", "upcity.com", "designrush.com", "sortlist.com", "themanifest.com")
-  if (offering === "software")
+  if (mix.offering.includes("software"))
     out.push("g2.com", "capterra.com", "getapp.com", "softwareadvice.com", "trustradius.com", "producthunt.com", "alternativeto.net", "saashub.com")
-  if (offering === "products") out.push("trustpilot.com", "sitejabber.com")
-  if (reach === "local" && buyer !== "b2b") out.push("yelp.com", "nextdoor.com", "angi.com", "houzz.com", "thumbtack.com")
+  if (mix.offering.includes("products")) out.push("trustpilot.com", "sitejabber.com")
+  if (hasLocal(mix) && mix.buyer.includes("b2c")) out.push("yelp.com", "nextdoor.com", "angi.com", "houzz.com", "thumbtack.com")
   return [...new Set(out)]
 }
 
@@ -112,9 +126,18 @@ const domain = z
 
 export const briefSchema = z
   .object({
-    reach: z.enum(REACHES, { error: "Choose where the customers are." }),
-    buyer: z.enum(BUYERS, { error: "Choose who buys." }),
-    offering: z.enum(OFFERINGS, { error: "Choose what the client sells." }),
+    reach: z
+      .array(z.enum(REACHES))
+      .min(1, "Choose where the customers are (one or more).")
+      .transform((v) => REACHES.filter((x) => v.includes(x))),
+    buyer: z
+      .array(z.enum(BUYERS))
+      .min(1, "Choose who buys (one or both).")
+      .transform((v) => BUYERS.filter((x) => v.includes(x))),
+    offering: z
+      .array(z.enum(OFFERINGS))
+      .min(1, "Choose what the client sells (one or more).")
+      .transform((v) => OFFERINGS.filter((x) => v.includes(x))),
     audience: z.string().trim().max(300, "Use 300 characters or fewer."),
     core_topics: z.array(topic).min(1, "Add at least one core topic.").max(5, "5 core topics at most."),
     adjacent_topics: z.array(topic).max(12, "12 adjacent topics at most."),
@@ -138,12 +161,19 @@ export function snapshotOf(row: unknown): BriefSnapshot | null {
   if (!row || typeof row !== "object") return null
   const r = row as Record<string, unknown>
   const list = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [])
-  if (!REACHES.includes(r.reach as Reach) || !BUYERS.includes(r.buyer as Buyer) || !OFFERINGS.includes(r.offering as Offering))
-    return null
+  // One value (briefs saved before 0039, old run snapshots) or a list; "both" means b2b + b2c.
+  const pick = <T extends string>(v: unknown, all: readonly T[]): T[] => {
+    const raw = typeof v === "string" ? (v === "both" ? ["b2b", "b2c"] : [v]) : list(v).flatMap((x) => (x === "both" ? ["b2b", "b2c"] : [x]))
+    return all.filter((x) => raw.includes(x))
+  }
+  const reach = pick(r.reach, REACHES)
+  const buyer = pick(r.buyer, BUYERS)
+  const offering = pick(r.offering, OFFERINGS)
+  if (!reach.length || !buyer.length || !offering.length) return null
   return {
-    reach: r.reach as Reach,
-    buyer: r.buyer as Buyer,
-    offering: r.offering as Offering,
+    reach,
+    buyer,
+    offering,
     audience: typeof r.audience === "string" ? r.audience : "",
     core_topics: list(r.core_topics),
     adjacent_topics: list(r.adjacent_topics),

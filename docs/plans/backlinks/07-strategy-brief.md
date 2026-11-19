@@ -52,9 +52,9 @@ Research agrees:
 
 | Field | Values | Used for |
 |---|---|---|
-| `reach` | `local`, `national`, `global` | Which search templates run, which basics apply, how "local" counts in the score |
-| `buyer` | `b2b`, `b2c`, `both` | Buyer templates, site-type weights, basics |
-| `offering` | `services`, `software`, `products` | Marketplaces (software → G2 and Capterra; services → Clutch and GoodFirms; products → retail and review sites) |
+| `reach` | One or more of `local`, `national`, `global` (local + national runs both kinds of searches) | Which search templates run, which basics apply, how "local" counts in the score |
+| `buyer` | `b2b`, `b2c`, or both ticked | Buyer templates, site-type weights, basics |
+| `offering` | One or more of `services`, `software`, `products` | Marketplaces (software → G2 and Capterra; services → Clutch and GoodFirms; products → retail and review sites) |
 | `audience` | Free text, up to 300 characters ("homeowners planning backyard projects", "CTOs at 20–200-person SaaS companies") | Claude's review: are this site's readers the buyers? |
 | `core_topics` | 1–5 chips (the niche: "web development", "no-code development") | Topic searches; the topic match in the score |
 | `adjacent_topics` | Up to 12 chips ("startup growth", "UX design", "SaaS marketing", "small business finance") | Topic searches; the topic match in the score (worth less than core) |
@@ -65,7 +65,7 @@ Research agrees:
 | `notes` | Up to 1,000 characters | Shown to Claude and the team |
 
 **Required before Find places:**
-- reach, buyer and offering
+- reach, buyer and offering (one or more of each; migration `0039` made them lists)
 - 1 or more core topics and 5 or more topics in total. A hint asks for 10–15.
 - local clients: at least one city or region place
 - national and global clients: at least one country place (suggested: the client's country, or for global US, GB, CA and AU)

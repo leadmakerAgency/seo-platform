@@ -1,6 +1,6 @@
 "use client"
 
-import { CircleAlert, Plus } from "lucide-react"
+import { Check, CircleAlert, Plus } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState, useTransition, type ReactNode } from "react"
@@ -26,9 +26,6 @@ import {
   SITE_TYPES,
   trustedSiteIdeas,
   type Brief,
-  type Buyer,
-  type Offering,
-  type Reach,
   type SiteType,
 } from "../brief"
 import { adjacentIdeas } from "../topic-ideas"
@@ -64,7 +61,7 @@ export function StrategyForm({
       const next = { ...prev, [key]: value }
       // Kinds of sites follow reach / buyer / offering until someone changes them by hand.
       if (!typesTouched && (key === "reach" || key === "buyer" || key === "offering")) {
-        next.site_types = defaultSiteTypes(next.reach, next.buyer, next.offering)
+        next.site_types = defaultSiteTypes(next)
       }
       return next
     })
@@ -73,7 +70,7 @@ export function StrategyForm({
 
   const topics = v.core_topics.length + v.adjacent_topics.length
   const ideas = adjacentIdeas(ideasText, [...v.core_topics, ...v.adjacent_topics]).slice(0, 12)
-  const siteIdeas = trustedSiteIdeas(v.reach, v.buyer, v.offering).filter((d) => !v.trusted_sites.includes(d))
+  const siteIdeas = trustedSiteIdeas(v).filter((d) => !v.trusted_sites.includes(d))
 
   function save() {
     setFormError(null)
@@ -95,26 +92,34 @@ export function StrategyForm({
     <div className="flex flex-col">
       <div className="flex max-w-4xl flex-col gap-10 pb-10">
         <Section n={1} title="Who the client sells to" description="This decides which kinds of sites are searched and how they're ranked.">
-          <Choice
+          <MultiChoice
             label="Where the customers are"
             options={REACHES.map((r) => ({ value: r, ...REACH_META[r] }))}
             value={v.reach}
-            onChange={(x) => set("reach", x as Reach)}
+            onChange={(x) => set("reach", x)}
             disabled={disabled}
+            error={errors.reach}
+            note={
+              v.reach.includes("local") && v.reach.length > 1
+                ? "Local and wider customers: each place's own searches, plus topic searches from your countries. Add a city or region and a country to the places."
+                : undefined
+            }
           />
-          <Choice
+          <MultiChoice
             label="Who buys"
             options={BUYERS.map((b) => ({ value: b, ...BUYER_META[b] }))}
             value={v.buyer}
-            onChange={(x) => set("buyer", x as Buyer)}
+            onChange={(x) => set("buyer", x)}
             disabled={disabled}
+            error={errors.buyer}
           />
-          <Choice
+          <MultiChoice
             label="What the client sells"
             options={OFFERINGS.map((o) => ({ value: o, ...OFFERING_META[o] }))}
             value={v.offering}
-            onChange={(x) => set("offering", x as Offering)}
+            onChange={(x) => set("offering", x)}
             disabled={disabled}
+            error={errors.offering}
           />
           <Field data-invalid={Boolean(errors.audience)}>
             <FieldLabel htmlFor="b-audience">The buyers in one sentence (optional)</FieldLabel>
@@ -208,7 +213,7 @@ export function StrategyForm({
                 size="sm"
                 onClick={() => {
                   setTypesTouched(false)
-                  set("site_types", defaultSiteTypes(v.reach, v.buyer, v.offering))
+                  set("site_types", defaultSiteTypes(v))
                 }}
               >
                 Use the defaults for this client
@@ -321,44 +326,73 @@ function Section({ n, title, description, children }: { n: number; title: string
   )
 }
 
-function Choice({
+/** Tick one or more cards. The last ticked card can't be unticked (at least one is needed). */
+function MultiChoice<T extends string>({
   label,
   options,
   value,
   onChange,
   disabled,
+  error,
+  note,
 }: {
   label: string
-  options: { value: string; label: string; help: string }[]
-  value: string
-  onChange: (v: string) => void
+  options: { value: T; label: string; help: string }[]
+  value: T[]
+  onChange: (v: T[]) => void
   disabled?: boolean
+  error?: string
+  note?: string
 }) {
   return (
     <fieldset className="flex flex-col gap-2">
-      <legend className="mb-1 text-sm font-medium">{label}</legend>
-      <div className="grid gap-2 sm:grid-cols-3" role="radiogroup">
+      <legend className="mb-1 text-sm font-medium">
+        {label} <span className="font-normal text-muted-foreground">(one or more)</span>
+      </legend>
+      <div className={cn("grid gap-2", options.length === 2 ? "sm:grid-cols-2" : "sm:grid-cols-3")}>
         {options.map((o) => {
-          const active = o.value === value
+          const active = value.includes(o.value)
+          const last = active && value.length === 1
           return (
             <button
               key={o.value}
               type="button"
-              role="radio"
+              role="checkbox"
               aria-checked={active}
               disabled={disabled}
-              onClick={() => onChange(o.value)}
+              title={last ? "Keep at least one ticked" : undefined}
+              onClick={() => {
+                if (last) return
+                onChange(active ? value.filter((x) => x !== o.value) : options.map((x) => x.value).filter((x) => x === o.value || value.includes(x)))
+              }}
               className={cn(
-                "flex flex-col gap-1 rounded-lg border bg-card p-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60",
+                "flex gap-2.5 rounded-lg border bg-card p-3 text-left transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:opacity-60",
                 active ? "border-primary bg-brand-soft" : "hover:bg-muted/60",
               )}
             >
-              <span className="text-sm font-medium">{o.label}</span>
-              <span className="text-xs text-muted-foreground">{o.help}</span>
+              <span
+                aria-hidden
+                className={cn(
+                  "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-[4px] border",
+                  active ? "border-primary bg-primary text-primary-foreground" : "border-input bg-background",
+                )}
+              >
+                {active && <Check className="size-3" strokeWidth={3} />}
+              </span>
+              <span className="flex flex-col gap-1">
+                <span className="text-sm font-medium">{o.label}</span>
+                <span className="text-xs text-muted-foreground">{o.help}</span>
+              </span>
             </button>
           )
         })}
       </div>
+      {note && <p className="text-[13px] text-muted-foreground">{note}</p>}
+      {error && (
+        <p className="text-sm text-danger" role="alert">
+          {error}
+        </p>
+      )}
     </fieldset>
   )
 }

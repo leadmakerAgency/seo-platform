@@ -16,7 +16,7 @@ import {
   type DirectoryType,
   type FilterReason,
 } from "./constants"
-import { snapshotOf } from "./brief"
+import { onlyLocal, snapshotOf } from "./brief"
 import { cleanTerm, normQuery } from "./footprints"
 import { ruleScore, topicMatch } from "./scoring"
 import { applyShortlist } from "./shortlist"
@@ -613,7 +613,8 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
           serviceTerms,
           library,
           blockedRoots,
-          local: brief.reach === "local",
+          // Hide articles with nothing local only when every customer is local.
+          local: onlyLocal(brief),
           excludeTerms: brief.exclude_terms,
         },
       ]),

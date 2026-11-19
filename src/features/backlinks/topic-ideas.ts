@@ -1,3 +1,5 @@
+import type { Buyer } from "./brief"
+
 /**
  * Adjacent-topic ideas for the strategy brief (suggestions only; the team decides).
  * Adjacent topics are what the same buyers read about besides the client's own service:
@@ -49,9 +51,9 @@ export function adjacentIdeas(text: string, existing: string[] = []): string[] {
 }
 
 /** A first guess at the buyer from the industry (the team confirms). */
-export function guessBuyer(text: string): "b2b" | "b2c" | "both" {
+export function guessBuyer(text: string): Buyer[] {
   const hay = text.toLowerCase()
-  if (/\b(saas|b2b|agency|consult|software|development|wholesale|manufactur|it services|payroll|marketing)/.test(hay)) return "b2b"
-  if (/\b(account|law|legal|insurance|clean|print)/.test(hay)) return "both"
-  return "b2c"
+  if (/\b(saas|b2b|agency|consult|software|development|wholesale|manufactur|it services|payroll|marketing)/.test(hay)) return ["b2b"]
+  if (/\b(account|law|legal|insurance|clean|print)/.test(hay)) return ["b2b", "b2c"]
+  return ["b2c"]
 }

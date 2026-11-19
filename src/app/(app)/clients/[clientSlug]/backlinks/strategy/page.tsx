@@ -57,16 +57,16 @@ async function Content({ params }: Pick<Props, "params">) {
   // A first draft from what we know: services as core topics, a guessed buyer, local reach.
   const buyer = guessBuyer(ideasText)
   const initial: Brief = saved ?? {
-    reach: "local",
+    reach: ["local"],
     buyer,
-    offering: "services",
+    offering: ["services"],
     audience: "",
     core_topics: [...new Set((profile?.services ?? []).map((s) => s.trim().toLowerCase()).filter((s) => s.length >= 2 && s.length <= 60 && !/[:{}"]/.test(s)))].slice(0, 5),
     adjacent_topics: [],
     trusted_sites: [],
     competitors: [],
     exclude_terms: ["jobs", "careers", "salary", "free download", "course"],
-    site_types: defaultSiteTypes("local", buyer, "services"),
+    site_types: defaultSiteTypes({ reach: ["local"], buyer, offering: ["services"] }),
     notes: "",
   }
   const canEdit = can(member.role, "backlinks.strategy")

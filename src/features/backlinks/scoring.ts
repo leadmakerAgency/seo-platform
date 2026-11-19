@@ -1,12 +1,14 @@
-import type { Brief } from "./brief"
+import { hasLocal, hasWide, onlyLocal, type Brief } from "./brief"
 import type { DirectoryType } from "./constants"
 
 /**
  * How places are ranked (pure; shown on the page under "How scores work").
  *
  * rule score (0–1, saved by the search), from the client's strategy brief:
- *   local:            0.30 topic + 0.25 site type + 0.15 local + 0.15 searches + 0.15 position
- *   national/global:  0.45 topic + 0.25 site type + 0.15 searches + 0.15 position
+ *   local only:            0.30 topic + 0.25 site type + 0.15 local + 0.15 searches + 0.15 position
+ *   local + national/glob: 0.38 topic + 0.25 site type + 0.07 local + 0.15 searches + 0.15 position
+ *   national/global:       0.45 topic + 0.25 site type + 0.15 searches + 0.15 position
+ * site type weight: the best of the lenses that apply (local; B2B and/or B2C for wider reach).
  * score (0–100, at read time) = 100 × (0.75 rule score + 0.25 strength)
  *   strength = Domain Rank / 100, unknown = 0.4; spam score 60+ halves the score.
  * The top 30 is then picked by Claude's review (shortlist.ts); without it, by this score.
@@ -95,17 +97,18 @@ const B2C_WEIGHT: Record<DirectoryType, number> = {
 
 /** How much this kind of site is worth for this client's reach, buyer and offering. */
 export function siteTypeWeight(type: DirectoryType, brief: Pick<Brief, "reach" | "buyer" | "offering">): number {
-  let w =
-    brief.reach === "local"
-      ? LOCAL_WEIGHT[type]
-      : brief.buyer === "b2c"
-        ? B2C_WEIGHT[type]
-        : brief.buyer === "b2b"
-          ? B2B_WEIGHT[type]
-          : (B2B_WEIGHT[type] + B2C_WEIGHT[type]) / 2
-  if (brief.offering === "software" && type === "marketplace") w = 1
-  if (brief.offering === "products" && (type === "review_site" || type === "marketplace")) w = Math.max(w, 0.95)
-  return w ?? 0.25
+  // A kind of site is worth what it's worth to the client's best-matching customers.
+  const lenses: (number | undefined)[] = []
+  if (hasLocal(brief)) lenses.push(LOCAL_WEIGHT[type])
+  if (hasWide(brief)) {
+    if (brief.buyer.includes("b2b")) lenses.push(B2B_WEIGHT[type])
+    if (brief.buyer.includes("b2c")) lenses.push(B2C_WEIGHT[type])
+  }
+  const known = lenses.filter((n): n is number => typeof n === "number")
+  let w = known.length ? Math.max(...known) : 0.25
+  if (brief.offering.includes("software") && type === "marketplace") w = 1
+  if (brief.offering.includes("products") && (type === "review_site" || type === "marketplace")) w = Math.max(w, 0.95)
+  return w
 }
 
 const words = (s: string) =>
@@ -150,9 +153,11 @@ export function ruleScore(input: {
   const hits = Math.min(1, Math.log2(1 + Math.max(0, input.searches)) / Math.log2(5))
   const pos = input.bestPosition === null ? 0.5 : Math.max(0, 1 - (input.bestPosition - 1) / 30)
   const topic = Math.min(1, Math.max(0, input.topicFit))
-  const r =
-    input.brief.reach === "local"
-      ? 0.3 * topic + 0.25 * type + 0.15 * (input.isLocal ? 1 : 0) + 0.15 * hits + 0.15 * pos
+  const local = input.isLocal ? 1 : 0
+  const r = onlyLocal(input.brief)
+    ? 0.3 * topic + 0.25 * type + 0.15 * local + 0.15 * hits + 0.15 * pos
+    : hasLocal(input.brief)
+      ? 0.38 * topic + 0.25 * type + 0.07 * local + 0.15 * hits + 0.15 * pos
       : 0.45 * topic + 0.25 * type + 0.15 * hits + 0.15 * pos
   return Math.round(Math.min(1, Math.max(0, r)) * 1000) / 1000
 }

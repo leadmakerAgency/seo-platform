@@ -15,7 +15,16 @@ import {
   FindPlacesButton,
   RerankButton,
 } from "@/features/backlinks/components/backlink-dialogs"
-import { BUYER_META, OFFERING_META, REACH_META, topicCount } from "@/features/backlinks/brief"
+import {
+  BUYER_META,
+  BUYERS,
+  mixLabel,
+  OFFERING_META,
+  OFFERINGS,
+  REACH_META,
+  REACHES,
+  topicCount,
+} from "@/features/backlinks/brief"
 import { BacklinksView } from "@/features/backlinks/components/backlinks-view"
 import { formatDay, usd } from "@/features/backlinks/components/bits"
 import { TargetsPanel } from "@/features/backlinks/components/targets-panel"
@@ -200,7 +209,8 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
             </h2>
             {brief ? (
               <p className="text-sm text-muted-foreground">
-                {REACH_META[brief.reach].label} · {BUYER_META[brief.buyer].label} · {OFFERING_META[brief.offering].label} ·{" "}
+                {mixLabel(brief.reach, REACHES, REACH_META)} · {mixLabel(brief.buyer, BUYERS, BUYER_META)} ·{" "}
+                {mixLabel(brief.offering, OFFERINGS, OFFERING_META)} ·{" "}
                 {topicCount(brief)} topics ({brief.core_topics.join(", ")}
                 {brief.adjacent_topics.length ? `, plus ${brief.adjacent_topics.slice(0, 4).join(", ")}${brief.adjacent_topics.length > 4 ? "…" : ""}` : ""})
               </p>

@@ -6,7 +6,7 @@ import { ClaudeError, claudeJson } from "@/lib/ai/claude"
 import type { Db } from "@/lib/dataforseo/client"
 import { hasAnthropicKey, hasDataForSeo } from "@/lib/env.server"
 import type { Json, Tables } from "@/lib/supabase/database.types"
-import { BUYER_META, OFFERING_META, REACH_META, type BriefSnapshot } from "./brief"
+import { BUYER_META, BUYERS, mixLabel, OFFERING_META, OFFERINGS, REACH_META, REACHES, type BriefSnapshot } from "./brief"
 import { REVIEW_CAP, type DirectoryType } from "./constants"
 import { ruleScore, scoreOf, topicMatch } from "./scoring"
 import { registrableDomain } from "./site-key"
@@ -336,9 +336,9 @@ async function syncBasics(db: Db, run: Run, brief: BriefSnapshot, ctx: Shortlist
   const countries = new Set(ctx.places.map((p) => p.countryIso.toUpperCase()))
   const fits = (core ?? []).filter(
     (d) =>
-      (d.core_reach.length === 0 || d.core_reach.includes(brief.reach)) &&
-      (d.core_buyer.length === 0 || d.core_buyer.includes(brief.buyer)) &&
-      (d.core_offering.length === 0 || d.core_offering.includes(brief.offering)) &&
+      (d.core_reach.length === 0 || d.core_reach.some((x) => (brief.reach as string[]).includes(x))) &&
+      (d.core_buyer.length === 0 || d.core_buyer.some((x) => x === "both" || (brief.buyer as string[]).includes(x))) &&
+      (d.core_offering.length === 0 || d.core_offering.some((x) => (brief.offering as string[]).includes(x))) &&
       (d.core_countries.length === 0 || d.core_countries.some((c) => countries.has(c))) &&
       (d.core_industries.length === 0 || d.core_industries.some((t) => ctx.matchText.includes(t))),
   )
@@ -430,9 +430,9 @@ function reviewPrompt(brief: BriefSnapshot, ctx: ShortlistContext, top: Candidat
     `<client>`,
     `Name: ${ctx.clientName}`,
     ctx.domain ? `Website: ${ctx.domain}` : null,
-    `Sells: ${OFFERING_META[brief.offering].label} — ${ctx.services.join(", ") || ctx.industry || "see topics"}`,
-    `Reach: ${REACH_META[brief.reach].label}. Places: ${ctx.places.map((p) => p.label).join(", ") || "none"}`,
-    `Buyers: ${BUYER_META[brief.buyer].label}${brief.audience ? ` — ${brief.audience}` : ""}`,
+    `Sells: ${mixLabel(brief.offering, OFFERINGS, OFFERING_META)} — ${ctx.services.join(", ") || ctx.industry || "see topics"}`,
+    `Reach: ${mixLabel(brief.reach, REACHES, REACH_META)}. Places: ${ctx.places.map((p) => p.label).join(", ") || "none"}`,
+    `Buyers: ${mixLabel(brief.buyer, BUYERS, BUYER_META)}${brief.audience ? ` — ${brief.audience}` : ""}`,
     `Core topics: ${brief.core_topics.join(", ")}`,
     `Adjacent topics: ${brief.adjacent_topics.join(", ") || "none"}`,
     `Sites the buyers trust: ${brief.trusted_sites.join(", ") || "none given"}`,
