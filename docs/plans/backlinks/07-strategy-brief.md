@@ -59,7 +59,7 @@ Research agrees:
 | `core_topics` | 1–5 chips (the niche: "web development", "no-code development") | Topic searches; the topic match in the score |
 | `adjacent_topics` | Up to 12 chips ("startup growth", "UX design", "SaaS marketing", "small business finance") | Topic searches; the topic match in the score (worth less than core) |
 | `trusted_sites` | Up to 20 domains the buyers trust ("clutch.co", "g2.com", "houzz.com") | Added to Basics as "Named in the brief"; a signal for Claude |
-| `competitors` | Up to 20 domains | Always hidden as competitors; Claude is told about them |
+| ~~`competitors`~~ | Removed from the form for now (competitors will be their own system); the column stays empty | — |
 | `exclude_terms` | Chips ("free", "jobs", "course") | Hide results whose title matches |
 | `site_types` | Multi-select, with defaults by reach and buyer: directories, review platforms, marketplaces, niche blogs, guest posts, local news, podcasts, associations, communities, sponsorships and events, resource pages | Templates that run; the site-type weights |
 | `notes` | Up to 1,000 characters | Shown to Claude and the team |
@@ -128,7 +128,7 @@ The button stays disabled until these are filled, saying what's missing.
   - **Local:** 0.30 topic + 0.25 site type + 0.15 local + 0.15 searches + 0.15 position.
   - **National / global:** "local" is dropped, and its weight moves to topic (0.40). A page that only mentions the country no longer counts as local; only a city or region mention does.
 - **Competitors** are hidden when:
-  - the domain is in the brief's competitors, or is a Maps or local-pack business
+  - the domain is a Maps or local-pack business
   - the site sells the client's own service: the title says "{service} company/agency/services/studio", or it's "Top/Best {service} companies" on a site that is itself one of those companies (not a platform in the library)
   - Claude flags it (below)
 - **Exclude terms:** results with an exclude term are hidden as "Excluded by the brief".
@@ -140,7 +140,7 @@ After the search results are saved:
 1. **Candidates:** every undecided searched place of the client (this run and earlier), best ~80 by rule score.
 2. **Site strength:** one bulk call for the candidates not checked in 30 days (`bulkRanks` + `bulkSpamScore`, reusing `strength.ts`), about $0.03. It's skipped when Backlinks API access is denied or the budget is reached. Spam 60+ drops a candidate from the top 30.
 3. **Claude review:**
-   - **Model and input:** Haiku 5.5 (the cheapest model; under $0.01 a review), one call, structured output. Input: the brief (reach, buyer, offering, audience, topics, trusted sites, competitors, notes) plus, per candidate, the id, domain, type, title, snippet, the searches that found it, its strength and its rule score.
+   - **Model and input:** Haiku 5.5 (the cheapest model; under $0.01 a review), one call, structured output. Input: the brief (reach, buyer, offering, audience, topics, trusted sites, notes) plus, per candidate, the id, domain, type, title, snippet, the searches that found it, its strength and its rule score.
    - **Output per candidate:**
      - `fit` from 1 to 5
      - `verdict`: keep, competitor, irrelevant, paid_link_seller, spam or not_a_link_opportunity

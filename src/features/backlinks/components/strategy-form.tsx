@@ -225,8 +225,8 @@ export function StrategyForm({
 
         <Section
           n={4}
-          title="Sites the buyers trust, and competitors"
-          description="Trusted sites are added to the Basics tab. Competitors are always hidden from the results."
+          title="Sites the buyers trust"
+          description="Trusted sites are added to the Basics tab."
         >
           <Field data-invalid={Boolean(errors.trusted_sites)}>
             <FieldLabel htmlFor="b-trusted">Sites the buyers trust (optional)</FieldLabel>
@@ -243,19 +243,6 @@ export function StrategyForm({
               <IdeaChips label="Ideas" ideas={siteIdeas} onPick={(d) => set("trusted_sites", [...v.trusted_sites, d].slice(0, 20))} />
             )}
             <FieldError>{errors.trusted_sites}</FieldError>
-          </Field>
-          <Field data-invalid={Boolean(errors.competitors)}>
-            <FieldLabel htmlFor="b-competitors">Competitors (optional)</FieldLabel>
-            <ChipsInput
-              id="b-competitors"
-              values={v.competitors}
-              onChange={(x) => set("competitors", x)}
-              max={20}
-              maxLength={120}
-              placeholder="competitor.com"
-              invalid={Boolean(errors.competitors)}
-            />
-            <FieldError>{errors.competitors}</FieldError>
           </Field>
           <Field data-invalid={Boolean(errors.exclude_terms)}>
             <FieldLabel htmlFor="b-exclude">Leave out results that mention (optional)</FieldLabel>

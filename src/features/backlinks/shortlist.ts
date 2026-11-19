@@ -120,7 +120,6 @@ export async function applyShortlist(db: Db, run: Run, brief: BriefSnapshot, ctx
     }
   }
 
-  const competitorRoots = new Set(brief.competitors.map((c) => registrableDomain(c.split("/")[0])))
   const items: Item[] = []
   const candidates: Candidate[] = []
   for (const r of rows ?? []) {
@@ -145,10 +144,6 @@ export async function applyShortlist(db: Db, run: Run, brief: BriefSnapshot, ctx
       bestPosition: r.best_position,
     })
     const base = { id: r.id, rule_score: rule, topic_fit: tm.fit, matched_topic: tm.topic, ai_fit: null, ai_verdict: null, ai_reason: null }
-    if (competitorRoots.has(registrableDomain(d.domain))) {
-      items.push({ ...base, status: "filtered", shortlist_rank: null, filter_reason: "competitor", ai_reason: "Named as a competitor in the brief." })
-      continue
-    }
     const title = `${r.found_title ?? ""} ${r.found_snippet ?? ""}`.toLowerCase()
     if (brief.exclude_terms.some((t) => t && title.includes(t.toLowerCase()))) {
       items.push({ ...base, status: "filtered", shortlist_rank: null, filter_reason: "excluded_term" })
@@ -436,7 +431,6 @@ function reviewPrompt(brief: BriefSnapshot, ctx: ShortlistContext, top: Candidat
     `Core topics: ${brief.core_topics.join(", ")}`,
     `Adjacent topics: ${brief.adjacent_topics.join(", ") || "none"}`,
     `Sites the buyers trust: ${brief.trusted_sites.join(", ") || "none given"}`,
-    `Competitors: ${brief.competitors.join(", ") || "none given"}`,
     brief.notes ? `Notes from the team: ${brief.notes}` : null,
     `</client>`,
     ``,

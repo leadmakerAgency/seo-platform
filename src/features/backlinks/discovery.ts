@@ -595,7 +595,6 @@ export async function runDiscovery(db: Db, run: Run): Promise<void> {
     )
     if (ctx.domain) agencyDomains.delete(registrableDomain(ctx.domain))
 
-    for (const c of brief.competitors) competitors.add(registrableDomain(c.split("/")[0]))
     const serviceTerms = [
       ...new Set(
         [...ctx.services, ctx.industry ?? ""].map(cleanTerm).filter((x): x is string => Boolean(x)),

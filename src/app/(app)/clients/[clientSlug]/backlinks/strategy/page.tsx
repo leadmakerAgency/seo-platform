@@ -64,7 +64,6 @@ async function Content({ params }: Pick<Props, "params">) {
     core_topics: [...new Set((profile?.services ?? []).map((s) => s.trim().toLowerCase()).filter((s) => s.length >= 2 && s.length <= 60 && !/[:{}"]/.test(s)))].slice(0, 5),
     adjacent_topics: [],
     trusted_sites: [],
-    competitors: [],
     exclude_terms: ["jobs", "careers", "salary", "free download", "course"],
     site_types: defaultSiteTypes({ reach: ["local"], buyer, offering: ["services"] }),
     notes: "",
