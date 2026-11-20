@@ -25,6 +25,8 @@ import {
   topicCount,
 } from "@/features/backlinks/brief"
 import { BacklinksView } from "@/features/backlinks/components/backlinks-view"
+import { ModePlaceholder } from "@/features/backlinks/components/mode-placeholder"
+import { isMode, MODE_META, ModeTabs, type Mode } from "@/features/backlinks/components/mode-tabs"
 import { RunHistoryPanel } from "@/features/backlinks/components/run-history-panel"
 import { RunProgress } from "@/features/backlinks/components/run-progress"
 import { TargetsPanel } from "@/features/backlinks/components/targets-panel"
@@ -70,6 +72,20 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
   const client = await getClientBySlug(clientSlug)
   if (!client) notFound()
 
+  // Three ways to find backlinks, as tabs (?mode=). Standard Search is everything built so far.
+  const rawMode = one(search.mode)
+  const mode: Mode = isMode(rawMode) ? rawMode : "standard"
+  const base = clientHref(client.slug, "backlinks")
+  if (mode !== "standard") {
+    return (
+      <>
+        <PageHeader eyebrow={client.name} title="Backlinks" description={MODE_META[mode].caption} />
+        <ModeTabs base={base} mode={mode} />
+        <ModePlaceholder mode={mode} standardHref={base} />
+      </>
+    )
+  }
+
   const configured = hasDataForSeo()
   const canDiscover = can(member.role, "backlinks.discover")
   const canReview = can(member.role, "backlinks.review")
@@ -85,7 +101,6 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
     getAccountBalances(isAdmin),
   ])
   const { quota, lastRun, places } = data
-  const base = clientHref(client.slug, "backlinks")
 
   const count = (t: Tab) => places.filter((p) => tabOf(p) === t).length
   const workable = places.filter((p) => p.status === "pending_review" || p.status === "approved")
@@ -197,6 +212,8 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
           </>
         }
       />
+
+      <ModeTabs base={base} mode="standard" />
 
       {!configured && <SetupNotice isAdmin={isAdmin} />}
 
