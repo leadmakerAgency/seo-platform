@@ -294,7 +294,7 @@ async function checkStrength(db: Db, run: Run, top: Candidate[]): Promise<number
   if (settings?.backlinks_access === "denied" || problem) return 0
   const { data: check, error } = await db
     .from("backlink_strength_checks")
-    .insert({ client_id: run.client_id, targets, domains: targets.length, created_by: run.created_by })
+    .insert({ client_id: run.client_id, run_id: run.id, targets, domains: targets.length, created_by: run.created_by })
     .select("id")
     .single()
   if (error || !check) return 0 // another check is running: rank without it

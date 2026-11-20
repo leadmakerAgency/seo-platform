@@ -25,11 +25,12 @@ import {
   topicCount,
 } from "@/features/backlinks/brief"
 import { BacklinksView } from "@/features/backlinks/components/backlinks-view"
-import { formatDay, usd } from "@/features/backlinks/components/bits"
+import { RunHistoryPanel } from "@/features/backlinks/components/run-history-panel"
 import { RunProgress } from "@/features/backlinks/components/run-progress"
 import { TargetsPanel } from "@/features/backlinks/components/targets-panel"
 import { REVIEW_CAP, TAB_LABELS, TABS, tabOf, type Tab } from "@/features/backlinks/constants"
 import { getBacklinksData } from "@/features/backlinks/queries"
+import { getRunHistory } from "@/features/backlinks/run-history"
 import { getClientBySlug } from "@/features/clients/queries"
 import { OverviewRefresher } from "@/features/overview/components/overview-refresher"
 import { getCurrentMember } from "@/lib/auth"
@@ -77,7 +78,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
 
   const rawTab = one(search.tab) as Tab | undefined
   const tab: Tab = rawTab && TABS.includes(rawTab) ? rawTab : "review"
-  const data = await getBacklinksData(client.id)
+  const [data, history] = await Promise.all([getBacklinksData(client.id), getRunHistory(client.id)])
   const { quota, lastRun, places } = data
   const base = clientHref(client.slug, "backlinks")
 
@@ -133,16 +134,10 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
           ? quota.budgetProblem
           : null
 
-  const describe = [
-    activeTargets.length
-      ? `Places to get listed, found by Google searches in ${listOf(activeTargets.map((t) => t.label))}`
-      : "Places to get listed, found by Google searches in the places you choose",
-    lastRun?.finishedAt
-      ? `last search ${formatDay(lastRun.createdAt)} (${formatNumber(Number(lastRun.counts.searches ?? lastRun.queriesTotal))} searches, ${usd(lastRun.cost)})`
-      : null,
-  ]
-    .filter(Boolean)
-    .join(" · ")
+  // Runs, dates and costs live in "Runs and costs" at the bottom of the page.
+  const describe = activeTargets.length
+    ? `Places to get listed, found by Google searches in ${listOf(activeTargets.map((t) => t.label))}`
+    : "Places to get listed, found by Google searches in the places you choose"
 
   const stats: StatItem[] = TABS.map((t) => ({
     key: t,
@@ -165,7 +160,6 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
                 : undefined,
   }))
 
-  const counts = lastRun?.counts ?? {}
   const findButton = (variant: "default" | "outline" = "default") =>
     canDiscover && quota ? (
       <FindPlacesButton
@@ -263,26 +257,6 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
           The last search didn&apos;t finish{lastRun.error ? `: ${lastRun.error}` : "."}
         </Notice>
       )}
-      {!openRun && lastRun?.status === "done" && (
-        <p className="-mt-4 text-[13px] text-muted-foreground">
-          Last search found {formatNumber(Number(counts.new ?? 0))} new{" "}
-          {Number(counts.new ?? 0) === 1 ? "place" : "places"}
-          {Number(counts.known ?? 0) > 0
-            ? `, ${formatNumber(Number(counts.known))} already known`
-            : ""}
-          {Number(counts.cached ?? 0) > 0
-            ? ` · ${formatNumber(Number(counts.cached))} searches reused from recent searches for the same place`
-            : ""}
-          {Number(counts.failed ?? 0) > 0
-            ? ` · ${formatNumber(Number(counts.failed))} searches failed`
-            : ""}
-          {counts.no_services
-            ? " · no services in the business profile, so only place searches ran"
-            : ""}
-          .{" "}
-          <ShortlistNote counts={counts} />
-        </p>
-      )}
 
       {places.length === 0 ? (
         <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed p-5 text-sm">
@@ -294,7 +268,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
                 ? "First write the strategy brief, then add the places where the client wants to be found. Find places then searches Google with searches built from both, and picks the best 30."
                 : activeTargets.length === 0
                   ? "Add the places where the client wants to be found (above). Find places then searches Google from each of them with searches built from the brief."
-                  : `Find places searches Google from the places above with searches built from the brief (${quota?.maxSearches ?? 60} at most, about $0.006 each; the dialog shows the exact list and cost first). The best ${REVIEW_CAP} land in Review with a reason each; the rest go to More.`}
+                  : `Find places searches Google from the places above with searches built from the brief (${quota?.maxSearches ?? 60} at most; the dialog shows the exact list and its estimate first). The best ${REVIEW_CAP} land in Review with a reason each; the rest go to More.`}
             </p>
           </div>
           {brief && activeTargets.length > 0 && findButton()}
@@ -320,21 +294,9 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
         </>
       )}
 
-      {openRun && <OverviewRefresher every={5_000} />}
-    </>
-  )
-}
+      {history && (history.entries.length > 0 || places.length > 0) && <RunHistoryPanel history={history} />}
 
-function ShortlistNote({ counts }: { counts: Record<string, unknown> }) {
-  const sl = counts.shortlist as
-    | { review?: number; more?: number; hidden?: number; ai?: string; aiNote?: string | null; strengthChecked?: number }
-    | undefined
-  if (!sl) return null
-  return (
-    <>
-      Top {formatNumber(sl.review ?? 0)} in Review, {formatNumber(sl.more ?? 0)} in More
-      {sl.ai === "used" ? ", picked with Claude's review" : `, picked by the rules${sl.aiNote ? ` (Claude's review skipped: ${sl.aiNote})` : ""}`}
-      {sl.strengthChecked ? ` · ${formatNumber(sl.strengthChecked)} sites checked for strength` : ""}.
+      {openRun && <OverviewRefresher every={5_000} />}
     </>
   )
 }

@@ -777,6 +777,7 @@ export type Database = {
           finished_at: string | null
           forced: boolean
           id: string
+          run_id: string | null
           status: Database["public"]["Enums"]["strength_check_status"]
           targets: string[]
         }
@@ -790,6 +791,7 @@ export type Database = {
           finished_at?: string | null
           forced?: boolean
           id?: string
+          run_id?: string | null
           status?: Database["public"]["Enums"]["strength_check_status"]
           targets?: string[]
         }
@@ -803,6 +805,7 @@ export type Database = {
           finished_at?: string | null
           forced?: boolean
           id?: string
+          run_id?: string | null
           status?: Database["public"]["Enums"]["strength_check_status"]
           targets?: string[]
         }
@@ -819,6 +822,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_strength_checks_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "backlink_runs"
             referencedColumns: ["id"]
           },
         ]
@@ -3496,6 +3506,10 @@ export type Database = {
         Returns: undefined
       }
       backlink_quota: { Args: { p_client_id: string }; Returns: Json }
+      backlink_run_history: {
+        Args: { p_client_id: string; p_limit?: number }
+        Returns: Json
+      }
       block_directory: {
         Args: { p_id: string; p_reason: string }
         Returns: number
