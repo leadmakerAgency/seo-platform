@@ -31,6 +31,7 @@ import { TargetsPanel } from "@/features/backlinks/components/targets-panel"
 import { REVIEW_CAP, TAB_LABELS, TABS, tabOf, type Tab } from "@/features/backlinks/constants"
 import { getBacklinksData } from "@/features/backlinks/queries"
 import { getRunHistory } from "@/features/backlinks/run-history"
+import { getAccountBalances } from "@/features/backlinks/accounts"
 import { getClientBySlug } from "@/features/clients/queries"
 import { OverviewRefresher } from "@/features/overview/components/overview-refresher"
 import { getCurrentMember } from "@/lib/auth"
@@ -78,7 +79,11 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
 
   const rawTab = one(search.tab) as Tab | undefined
   const tab: Tab = rawTab && TABS.includes(rawTab) ? rawTab : "review"
-  const [data, history] = await Promise.all([getBacklinksData(client.id), getRunHistory(client.id)])
+  const [data, history, accounts] = await Promise.all([
+    getBacklinksData(client.id),
+    getRunHistory(client.id),
+    getAccountBalances(isAdmin),
+  ])
   const { quota, lastRun, places } = data
   const base = clientHref(client.slug, "backlinks")
 
@@ -294,7 +299,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
         </>
       )}
 
-      {history && (history.entries.length > 0 || places.length > 0) && <RunHistoryPanel history={history} />}
+      {history && (history.entries.length > 0 || places.length > 0) && <RunHistoryPanel history={history} accounts={accounts} nowIso={new Date().toISOString()} />}
 
       {openRun && <OverviewRefresher every={5_000} />}
     </>

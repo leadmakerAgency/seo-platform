@@ -481,3 +481,21 @@ export async function setDirectoryBlocked(
   refresh()
   return { ok: true }
 }
+
+// ---------------------------------------------------------------------------
+// Credits left on the accounts (Runs and costs panel)
+// ---------------------------------------------------------------------------
+
+/** Admins: the Anthropic credit balance read from the console (its API has no balance call). */
+export async function setAnthropicCredit(amount: number): Promise<ActionResult> {
+  const denied = await guard("integrations.manage")
+  if (denied) return { ok: false, error: denied }
+  const value = Number(amount)
+  if (!Number.isFinite(value) || value < 0 || value > 1_000_000)
+    return { ok: false, error: "Enter the balance in dollars, for example 98.50." }
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.rpc("set_anthropic_credit", { p_amount: Math.round(value * 100) / 100 })
+  if (error) return { ok: false, error: dbError(error, "Couldn't save the balance. Try again.") }
+  refresh()
+  return { ok: true }
+}

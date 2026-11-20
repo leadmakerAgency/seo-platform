@@ -1568,6 +1568,8 @@ export type Database = {
       dfs_settings: {
         Row: {
           ai_monthly_budget_usd: number
+          anthropic_credit_at: string | null
+          anthropic_credit_usd: number | null
           backlink_runs_per_client_month: number
           backlinks_access: string
           backlinks_access_checked_at: string | null
@@ -1584,6 +1586,8 @@ export type Database = {
         }
         Insert: {
           ai_monthly_budget_usd?: number
+          anthropic_credit_at?: string | null
+          anthropic_credit_usd?: number | null
           backlink_runs_per_client_month?: number
           backlinks_access?: string
           backlinks_access_checked_at?: string | null
@@ -1600,6 +1604,8 @@ export type Database = {
         }
         Update: {
           ai_monthly_budget_usd?: number
+          anthropic_credit_at?: string | null
+          anthropic_credit_usd?: number | null
           backlink_runs_per_client_month?: number
           backlinks_access?: string
           backlinks_access_checked_at?: string | null
@@ -3466,6 +3472,7 @@ export type Database = {
       }
     }
     Functions: {
+      account_balances: { Args: never; Returns: Json }
       add_backlink_target: {
         Args: {
           p_client_id: string
@@ -3814,6 +3821,7 @@ export type Database = {
         Args: { p: Json; p_client_id: string }
         Returns: number
       }
+      set_anthropic_credit: { Args: { p_amount: number }; Returns: undefined }
       set_candidate_status: {
         Args: {
           p_client_id: string
