@@ -5,6 +5,7 @@ import {
   House,
   Inbox,
   LayoutDashboard,
+  Library,
   Link2,
   ListChecks,
   type LucideIcon,
@@ -55,6 +56,16 @@ export const AGENCY_NAV: AgencyNavItem[] = [
     comingSoon: false,
     summary:
       "All manual work in one list. One task can cover many clients, ticked off one client at a time.",
+  },
+  {
+    id: "backlink-catalog",
+    title: "Backlink catalog",
+    href: "/backlink-catalog",
+    icon: Library,
+    roles: ["admin", "manager", "va", "viewer"],
+    comingSoon: false,
+    summary:
+      "The agency's list of trusted backlink sites that VAs pick from on each client's Manual Search tab.",
   },
   {
     id: "team",

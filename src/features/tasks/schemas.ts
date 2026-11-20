@@ -41,9 +41,12 @@ export const taskFormSchema = z.object({
     .max(50, "At most 50."),
 })
 
-/** The usual "counts toward" for a task type (used when creating a task). */
+/**
+ * The usual "counts toward" for a task type (used when creating a task). Backlink tasks count
+ * nothing: a backlink counts once, when its listing goes Live on the Backlinks page (Manual Search).
+ */
 export function defaultCountsAs(type: string): string {
-  if (type === "backlinks") return "backlinks"
+  if (type === "backlinks") return "none"
   if (type === "content") return "articles"
   return "none"
 }

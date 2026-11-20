@@ -45,6 +45,8 @@ const PERMISSIONS = {
   "backlinks.review": ["admin", "manager", "va"],
   "backlinks.library": ["admin", "manager"],
   "backlinks.strategy": ["admin", "manager"],
+  "backlinks.manual": ["admin", "manager", "va"],
+  "backlinks.catalog": ["admin", "manager"],
   "requests.create": ["admin", "manager", "va", "writer"],
   "requests.manage": ["admin", "manager"],
   "connections.manage": ["admin", "manager"],
@@ -73,6 +75,9 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "backlinks.review": "Approve and reject backlink places (VAs: clients in their tasks)",
   "backlinks.library": "Edit or block a site in the directory library for every client",
   "backlinks.strategy": "Write each client's backlink strategy brief (topics, reach, buyers)",
+  "backlinks.manual":
+    "Pick catalog sites, add sites by hand and track each listing to Live (VAs: clients in their tasks)",
+  "backlinks.catalog": "Edit, check and retire sites in the backlink catalog; accept VA suggestions",
   "requests.create": "Ask clients for codes, files and approvals (VAs: clients in their tasks)",
   "requests.manage": "Turn on or replace a client's private link",
   "connections.manage": "Connect and disconnect a client's Google and social accounts",

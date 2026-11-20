@@ -25,8 +25,8 @@ import {
   topicCount,
 } from "@/features/backlinks/brief"
 import { BacklinksView } from "@/features/backlinks/components/backlinks-view"
-import { ModePlaceholder } from "@/features/backlinks/components/mode-placeholder"
-import { isMode, MODE_META, ModeTabs, type Mode } from "@/features/backlinks/components/mode-tabs"
+import { isMode, ModeTabs, type Mode } from "@/features/backlinks/components/mode-tabs"
+import { ManualSearch } from "@/features/backlinks/manual/components/manual-search"
 import { RunHistoryPanel } from "@/features/backlinks/components/run-history-panel"
 import { RunProgress } from "@/features/backlinks/components/run-progress"
 import { TargetsPanel } from "@/features/backlinks/components/targets-panel"
@@ -117,13 +117,14 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
       </>
     )
   }
-  if (mode !== "standard") {
+  if (mode === "manual") {
+    // Manual Search: the catalog of trusted sites and the work list of every approved place.
     return (
-      <>
-        <PageHeader eyebrow={client.name} title="Backlinks" description={MODE_META[mode].caption} />
-        <ModeTabs base={base} mode={mode} />
-        <ModePlaceholder mode={mode} standardHref={base} />
-      </>
+      <ManualSearch
+        client={{ id: client.id, slug: client.slug, name: client.name }}
+        member={{ id: member.id, role: member.role }}
+        search={search}
+      />
     )
   }
 

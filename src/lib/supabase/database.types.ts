@@ -716,6 +716,170 @@ export type Database = {
           },
         ]
       }
+      backlink_catalog: {
+        Row: {
+          active: boolean
+          benefits: string[]
+          buyer: string[]
+          category: Database["public"]["Enums"]["catalog_category"]
+          countries: string[]
+          created_at: string
+          created_by: string | null
+          directory_id: string
+          home_url: string | null
+          how_to: string | null
+          id: string
+          industries: string[]
+          kind: Database["public"]["Enums"]["catalog_kind"]
+          name: string
+          needs: string[]
+          notes: string | null
+          offering: string[]
+          price_note: string | null
+          pricing: Database["public"]["Enums"]["catalog_pricing"]
+          priority: number
+          problem_at: string | null
+          problem_by: string | null
+          problem_note: string | null
+          reach: string[]
+          sort: number
+          submit_url: string | null
+          suggested_by: string | null
+          suggested_client_id: string | null
+          suggestion_status: string | null
+          typical_link: Database["public"]["Enums"]["link_kind"]
+          updated_at: string
+          updated_by: string | null
+          verified_at: string | null
+          verified_by: string | null
+          warnings: string | null
+        }
+        Insert: {
+          active?: boolean
+          benefits?: string[]
+          buyer?: string[]
+          category: Database["public"]["Enums"]["catalog_category"]
+          countries?: string[]
+          created_at?: string
+          created_by?: string | null
+          directory_id: string
+          home_url?: string | null
+          how_to?: string | null
+          id?: string
+          industries?: string[]
+          kind?: Database["public"]["Enums"]["catalog_kind"]
+          name: string
+          needs?: string[]
+          notes?: string | null
+          offering?: string[]
+          price_note?: string | null
+          pricing?: Database["public"]["Enums"]["catalog_pricing"]
+          priority?: number
+          problem_at?: string | null
+          problem_by?: string | null
+          problem_note?: string | null
+          reach?: string[]
+          sort?: number
+          submit_url?: string | null
+          suggested_by?: string | null
+          suggested_client_id?: string | null
+          suggestion_status?: string | null
+          typical_link?: Database["public"]["Enums"]["link_kind"]
+          updated_at?: string
+          updated_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          warnings?: string | null
+        }
+        Update: {
+          active?: boolean
+          benefits?: string[]
+          buyer?: string[]
+          category?: Database["public"]["Enums"]["catalog_category"]
+          countries?: string[]
+          created_at?: string
+          created_by?: string | null
+          directory_id?: string
+          home_url?: string | null
+          how_to?: string | null
+          id?: string
+          industries?: string[]
+          kind?: Database["public"]["Enums"]["catalog_kind"]
+          name?: string
+          needs?: string[]
+          notes?: string | null
+          offering?: string[]
+          price_note?: string | null
+          pricing?: Database["public"]["Enums"]["catalog_pricing"]
+          priority?: number
+          problem_at?: string | null
+          problem_by?: string | null
+          problem_note?: string | null
+          reach?: string[]
+          sort?: number
+          submit_url?: string | null
+          suggested_by?: string | null
+          suggested_client_id?: string | null
+          suggestion_status?: string | null
+          typical_link?: Database["public"]["Enums"]["link_kind"]
+          updated_at?: string
+          updated_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+          warnings?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backlink_catalog_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_catalog_directory_id_fkey"
+            columns: ["directory_id"]
+            isOneToOne: true
+            referencedRelation: "directories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_catalog_problem_by_fkey"
+            columns: ["problem_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_catalog_suggested_by_fkey"
+            columns: ["suggested_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_catalog_suggested_client_id_fkey"
+            columns: ["suggested_client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_catalog_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_catalog_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       backlink_footprints: {
         Row: {
           active: boolean
@@ -1198,6 +1362,196 @@ export type Database = {
             columns: ["run_id"]
             isOneToOne: false
             referencedRelation: "backlink_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      backlink_submission_events: {
+        Row: {
+          actor_id: string | null
+          at: string
+          change: Json
+          client_id: string
+          from_status: Database["public"]["Enums"]["submission_status"] | null
+          id: number
+          note: string | null
+          submission_id: string
+          to_status: Database["public"]["Enums"]["submission_status"] | null
+        }
+        Insert: {
+          actor_id?: string | null
+          at?: string
+          change?: Json
+          client_id: string
+          from_status?: Database["public"]["Enums"]["submission_status"] | null
+          id?: never
+          note?: string | null
+          submission_id: string
+          to_status?: Database["public"]["Enums"]["submission_status"] | null
+        }
+        Update: {
+          actor_id?: string | null
+          at?: string
+          change?: Json
+          client_id?: string
+          from_status?: Database["public"]["Enums"]["submission_status"] | null
+          id?: never
+          note?: string | null
+          submission_id?: string
+          to_status?: Database["public"]["Enums"]["submission_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backlink_submission_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_submission_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_submission_events_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "backlink_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      backlink_submissions: {
+        Row: {
+          assigned_to: string | null
+          block_note: string | null
+          block_reason: Database["public"]["Enums"]["submission_block"] | null
+          catalog_id: string | null
+          client_id: string
+          cost_note: string | null
+          cost_usd: number | null
+          created_at: string
+          created_by: string | null
+          directory_id: string
+          follow_up_on: string | null
+          id: string
+          link_kind: Database["public"]["Enums"]["link_kind"] | null
+          listing_url: string | null
+          live_on: string | null
+          login_id: string | null
+          notes: string | null
+          opportunity_id: string
+          status: Database["public"]["Enums"]["submission_status"]
+          submitted_on: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          block_note?: string | null
+          block_reason?: Database["public"]["Enums"]["submission_block"] | null
+          catalog_id?: string | null
+          client_id: string
+          cost_note?: string | null
+          cost_usd?: number | null
+          created_at?: string
+          created_by?: string | null
+          directory_id: string
+          follow_up_on?: string | null
+          id?: string
+          link_kind?: Database["public"]["Enums"]["link_kind"] | null
+          listing_url?: string | null
+          live_on?: string | null
+          login_id?: string | null
+          notes?: string | null
+          opportunity_id: string
+          status?: Database["public"]["Enums"]["submission_status"]
+          submitted_on?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          block_note?: string | null
+          block_reason?: Database["public"]["Enums"]["submission_block"] | null
+          catalog_id?: string | null
+          client_id?: string
+          cost_note?: string | null
+          cost_usd?: number | null
+          created_at?: string
+          created_by?: string | null
+          directory_id?: string
+          follow_up_on?: string | null
+          id?: string
+          link_kind?: Database["public"]["Enums"]["link_kind"] | null
+          listing_url?: string | null
+          live_on?: string | null
+          login_id?: string | null
+          notes?: string | null
+          opportunity_id?: string
+          status?: Database["public"]["Enums"]["submission_status"]
+          submitted_on?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backlink_submissions_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_submissions_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "backlink_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_submissions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_submissions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_submissions_directory_id_fkey"
+            columns: ["directory_id"]
+            isOneToOne: false
+            referencedRelation: "directories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_submissions_login_id_fkey"
+            columns: ["login_id"]
+            isOneToOne: false
+            referencedRelation: "client_logins"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_submissions_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: true
+            referencedRelation: "backlink_opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "backlink_submissions_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
         ]
@@ -3857,6 +4211,17 @@ export type Database = {
     }
     Functions: {
       account_balances: { Args: never; Returns: Json }
+      add_backlink_login: {
+        Args: {
+          p_has_2fa: boolean
+          p_password: string
+          p_site_name: string
+          p_site_url: string
+          p_submission_id: string
+          p_username: string
+        }
+        Returns: string
+      }
       add_backlink_target: {
         Args: {
           p_client_id: string
@@ -3888,6 +4253,7 @@ export type Database = {
         }
         Returns: Json
       }
+      add_manual_site: { Args: { p: Json; p_client_id: string }; Returns: Json }
       ai_search_quota: { Args: { p_client_id: string }; Returns: Json }
       apply_onboarding_profile: {
         Args: { p_client_id: string; p_fields: string[] }
@@ -3904,6 +4270,10 @@ export type Database = {
       }
       block_directory: {
         Args: { p_id: string; p_reason: string }
+        Returns: number
+      }
+      bulk_update_submissions: {
+        Args: { p: Json; p_ids: string[] }
         Returns: number
       }
       client_activity: {
@@ -4174,6 +4544,10 @@ export type Database = {
         Returns: Json
       }
       onboarding_submit: { Args: { p_token: string }; Returns: Json }
+      pick_catalog_sites: {
+        Args: { p_catalog_ids: string[]; p_client_id: string }
+        Returns: Json
+      }
       portal_attach_file: {
         Args: {
           p_mime: string
@@ -4206,6 +4580,10 @@ export type Database = {
       replace_keyword: {
         Args: { p_keyword_id: string; p_new_phrase: string }
         Returns: Json
+      }
+      report_catalog_problem: {
+        Args: { p_id: string; p_note: string }
+        Returns: undefined
       }
       request_ai_search: {
         Args: {
@@ -4264,10 +4642,15 @@ export type Database = {
         }
         Returns: number
       }
+      review_catalog_suggestion: {
+        Args: { p_accept: boolean; p_id: string }
+        Returns: undefined
+      }
       save_backlink_brief: {
         Args: { p: Json; p_client_id: string }
         Returns: number
       }
+      save_catalog_site: { Args: { p: Json }; Returns: string }
       set_anthropic_credit: { Args: { p_amount: number }; Returns: undefined }
       set_candidate_status: {
         Args: {
@@ -4315,7 +4698,9 @@ export type Database = {
         Args: { p_client_id: string; p_data: Json }
         Returns: undefined
       }
+      update_submission: { Args: { p: Json; p_id: string }; Returns: undefined }
       verify_backlinks_token: { Args: { p_token: string }; Returns: boolean }
+      verify_catalog_site: { Args: { p_id: string }; Returns: undefined }
       verify_rankings_token: {
         Args: { p_kind: string; p_token: string }
         Returns: boolean
@@ -4338,6 +4723,34 @@ export type Database = {
         | "other"
       backlink_run_status: "queued" | "running" | "done" | "failed"
       candidate_status: "new" | "tracked" | "dismissed"
+      catalog_category:
+        | "maps_core"
+        | "citation"
+        | "local_country"
+        | "home_services"
+        | "professional"
+        | "b2b_reviews"
+        | "software"
+        | "company_profile"
+        | "social_profile"
+        | "publishing"
+        | "journalist_requests"
+        | "press_release"
+        | "podcast"
+        | "local_play"
+        | "community"
+        | "ecommerce"
+        | "marketplace_paid"
+      catalog_kind: "site" | "play"
+      catalog_pricing:
+        | "free"
+        | "freemium"
+        | "trial"
+        | "paid"
+        | "lead_fees"
+        | "membership"
+        | "selection"
+        | "retired"
       check_scope: "full" | "partial"
       check_status: "running" | "done" | "failed"
       client_health: "on_track" | "needs_look" | "action_needed"
@@ -4392,6 +4805,7 @@ export type Database = {
         | "not_using"
         | "help"
       keyword_source: "manual" | "research" | "onboarding" | "ranked"
+      link_kind: "follow" | "nofollow" | "mixed" | "varies" | "none" | "unknown"
       login_source: "onboarding" | "team"
       member_status: "active" | "invited" | "disabled"
       notification_kind:
@@ -4406,6 +4820,7 @@ export type Database = {
         | "dfs_low_balance"
         | "backlinks_found"
         | "backlinks_failed"
+        | "backlink_follow_up"
       onboarding_link_status: "active" | "revoked" | "expired"
       onboarding_status:
         | "not_started"
@@ -4441,6 +4856,21 @@ export type Database = {
         | "pinterest"
         | "threads"
       strength_check_status: "running" | "done" | "failed"
+      submission_block:
+        | "verification"
+        | "needs_client_info"
+        | "needs_payment"
+        | "site_rejected"
+        | "site_broken"
+        | "duplicate_found"
+        | "other"
+      submission_status:
+        | "todo"
+        | "doing"
+        | "submitted"
+        | "live"
+        | "blocked"
+        | "skipped"
       task_priority: "low" | "normal" | "high"
       task_repeat: "none" | "weekdays" | "weekly" | "monthly"
       task_status: "todo" | "in_progress" | "waiting_on_client" | "done"
@@ -4615,6 +5045,36 @@ export const Constants = {
       ],
       backlink_run_status: ["queued", "running", "done", "failed"],
       candidate_status: ["new", "tracked", "dismissed"],
+      catalog_category: [
+        "maps_core",
+        "citation",
+        "local_country",
+        "home_services",
+        "professional",
+        "b2b_reviews",
+        "software",
+        "company_profile",
+        "social_profile",
+        "publishing",
+        "journalist_requests",
+        "press_release",
+        "podcast",
+        "local_play",
+        "community",
+        "ecommerce",
+        "marketplace_paid",
+      ],
+      catalog_kind: ["site", "play"],
+      catalog_pricing: [
+        "free",
+        "freemium",
+        "trial",
+        "paid",
+        "lead_fees",
+        "membership",
+        "selection",
+        "retired",
+      ],
       check_scope: ["full", "partial"],
       check_status: ["running", "done", "failed"],
       client_health: ["on_track", "needs_look", "action_needed"],
@@ -4668,6 +5128,7 @@ export const Constants = {
       footprint_scope: ["geo", "service", "industry", "topic", "buyer"],
       google_access_status: ["todo", "added", "no_access", "not_using", "help"],
       keyword_source: ["manual", "research", "onboarding", "ranked"],
+      link_kind: ["follow", "nofollow", "mixed", "varies", "none", "unknown"],
       login_source: ["onboarding", "team"],
       member_status: ["active", "invited", "disabled"],
       notification_kind: [
@@ -4682,6 +5143,7 @@ export const Constants = {
         "dfs_low_balance",
         "backlinks_found",
         "backlinks_failed",
+        "backlink_follow_up",
       ],
       onboarding_link_status: ["active", "revoked", "expired"],
       onboarding_status: [
@@ -4721,6 +5183,23 @@ export const Constants = {
         "threads",
       ],
       strength_check_status: ["running", "done", "failed"],
+      submission_block: [
+        "verification",
+        "needs_client_info",
+        "needs_payment",
+        "site_rejected",
+        "site_broken",
+        "duplicate_found",
+        "other",
+      ],
+      submission_status: [
+        "todo",
+        "doing",
+        "submitted",
+        "live",
+        "blocked",
+        "skipped",
+      ],
       task_priority: ["low", "normal", "high"],
       task_repeat: ["none", "weekdays", "weekly", "monthly"],
       task_status: ["todo", "in_progress", "waiting_on_client", "done"],

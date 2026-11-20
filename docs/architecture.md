@@ -45,6 +45,8 @@ Browser ──> src/proxy.ts ──> app routes (thin) ──> features/<module>
 | `/api/webhooks/dataforseo`          | DataForSEO postbacks for SERP tasks (Vault token in the URL, no session)                              | Built       |
 | `/api/cron/rankings`                | Every 10 minutes from pg_cron (Vault token): start due checks, recover tasks, research, daily balance | Built       |
 | `/clients/[clientSlug]/backlinks`   | Backlinks: places to get listed (`?tab=review|approved|rejected|hidden`), Find places, site strength   | Built       |
+| `…/backlinks?mode=manual`           | Manual Search: pick from the catalog, add by hand, work every approved place to Live (`?stage=&from=&who=&sheet=`) | Built |
+| `/backlink-catalog`                 | The agency's backlink catalog: edit, check, retire, VA suggestions and problem reports, CSV            | Built       |
 | `/api/cron/backlinks`               | Every 15 minutes from pg_cron (Vault token): resume stopped searches, clean up (never starts one)     | Built       |
 | `/clients/[clientSlug]/[section]`   | AI visibility, content, reviews, report                                                               | Coming soon |
 | `/api/clients/search?q=`            | Client search in the sidebar (Ctrl/Cmd+K focuses it)                                                  | Built       |
@@ -303,6 +305,32 @@ Plan: `docs/plans/backlinks/` (00-overview to 07-strategy-brief). Migrations `00
   disabled with the reason.
 - **Money**: Backlinks spend is the `dfs_calls` rows whose `ref` is a run or a strength check;
   it is capped by `dfs_settings.backlinks_budget_usd` on top of the shared monthly budget.
+
+### Manual Search (catalog and work list)
+
+Plan: `docs/plans/backlinks/09-manual-search.md`; site list: `10-manual-catalog.md`. Migrations
+`0045`–`0048`. Code: `src/features/backlinks/manual/`.
+
+- **`backlink_catalog`**: the agency's trusted sites (one per `directories` row, so strength and
+  blocking stay shared). Who each suits (`countries`, `reach`, `buyer`, `offering`, `industries`),
+  cost (`pricing`, `price_note`), usual link, priority, needs, how-to, warnings, `verified_at`.
+  Plays (`kind = 'play'`, site key `play:<slug>`) are tactics where the VA records the real site.
+  VA suggestions wait inactive (`suggestion_status = 'pending'`); problem reports sit on the row.
+  Managers edit through `save_catalog_site` / `verify_catalog_site` / `review_catalog_suggestion`.
+- **Matching** (`manual/match.ts`, read time): the brief's places give the countries (else the
+  client's country); reach, buyer and offering come from the brief; industry keywords match the
+  client's industry, categories, services and brief topics.
+- **`backlink_submissions`**: one per approved opportunity, from any tab (trigger on
+  `backlink_opportunities`). To do → Doing → Submitted → Live, or Blocked (reason) / Skipped.
+  An opportunity leaving Approved skips its submission. History in `backlink_submission_events`.
+- **Work ledger**: entering Live inserts `work_items (kind 'backlinks', source 'backlink',
+  source_id = submission id, delivered_on = live_on)`; leaving Live or deleting removes it.
+  Backlink tasks now default to `counts_as` none.
+- **Follow-ups**: pg_cron `backlinks-follow-ups` (daily 07:00 Phoenix) notifies the assignee
+  (`backlink_follow_up`, one per person and client) for due follow-ups and listings waiting 21+
+  days in Submitted.
+- **Logins**: `add_backlink_login` lets backlink workers save the directory account to the vault
+  for a submission (password only in Vault).
 
 ## Next widgets for the Dashboard (when their modules exist)
 

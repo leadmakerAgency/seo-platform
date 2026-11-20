@@ -165,7 +165,14 @@ export function describeActivity(entry: ActivityLike): string {
       const phrases = Array.isArray(m.phrases) ? (m.phrases as unknown[]).map(String) : []
       return n === 1 && phrases[0]
         ? `started tracking the keyword “${phrases[0]}”`
-        : `started tracking ${n} keywords${phrases.length ? `: ${phrases.slice(0, 3).map((p) => `“${p}”`).join(", ")}${n > 3 ? "…" : ""}` : ""}`
+        : `started tracking ${n} keywords${
+            phrases.length
+              ? `: ${phrases
+                  .slice(0, 3)
+                  .map((p) => `“${p}”`)
+                  .join(", ")}${n > 3 ? "…" : ""}`
+              : ""
+          }`
     }
     case "keyword.removed":
       return `stopped tracking the keyword “${str(m.phrase)}”${str(m.reason) ? ` (${str(m.reason)})` : ""}`
@@ -180,7 +187,8 @@ export function describeActivity(entry: ActivityLike): string {
     case "rank.check_finished": {
       const into = Number(m.moved_into_top10) || 0
       const out = Number(m.moved_out_of_top10) || 0
-      const what = m.scope === "partial" ? "checked the new keywords" : "finished the weekly ranking check"
+      const what =
+        m.scope === "partial" ? "checked the new keywords" : "finished the weekly ranking check"
       const parts = [
         into ? `${into} keyword${into === 1 ? "" : "s"} moved into the Google top 10` : "",
         out ? `${out} dropped out` : "",
@@ -211,8 +219,16 @@ export function describeActivity(entry: ActivityLike): string {
     case "backlink.reviewed": {
       const n = Number(m.count) || 0
       const sites = Array.isArray(m.sites) ? (m.sites as unknown[]).map(String) : []
-      const verb = m.decision === "approve" ? "approved" : m.decision === "reject" ? "rejected" : "moved back to review"
-      const what = n === 1 && sites[0] ? sites[0] : `${n} backlink places${sites.length ? ` (${sites.slice(0, 3).join(", ")}${n > 3 ? "…" : ""})` : ""}`
+      const verb =
+        m.decision === "approve"
+          ? "approved"
+          : m.decision === "reject"
+            ? "rejected"
+            : "moved back to review"
+      const what =
+        n === 1 && sites[0]
+          ? sites[0]
+          : `${n} backlink places${sites.length ? ` (${sites.slice(0, 3).join(", ")}${n > 3 ? "…" : ""})` : ""}`
       return `${verb} ${what}`
     }
     case "backlink.strength_checked":
@@ -223,6 +239,23 @@ export function describeActivity(entry: ActivityLike): string {
       return `unblocked ${str(m.site) || "a site"}`
     case "backlink.live":
       return `confirmed a backlink live on ${str(m.site) || "a directory"}`
+    case "backlink.manual_picked": {
+      const n = Number(m.count) || 0
+      const sites = Array.isArray(m.sites) ? (m.sites as unknown[]).map(String) : []
+      return `added ${n === 1 && sites[0] ? sites[0] : `${n} catalog sites`} to the backlink work list${n > 1 && sites.length ? ` (${sites.slice(0, 3).join(", ")}${n > 3 ? "…" : ""})` : ""}`
+    }
+    case "backlink.manual_added":
+      return `added ${str(m.site) || "a site"} by hand to the backlink work list`
+    case "backlink.went_live":
+      return `marked the ${str(m.site) || "backlink"} listing live`
+    case "backlink.submission_status":
+      return `moved the ${str(m.site) || "backlink"} listing to ${str(m.to).replace(/_/g, " ") || "a new status"}`
+    case "backlink.submissions_bulk":
+      return `updated ${num(m.count) || 0} backlink listings`
+    case "catalog.site_saved":
+      return `saved ${str(m.site) || "a site"} in the backlink catalog`
+    case "catalog.suggestion_reviewed":
+      return `${m.accepted ? "accepted" : "declined"} ${str(m.site) || "a site"} for the backlink catalog`
     case "article.published":
       return `published the article “${str(m.title)}”`
     case "review.received":

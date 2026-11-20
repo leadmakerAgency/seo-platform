@@ -41,6 +41,9 @@ function describe(n: NotificationItem) {
   if (n.kind === "backlinks_failed") {
     return `The backlink search for ${n.client?.name ?? "a client"} didn't finish`
   }
+  if (n.kind === "backlink_follow_up") {
+    return `Backlink listings for ${n.client?.name ?? "a client"} need a follow-up today`
+  }
   if (n.kind === "request_answered") {
     const r = n.request
     if (!r) return "A client answered a request"
@@ -59,10 +62,14 @@ function hrefFor(n: NotificationItem) {
   if ((n.kind === "onboarding_opened" || n.kind === "onboarding_submitted") && n.client) {
     return clientHref(n.client.slug, "onboarding")
   }
-  if (n.kind === "research_finished" && n.client) return `${clientHref(n.client.slug, "rankings")}?tab=research`
+  if (n.kind === "research_finished" && n.client)
+    return `${clientHref(n.client.slug, "rankings")}?tab=research`
   if (n.kind === "dfs_low_balance") return "/dashboard"
   if ((n.kind === "backlinks_found" || n.kind === "backlinks_failed") && n.client) {
     return `${clientHref(n.client.slug, "backlinks")}?tab=review`
+  }
+  if (n.kind === "backlink_follow_up" && n.client) {
+    return `${clientHref(n.client.slug, "backlinks")}?mode=manual&stage=open&who=me`
   }
   if (n.socialAccount?.client) return clientHref(n.socialAccount.client.slug, "connections")
   if (n.request?.client) {

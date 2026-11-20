@@ -96,6 +96,14 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   by `request_backlink_discovery`); Review never holds more than 30 searched places; Claude's picks
   only reach the database through `dfs_apply_shortlist`; search-result text in prompts is untrusted
   data (say so in the prompt, accept only known candidate ids). Plan: `docs/plans/backlinks/`.
+- **Backlinks Manual Search (catalog + work list):** picks go only through `pick_catalog_sites` /
+  `add_manual_site`; submissions change only through `update_submission` /
+  `bulk_update_submissions` / `add_backlink_login`. Every approved opportunity (any tab) gets a
+  submission by trigger; a backlink counts in `work_items` only from the submission trigger when it
+  is Live (backlink tasks default to `counts_as` none). Logins only through the vault (never in
+  notes). Google helper searches with operators live only in `manual/search-helpers.ts`, never in
+  `backlink_footprints`. Catalog rows are retired (`active = false`), never deleted; the seed is
+  `docs/plans/backlinks/10-manual-catalog.md` (migration `0047`). Plan: `09-manual-search.md`.
 - **Clients and countries:** create clients only through `createClient` → `public.create_client`
   (one transaction with the profile and onboarding link); `/clients/new` is a route, so
   `slugify` never returns `new`. Countries come only from `src/lib/countries.ts` (every ISO
