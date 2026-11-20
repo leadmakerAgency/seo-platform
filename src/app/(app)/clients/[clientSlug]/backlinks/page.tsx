@@ -8,7 +8,6 @@ import { StatStrip, StatStripSkeleton, type StatItem } from "@/components/common
 import { AccessGuard } from "@/components/layout/access-guard"
 import { PageHeader } from "@/components/layout/page-header"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   CheckStrengthButton,
@@ -27,6 +26,7 @@ import {
 } from "@/features/backlinks/brief"
 import { BacklinksView } from "@/features/backlinks/components/backlinks-view"
 import { formatDay, usd } from "@/features/backlinks/components/bits"
+import { RunProgress } from "@/features/backlinks/components/run-progress"
 import { TargetsPanel } from "@/features/backlinks/components/targets-panel"
 import { REVIEW_CAP, TAB_LABELS, TABS, tabOf, type Tab } from "@/features/backlinks/constants"
 import { getBacklinksData } from "@/features/backlinks/queries"
@@ -248,32 +248,15 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
       />
 
       {openRun && (
-        <div className="flex flex-col gap-2 rounded-lg border bg-card px-4 py-3 text-sm">
-          <p>
-            <span className="font-medium">
-              {openRun.kind === "rerank"
-                ? "Picking the top 30 again with the brief"
-                : openRun.step >= 4
-                  ? "Picking the top 30 (site strength and Claude's review)"
-                  : `Searching Google${runPlaces.length ? ` for ${listOf(runPlaces)}` : ""}`}
-            </span>
-            <span className="text-muted-foreground">
-              {openRun.kind === "search" && openRun.step < 4
-                ? openRun.queries_total > 0
-                  ? ` · ${formatNumber(openRun.queries_done)} of ${formatNumber(openRun.queries_total)} searches done`
-                  : " · starting"
-                : ""}
-              . Usually a few minutes; this page updates by itself.
-            </span>
-          </p>
-          {openRun.kind === "search" && openRun.step < 4 && openRun.queries_total > 0 && (
-            <Progress
-              value={(openRun.queries_done / openRun.queries_total) * 100}
-              aria-label="Search progress"
-              className="max-w-md"
-            />
-          )}
-        </div>
+        <RunProgress
+          kind={openRun.kind}
+          status={openRun.status}
+          step={openRun.step}
+          done={openRun.queries_done}
+          total={openRun.queries_total}
+          places={runPlaces}
+          startedAt={lastRun?.id === openRun.id ? lastRun.createdAt : null}
+        />
       )}
       {!openRun && lastRun?.status === "failed" && (
         <Notice>

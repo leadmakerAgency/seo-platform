@@ -72,6 +72,16 @@
   --shadow-sm: 0 1px 2px var(--shadow-color-soft);
   --shadow-md: 0 1px 2px var(--shadow-color-soft), 0 6px 16px -4px var(--shadow-color);
   --shadow-lg: 0 1px 3px var(--shadow-color-soft), 0 16px 32px -8px var(--shadow-color);
+  /* Indeterminate progress: a segment sweeping across the track (motion-safe only). */
+  --animate-progress-sweep: progress-sweep 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  @keyframes progress-sweep {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(300%);
+    }
+  }
 }
 
 /*
