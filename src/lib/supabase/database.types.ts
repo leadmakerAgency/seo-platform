@@ -133,6 +133,8 @@ export type Database = {
       }
       ai_calls: {
         Row: {
+          cache_read_tokens: number
+          cache_write_tokens: number
           client_id: string | null
           cost_usd: number
           created_at: string
@@ -145,8 +147,13 @@ export type Database = {
           ok: boolean
           output_tokens: number
           ref: string | null
+          stage: string | null
+          task_id: string | null
+          web_searches: number
         }
         Insert: {
+          cache_read_tokens?: number
+          cache_write_tokens?: number
           client_id?: string | null
           cost_usd?: number
           created_at?: string
@@ -159,8 +166,13 @@ export type Database = {
           ok?: boolean
           output_tokens?: number
           ref?: string | null
+          stage?: string | null
+          task_id?: string | null
+          web_searches?: number
         }
         Update: {
+          cache_read_tokens?: number
+          cache_write_tokens?: number
           client_id?: string | null
           cost_usd?: number
           created_at?: string
@@ -173,6 +185,9 @@ export type Database = {
           ok?: boolean
           output_tokens?: number
           ref?: string | null
+          stage?: string | null
+          task_id?: string | null
+          web_searches?: number
         }
         Relationships: [
           {
@@ -224,6 +239,360 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_client_dossiers: {
+        Row: {
+          brief_version: number | null
+          client_id: string
+          competitors: Json
+          dossier: Json
+          ranking_map: Json
+          run_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          brief_version?: number | null
+          client_id: string
+          competitors?: Json
+          dossier?: Json
+          ranking_map?: Json
+          run_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brief_version?: number | null
+          client_id?: string
+          competitors?: Json
+          dossier?: Json
+          ranking_map?: Json
+          run_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_client_dossiers_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_client_dossiers_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_search_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_link_prospects: {
+        Row: {
+          action: string | null
+          authority: number | null
+          category: string
+          client_id: string
+          cost_type: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          directory_id: string
+          effort: string | null
+          evidence: Json
+          filter_reason: string | null
+          first_run_id: string | null
+          fit: number | null
+          found_by: string[]
+          id: string
+          last_run_id: string | null
+          link_type: string | null
+          notes: string | null
+          page_title: string | null
+          page_url: string | null
+          reason: string | null
+          reject_note: string | null
+          reject_reason:
+            | Database["public"]["Enums"]["backlink_reject_reason"]
+            | null
+          scores: Json
+          shortlist_rank: number | null
+          status: Database["public"]["Enums"]["opportunity_status"]
+          target_ids: string[]
+          updated_at: string
+          verdict: string | null
+          verification: Json
+        }
+        Insert: {
+          action?: string | null
+          authority?: number | null
+          category?: string
+          client_id: string
+          cost_type?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          directory_id: string
+          effort?: string | null
+          evidence?: Json
+          filter_reason?: string | null
+          first_run_id?: string | null
+          fit?: number | null
+          found_by?: string[]
+          id?: string
+          last_run_id?: string | null
+          link_type?: string | null
+          notes?: string | null
+          page_title?: string | null
+          page_url?: string | null
+          reason?: string | null
+          reject_note?: string | null
+          reject_reason?:
+            | Database["public"]["Enums"]["backlink_reject_reason"]
+            | null
+          scores?: Json
+          shortlist_rank?: number | null
+          status?: Database["public"]["Enums"]["opportunity_status"]
+          target_ids?: string[]
+          updated_at?: string
+          verdict?: string | null
+          verification?: Json
+        }
+        Update: {
+          action?: string | null
+          authority?: number | null
+          category?: string
+          client_id?: string
+          cost_type?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          directory_id?: string
+          effort?: string | null
+          evidence?: Json
+          filter_reason?: string | null
+          first_run_id?: string | null
+          fit?: number | null
+          found_by?: string[]
+          id?: string
+          last_run_id?: string | null
+          link_type?: string | null
+          notes?: string | null
+          page_title?: string | null
+          page_url?: string | null
+          reason?: string | null
+          reject_note?: string | null
+          reject_reason?:
+            | Database["public"]["Enums"]["backlink_reject_reason"]
+            | null
+          scores?: Json
+          shortlist_rank?: number | null
+          status?: Database["public"]["Enums"]["opportunity_status"]
+          target_ids?: string[]
+          updated_at?: string
+          verdict?: string | null
+          verification?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_link_prospects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_link_prospects_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_link_prospects_directory_id_fkey"
+            columns: ["directory_id"]
+            isOneToOne: false
+            referencedRelation: "directories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_link_prospects_first_run_id_fkey"
+            columns: ["first_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_search_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_link_prospects_last_run_id_fkey"
+            columns: ["last_run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_search_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_search_runs: {
+        Row: {
+          attempts: number
+          brief_version: number | null
+          client_id: string
+          cost_usd: number
+          counts: Json
+          created_at: string
+          created_by: string | null
+          error: string | null
+          estimate_usd: number
+          finished_at: string | null
+          heartbeat_at: string | null
+          id: string
+          params: Json
+          released_at: string | null
+          stage: number
+          started_at: string | null
+          status: Database["public"]["Enums"]["backlink_run_status"]
+          target_ids: string[]
+          web_searches: number
+        }
+        Insert: {
+          attempts?: number
+          brief_version?: number | null
+          client_id: string
+          cost_usd?: number
+          counts?: Json
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          estimate_usd?: number
+          finished_at?: string | null
+          heartbeat_at?: string | null
+          id?: string
+          params?: Json
+          released_at?: string | null
+          stage?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["backlink_run_status"]
+          target_ids?: string[]
+          web_searches?: number
+        }
+        Update: {
+          attempts?: number
+          brief_version?: number | null
+          client_id?: string
+          cost_usd?: number
+          counts?: Json
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          estimate_usd?: number
+          finished_at?: string | null
+          heartbeat_at?: string | null
+          id?: string
+          params?: Json
+          released_at?: string | null
+          stage?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["backlink_run_status"]
+          target_ids?: string[]
+          web_searches?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_search_runs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_search_runs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_search_tasks: {
+        Row: {
+          attempts: number
+          client_id: string
+          cost_usd: number
+          created_at: string
+          error: string | null
+          finished_at: string | null
+          id: string
+          input: Json
+          key: string
+          kind: string
+          model: string | null
+          output: Json | null
+          prompt_version: string | null
+          run_id: string
+          stage: number
+          started_at: string | null
+          status: string
+          tokens_in: number
+          tokens_out: number
+          web_searches: number
+        }
+        Insert: {
+          attempts?: number
+          client_id: string
+          cost_usd?: number
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input?: Json
+          key: string
+          kind: string
+          model?: string | null
+          output?: Json | null
+          prompt_version?: string | null
+          run_id: string
+          stage: number
+          started_at?: string | null
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          web_searches?: number
+        }
+        Update: {
+          attempts?: number
+          client_id?: string
+          cost_usd?: number
+          created_at?: string
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input?: Json
+          key?: string
+          kind?: string
+          model?: string | null
+          output?: Json | null
+          prompt_version?: string | null
+          run_id?: string
+          stage?: number
+          started_at?: string | null
+          status?: string
+          tokens_in?: number
+          tokens_out?: number
+          web_searches?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_search_tasks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_search_tasks_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "ai_search_runs"
             referencedColumns: ["id"]
           },
         ]
@@ -1568,6 +1937,10 @@ export type Database = {
       dfs_settings: {
         Row: {
           ai_monthly_budget_usd: number
+          ai_search_max_run_usd: number
+          ai_search_max_web_searches: number
+          ai_search_monthly_budget_usd: number
+          ai_search_runs_per_client_month: number
           anthropic_credit_at: string | null
           anthropic_credit_usd: number | null
           backlink_runs_per_client_month: number
@@ -1583,9 +1956,14 @@ export type Database = {
           research_runs_per_client_month: number
           updated_at: string
           updated_by: string | null
+          web_search_price_usd: number
         }
         Insert: {
           ai_monthly_budget_usd?: number
+          ai_search_max_run_usd?: number
+          ai_search_max_web_searches?: number
+          ai_search_monthly_budget_usd?: number
+          ai_search_runs_per_client_month?: number
           anthropic_credit_at?: string | null
           anthropic_credit_usd?: number | null
           backlink_runs_per_client_month?: number
@@ -1601,9 +1979,14 @@ export type Database = {
           research_runs_per_client_month?: number
           updated_at?: string
           updated_by?: string | null
+          web_search_price_usd?: number
         }
         Update: {
           ai_monthly_budget_usd?: number
+          ai_search_max_run_usd?: number
+          ai_search_max_web_searches?: number
+          ai_search_monthly_budget_usd?: number
+          ai_search_runs_per_client_month?: number
           anthropic_credit_at?: string | null
           anthropic_credit_usd?: number | null
           backlink_runs_per_client_month?: number
@@ -1619,6 +2002,7 @@ export type Database = {
           research_runs_per_client_month?: number
           updated_at?: string
           updated_by?: string | null
+          web_search_price_usd?: number
         }
         Relationships: [
           {
@@ -3504,6 +3888,7 @@ export type Database = {
         }
         Returns: Json
       }
+      ai_search_quota: { Args: { p_client_id: string }; Returns: Json }
       apply_onboarding_profile: {
         Args: { p_client_id: string; p_fields: string[] }
         Returns: undefined
@@ -3559,6 +3944,11 @@ export type Database = {
         Returns: Json
       }
       dfs_ai_budget_problem: { Args: never; Returns: string }
+      dfs_ai_search_budget_problem: { Args: never; Returns: string }
+      dfs_apply_ai_shortlist: {
+        Args: { p_items: Json; p_run_id: string }
+        Returns: Json
+      }
       dfs_apply_shortlist: {
         Args: { p_items: Json; p_run_id: string }
         Returns: Json
@@ -3566,6 +3956,36 @@ export type Database = {
       dfs_backlinks_budget_problem: { Args: never; Returns: string }
       dfs_backlinks_cleanup: { Args: never; Returns: Json }
       dfs_budget_status: { Args: never; Returns: Json }
+      dfs_claim_ai_search_run: {
+        Args: never
+        Returns: {
+          attempts: number
+          brief_version: number | null
+          client_id: string
+          cost_usd: number
+          counts: Json
+          created_at: string
+          created_by: string | null
+          error: string | null
+          estimate_usd: number
+          finished_at: string | null
+          heartbeat_at: string | null
+          id: string
+          params: Json
+          released_at: string | null
+          stage: number
+          started_at: string | null
+          status: Database["public"]["Enums"]["backlink_run_status"]
+          target_ids: string[]
+          web_searches: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "ai_search_runs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       dfs_claim_backlink_run: {
         Args: never
         Returns: {
@@ -3658,6 +4078,14 @@ export type Database = {
       dfs_finalize_runs: { Args: never; Returns: string[] }
       dfs_postback_config: { Args: never; Returns: Json }
       dfs_queue_due_runs: { Args: { p_limit?: number }; Returns: number }
+      dfs_release_ai_search_run: {
+        Args: { p_run_id: string }
+        Returns: undefined
+      }
+      dfs_store_ai_prospects: {
+        Args: { p_items: Json; p_run_id: string }
+        Returns: Json
+      }
       dfs_store_backlink_candidates: {
         Args: { p_items: Json; p_run_id: string }
         Returns: Json
@@ -3779,6 +4207,16 @@ export type Database = {
         Args: { p_keyword_id: string; p_new_phrase: string }
         Returns: Json
       }
+      request_ai_search: {
+        Args: {
+          p_brief_version: number
+          p_client_id: string
+          p_estimate: number
+          p_options: Json
+          p_target_ids: string[]
+        }
+        Returns: string
+      }
       request_backlink_discovery:
         | {
             Args: { p_client_id: string; p_target_ids: string[] }
@@ -3808,6 +4246,15 @@ export type Database = {
       rerank_backlinks: { Args: { p_client_id: string }; Returns: string }
       research_quota: { Args: { p_client_id: string }; Returns: Json }
       reveal_client_login: { Args: { p_login_id: string }; Returns: string }
+      review_ai_prospects: {
+        Args: {
+          p_decision: string
+          p_ids: string[]
+          p_note?: string
+          p_reason?: Database["public"]["Enums"]["backlink_reject_reason"]
+        }
+        Returns: number
+      }
       review_backlink_opportunities: {
         Args: {
           p_decision: string

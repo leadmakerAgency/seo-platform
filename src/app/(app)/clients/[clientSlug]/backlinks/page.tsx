@@ -34,10 +34,12 @@ import { REVIEW_CAP, TAB_LABELS, TABS, tabOf, type Tab } from "@/features/backli
 import { getBacklinksData } from "@/features/backlinks/queries"
 import { getRunHistory } from "@/features/backlinks/run-history"
 import { getAccountBalances } from "@/features/backlinks/accounts"
+import { AiSearchTab } from "@/features/backlinks/ai-search/components/ai-search-tab"
+import { getAiSearchData } from "@/features/backlinks/ai-search/queries"
 import { getClientBySlug } from "@/features/clients/queries"
 import { OverviewRefresher } from "@/features/overview/components/overview-refresher"
 import { getCurrentMember } from "@/lib/auth"
-import { hasDataForSeo } from "@/lib/env.server"
+import { hasAnthropicKey, hasDataForSeo } from "@/lib/env.server"
 import { formatNumber } from "@/lib/format"
 import { clientHref, findClientSection } from "@/lib/navigation"
 import { can } from "@/lib/roles"
@@ -76,6 +78,45 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
   const rawMode = one(search.mode)
   const mode: Mode = isMode(rawMode) ? rawMode : "standard"
   const base = clientHref(client.slug, "backlinks")
+  if (mode === "ai") {
+    // Shockwave AI Search: Claude researches from the brief and the places (no DataForSEO).
+    const isAdmin = can(member.role, "integrations.manage")
+    const supabase = await createSupabaseServerClient()
+    const [aiData, history, accounts, { data: profile }] = await Promise.all([
+      getAiSearchData(client.id),
+      getRunHistory(client.id),
+      getAccountBalances(isAdmin),
+      supabase.from("client_business_profiles").select("service_areas").eq("client_id", client.id).maybeSingle(),
+    ])
+    const suggestions = [...new Set([client.city ?? "", ...(profile?.service_areas ?? [])].map((s) => s.trim()).filter(Boolean))].slice(0, 6)
+    return (
+      <>
+        <PageHeader
+          eyebrow={client.name}
+          title="Backlinks"
+          description="Shockwave AI researches where this client should get listed, from the strategy brief and the places below"
+        />
+        <ModeTabs base={base} mode="ai" />
+        <AiSearchTab
+          clientId={client.id}
+          clientStage={client.stage}
+          defaultCountry={client.country_code}
+          suggestions={suggestions}
+          base={base}
+          data={aiData}
+          canDiscover={can(member.role, "backlinks.discover")}
+          canReview={can(member.role, "backlinks.review")}
+          canStrategy={can(member.role, "backlinks.strategy")}
+          isAdmin={isAdmin}
+          claudeReady={hasAnthropicKey()}
+          nowIso={new Date().toISOString()}
+        />
+        {history && history.entries.length > 0 && (
+          <RunHistoryPanel history={history} accounts={accounts} nowIso={new Date().toISOString()} />
+        )}
+      </>
+    )
+  }
   if (mode !== "standard") {
     return (
       <>

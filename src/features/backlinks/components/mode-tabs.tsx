@@ -17,7 +17,7 @@ export const isMode = (v: unknown): v is Mode => typeof v === "string" && (MODES
 
 export const MODE_META: Record<Mode, { label: string; short: string; caption: string; soon?: boolean }> = {
   standard: { label: "Standard Search", short: "Standard", caption: "Searches built from the brief and your places" },
-  ai: { label: "Shockwave AI Search", short: "Shockwave AI", caption: "AI finds and vets places for the client", soon: true },
+  ai: { label: "Shockwave AI Search", short: "Shockwave AI", caption: "AI finds and vets places for the client" },
   manual: { label: "Manual Search", short: "Manual", caption: "Add and track places by hand", soon: true },
 }
 

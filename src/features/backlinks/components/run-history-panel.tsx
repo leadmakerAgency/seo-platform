@@ -64,6 +64,7 @@ const KIND: Record<RunEntry["kind"], { label: string; icon: LucideIcon; node: st
   search: { label: "Find places", icon: Search, node: "border-brand/30 text-brand" },
   rerank: { label: "Re-rank with the brief", icon: ListOrdered, node: "border-info/30 text-info" },
   strength: { label: "Strength check", icon: Gauge, node: "border-border text-muted-foreground" },
+  ai: { label: "Shockwave AI Search", icon: Sparkles, node: "border-primary/30 text-primary" },
 }
 
 function duration(from: string, to: string | null) {
@@ -169,12 +170,12 @@ function Row({ e }: { e: RunEntry }) {
       key: "strength",
       detail: e.strengthDomains ? `${formatNumber(e.strengthDomains)} sites` : "not needed",
       value: e.strength,
-      show: true,
+      show: e.kind !== "ai" || e.strength > 0,
     },
     {
       key: "ai",
       detail: e.aiCalls
-        ? `Haiku 5.5, ${formatNumber(e.aiInputTokens ?? 0)} in / ${formatNumber(e.aiOutputTokens ?? 0)} out tokens`
+        ? `Haiku 5.5, ${formatNumber(e.aiCalls)} ${e.aiCalls === 1 ? "call" : "calls"}${e.webSearches ? `, ${formatNumber(e.webSearches)} web searches` : ""}, ${formatNumber(e.aiInputTokens ?? 0)} in / ${formatNumber(e.aiOutputTokens ?? 0)} out tokens`
         : "not used",
       value: e.ai,
       show: e.kind !== "strength",

@@ -194,6 +194,12 @@ export function describeActivity(entry: ActivityLike): string {
       return `added ${str(m.place) || "a place"} to the places for backlinks`
     case "backlink.brief_saved":
       return `saved the backlink strategy brief (version ${num(m.version) || 1})`
+    case "backlink.ai_search_started":
+      return `started a Shockwave AI Search for ${num(m.places) || 1} ${Number(m.places) === 1 ? "place" : "places"}`
+    case "backlink.ai_search_finished":
+      return `finished a Shockwave AI Search: ${num(m.review) || 0} in the top 30`
+    case "backlink.ai_reviewed":
+      return `${str(m.decision) === "approve" ? "approved" : str(m.decision) === "reject" ? "rejected" : "restored"} ${num(m.count) || 1} AI-found ${Number(m.count) === 1 ? "place" : "places"}`
     case "backlink.reranked":
       return `re-ranked the backlink places: ${num(m.review) || 0} in the top 30`
     case "backlink.target_removed":

@@ -1,8 +1,9 @@
 import { after, NextResponse } from "next/server"
 
+import { processAiSearchRuns } from "@/features/backlinks/ai-search/pipeline"
 import { processBacklinkRuns } from "@/features/backlinks/discovery"
 import type { Db } from "@/lib/dataforseo/client"
-import { hasDataForSeo } from "@/lib/env.server"
+import { hasAnthropicKey, hasDataForSeo } from "@/lib/env.server"
 import { createSupabaseAdminClient, hasSupabaseSecretKey } from "@/lib/supabase/admin"
 
 /**
@@ -25,6 +26,18 @@ export async function POST(request: Request) {
 
   const { data: cleanup, error } = await db.rpc("dfs_backlinks_cleanup")
   if (error) console.error("[backlinks] cleanup failed", error.message)
+
+  // Shockwave AI Search (Claude only, no DataForSEO): resume runs whose worker stopped or was
+  // released on a redeploy.
+  if (hasAnthropicKey()) {
+    after(async () => {
+      try {
+        await processAiSearchRuns(db, 1)
+      } catch (e) {
+        console.error("[ai-search] cron resume failed", e)
+      }
+    })
+  }
 
   if (!hasDataForSeo()) {
     return NextResponse.json({
