@@ -23,6 +23,10 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-cost-google: var(--cost-google);
+  --color-cost-maps: var(--cost-maps);
+  --color-cost-strength: var(--cost-strength);
+  --color-cost-ai: var(--cost-ai);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -136,6 +140,13 @@
   --chart-4: oklch(0.38 0.08 272);
   --chart-5: oklch(0.66 0.15 20);
 
+  /* Backlinks "Runs and costs": one fixed colour per cost part. Checked with the dataviz
+     validator (lightness band, chroma, colour-blind and normal-vision separation). */
+  --cost-google: oklch(0.5 0.235 300);
+  --cost-maps: oklch(0.62 0.1 195);
+  --cost-strength: oklch(0.74 0.14 75);
+  --cost-ai: oklch(0.66 0.15 20);
+
   --sidebar: oklch(0.966 0.008 286);
   --sidebar-foreground: oklch(0.3 0.04 277);
   --sidebar-primary: oklch(0.5 0.235 300);
@@ -198,6 +209,11 @@
   --chart-3: oklch(0.655 0.14 75);
   --chart-4: oklch(0.7 0.06 260);
   --chart-5: oklch(0.72 0.15 20);
+
+  --cost-google: oklch(0.64 0.19 300);
+  --cost-maps: oklch(0.65 0.11 195);
+  --cost-strength: oklch(0.655 0.14 75);
+  --cost-ai: oklch(0.64 0.17 10);
 
   --sidebar: oklch(0.165 0.005 70);
   --sidebar-foreground: oklch(0.88 0.006 70);
