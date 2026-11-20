@@ -48,7 +48,7 @@ export type CategoryKey =
   | "partners_vendors"
 
 /** Extra finders besides the categories. */
-export type FinderKey = "ranking" | "competitor_footprint" | "mentions" | "buyer_questions" | "seed"
+export type FinderKey = "ranking" | "competitor_footprint" | "mentions" | "buyer_questions" | "seed" | "competitor_links" | "gap_footprint"
 
 export type Category = {
   key: CategoryKey
@@ -173,6 +173,8 @@ export const FINDER_LABELS: Record<FinderKey | CategoryKey, string> = {
   mentions: "Mentions the client",
   buyer_questions: "Answers buyer questions",
   seed: "Known for this industry",
+  competitor_links: "Links to competitors",
+  gap_footprint: "Features competitors (estimate)",
 }
 
 /** One place from the places panel, as the AI search sees it. */
@@ -319,4 +321,70 @@ export function planAiSearch(input: {
   const research4 = kept.length + fixed.length
   const minutes: [number, number] = [Math.max(4, Math.round(3 + research4 / 6)), Math.max(8, Math.round(6 + research4 / 3))]
   return { tasks: all, dropped, searches, estimateUsd, minutes }
+}
+
+// ---------------------------------------------------------------------------
+// Competitor backlinks (docs/plans/backlinks/11-competitor-backlinks.md)
+// ---------------------------------------------------------------------------
+
+/** "Links to competitors" as a category label (the found_by key is the same). */
+export const GAP_CATEGORY = "competitor_links"
+export const GAP_LABEL = "Links to competitors"
+export const GAP_FOOTPRINT_LABEL = "Estimated from mentions"
+
+/** DataForSEO Backlinks prices (per task, per row returned). */
+const DFS_BACKLINKS = { task: 0.024, row: 0.000036, bulkTask: 0.02, bulkRow: 0.00002 }
+
+export type GapPlan = {
+  mode: "dataforseo" | "ai_only"
+  /** DataForSEO $ (0 when cached or AI only). */
+  dfsUsd: number
+  /** Claude $ (page checks, judging, insights; web searches in AI-only mode). */
+  aiUsd: number
+  searches: number
+  estimateUsd: number
+  minutes: [number, number]
+}
+
+/**
+ * What a competitor backlinks pass should cost. With DataForSEO: the linking sites of each
+ * competitor and the client, the linking pages, strength for the kept sites, then Claude.
+ * AI only: up to 5 web searches per competitor.
+ */
+export function planGap(input: {
+  competitors: number
+  maxSites: number
+  mode: "dataforseo" | "ai_only"
+  cached?: boolean
+  searchPrice: number
+  referrersPerCompetitor?: number
+}): GapPlan {
+  const n = Math.max(0, input.competitors)
+  const sites = Math.max(0, input.maxSites)
+  const pagesAi = Math.min(sites, 200)
+  // Page checks (8 per call), judging (15 per call), insights.
+  const claude = Math.ceil(pagesAi / 8) * 0.004 + Math.ceil(pagesAi / 15) * 0.004 + 0.004
+  if (input.mode === "ai_only") {
+    const searches = n * 5
+    const aiUsd = Math.round((searches * input.searchPrice + n * 0.005 + 0.03) * 1000) / 1000
+    return { mode: "ai_only", dfsUsd: 0, aiUsd, searches, estimateUsd: Math.round(aiUsd * 1.1 * 1000) / 1000, minutes: [4, 10] }
+  }
+  const per = input.referrersPerCompetitor ?? 500
+  const dfsUsd = input.cached
+    ? 0
+    : Math.round(
+        ((n + 1) * (DFS_BACKLINKS.task + per * DFS_BACKLINKS.row) +
+          n * (DFS_BACKLINKS.task + Math.min(1000, sites * 2) * DFS_BACKLINKS.row) +
+          2 * (DFS_BACKLINKS.bulkTask + sites * DFS_BACKLINKS.bulkRow)) *
+          1000,
+      ) / 1000
+  const aiUsd = Math.round(claude * 1000) / 1000
+  return {
+    mode: "dataforseo",
+    dfsUsd,
+    aiUsd,
+    searches: 0,
+    estimateUsd: Math.round((dfsUsd + aiUsd) * 1.1 * 1000) / 1000,
+    minutes: [3, 8],
+  }
 }

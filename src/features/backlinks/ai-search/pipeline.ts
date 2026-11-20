@@ -1,17 +1,20 @@
 import "server-only"
 
 import { ClaudeError, claudeJsonWithUsage, claudeResearch, type CallUsage } from "@/lib/ai/claude"
+import { BacklinksAccessError } from "@/lib/dataforseo/backlinks"
 import type { Db } from "@/lib/dataforseo/client"
-import { hasAnthropicKey } from "@/lib/env.server"
+import { hasAnthropicKey, hasDataForSeo } from "@/lib/env.server"
 import type { Database, Json, Tables } from "@/lib/supabase/database.types"
 import { snapshotOf, type BriefSnapshot } from "../brief"
 import type { DirectoryType } from "../constants"
 import { registrableDomain, siteKeyOf } from "../site-key"
 import { checkPage, linkTypeOf, type RedFlag } from "./checks"
+import { cleanDomain, MIN_COMPETITORS, pickCompetitors, type CompetitorOption } from "./competitors"
 import {
   AI_REVIEW_CAP,
   CATEGORIES,
   CATEGORY,
+  GAP_CATEGORY,
   languageOf,
   LIMITS,
   planAiSearch,
@@ -22,12 +25,14 @@ import {
   type PlannedTask,
 } from "./config"
 import { fetchMany, fetchPage } from "./fetcher"
+import { competitorGap, GAP_SPAM_LIMIT, labsCompetitors, type GapLink, type GapSite } from "./gap"
 import { norm, parseWith, quoteOnPage } from "./parse"
 import * as P from "./prompts"
 import {
   CandidatesSchema,
   CompetitorsSchema,
   DossierSchema,
+  InsightsSchema,
   JudgementSchema,
   PageReadSchema,
   PicksSchema,
@@ -46,6 +51,11 @@ import {
  *
  * Steps: 1 dossier · 2 where to rank · 3 competitors · 4 research · 5 merge · 6 verify ·
  * 8 judge · 9 pick the top 30. (7 was site strength through DataForSEO; not used.)
+ *
+ * Competitor backlinks (docs/plans/backlinks/11-competitor-backlinks.md): a "competitors" run
+ * reuses the dossier, picks the top 5 competitors (step 3) and pulls the sites that link to them
+ * from DataForSEO (step 4, or AI searches of their names when DataForSEO can't be used). A full
+ * run does the same when its switch is on. Insights come after judging (step 8).
  */
 
 type Run = Tables<"ai_search_runs">
@@ -118,6 +128,19 @@ type Ctx = {
   dossier: Dossier | null
   competitors: Record<string, { domain: string; name: string }[]>
   counts: Record<string, unknown>
+  kind: "full" | "competitors"
+  /** Competitor backlinks: on for "competitors" runs, and for full runs with the switch on. */
+  gap: GapOptions | null
+  gapCompetitors: { domain: string; name: string }[]
+}
+
+type GapOptions = {
+  requested: string[]
+  minShared: number
+  includeSingle: boolean
+  maxSites: number
+  refresh: boolean
+  useDfs: boolean
 }
 
 type Rec = Record<string, unknown>
@@ -198,6 +221,19 @@ async function loadContext(db: Db, run: Run): Promise<Ctx> {
     dossier: null,
     competitors: {},
     counts: { ...((run.counts ?? {}) as Rec) },
+    kind: run.kind === "competitors" ? "competitors" : "full",
+    gap:
+      run.kind === "competitors" || options.gap === true
+        ? {
+            requested: (run.competitors ?? []).map((d) => cleanDomain(d)).filter((d): d is string => Boolean(d)),
+            minShared: Math.min(5, Math.max(1, num(options.min_shared, num(caps.gap_min_shared, 2)))),
+            includeSingle: options.include_single === true,
+            maxSites: Math.min(500, Math.max(20, num(options.max_sites, num(caps.gap_max_sites, 150)))),
+            refresh: options.refresh === true,
+            useDfs: options.use_dataforseo !== false,
+          }
+        : null,
+    gapCompetitors: [],
   }
 }
 
@@ -299,10 +335,11 @@ async function runStage(
   ctx: Ctx,
   stage: number,
   handler: (task: Task) => Promise<TaskResult>,
-  opts: { concurrency?: number; searchesPerTask?: (t: Task) => number } = {},
+  opts: { concurrency?: number; searchesPerTask?: (t: Task) => number; kinds?: string[] } = {},
 ) {
   await ctx.db.from("ai_search_runs").update({ stage }).eq("id", ctx.run.id)
-  const queue = (await tasksOf(ctx, stage)).filter((t) => t.status === "queued")
+  // A stage can hold tasks of several steps (research and the link gap share step 4).
+  const queue = (await tasksOf(ctx, stage)).filter((t) => t.status === "queued" && (!opts.kinds || opts.kinds.includes(t.kind)))
   let i = 0
   const worker = async () => {
     while (i < queue.length) {
@@ -430,12 +467,17 @@ export async function runAiSearch(db: Db, run: Run): Promise<void> {
     ctx.counts.markets = ctx.markets.length
 
     await stageDossier(ctx)
-    await stageRanking(ctx)
-    await stageCompetitors(ctx)
-    await stageResearch(ctx)
+    if (ctx.kind === "full") {
+      await stageRanking(ctx)
+      await stageCompetitors(ctx)
+    }
+    if (ctx.gap) await stageGapCompetitors(ctx)
+    if (ctx.kind === "full") await stageResearch(ctx)
+    if (ctx.gap) await stageGap(ctx)
     await stageMerge(ctx)
     await stageVerify(ctx)
     await stageJudge(ctx)
+    if (ctx.gap) await stageInsights(ctx)
     const result = await stagePick(ctx)
 
     const { data: calls } = await db.from("ai_calls").select("cost_usd, web_searches").eq("ref", run.id)
@@ -458,7 +500,14 @@ export async function runAiSearch(db: Db, run: Run): Promise<void> {
       actor_id: run.created_by,
       client_id: run.client_id,
       action: "backlink.ai_search_finished",
-      meta: { review: result.review, more: result.more, hidden: result.hidden, cost: Math.round(cost * 100) / 100 } as Json,
+      meta: {
+        review: result.review,
+        more: result.more,
+        hidden: result.hidden,
+        cost: Math.round(cost * 100) / 100,
+        kind: ctx.kind,
+        gap_sites: num(ctx.counts.gap_sites),
+      } as Json,
     })
     await notify(db, run, "backlinks_found")
   } catch (e) {
@@ -499,6 +548,17 @@ const ABOUT = /\b(about|services?|what-we-do|company|who-we-are|solutions|our-wo
 async function stageDossier(ctx: Ctx) {
   await ensureTasks(ctx, [{ stage: 1, kind: "dossier", key: "dossier" }])
   await runStage(ctx, 1, async (task) => {
+    // A competitor backlinks run reuses a recent dossier made from the same brief.
+    if (ctx.kind === "competitors") {
+      const { data: saved } = await ctx.db
+        .from("ai_client_dossiers")
+        .select("dossier, brief_version, updated_at")
+        .eq("client_id", ctx.clientId)
+        .maybeSingle()
+      if (saved?.dossier && saved.brief_version === ctx.brief.version && Date.now() - new Date(saved.updated_at).getTime() < 30 * 86_400_000) {
+        return { output: { dossier: saved.dossier, pages: [], reused: true } as unknown as Json }
+      }
+    }
     const pages: { url: string; title: string | null; text: string }[] = []
     if (ctx.website) {
       const home = await fetchPage(/^https?:\/\//i.test(ctx.website) ? ctx.website : `https://${ctx.website}`)
@@ -569,7 +629,10 @@ async function stageDossier(ctx: Ctx) {
 // Step 2 · where the client needs to rank (web search)
 // ---------------------------------------------------------------------------
 
-const blocked = (ctx: Ctx) => [ctx.domain, ...Object.values(ctx.competitors).flat().map((c) => c.domain)].filter((d): d is string => Boolean(d))
+const blocked = (ctx: Ctx) =>
+  [...new Set([ctx.domain, ...Object.values(ctx.competitors).flat().map((c) => c.domain), ...ctx.gapCompetitors.map((c) => c.domain)])].filter(
+    (d): d is string => Boolean(d),
+  )
 
 async function stageRanking(ctx: Ctx) {
   await ensureTasks(
@@ -637,11 +700,29 @@ async function stageCompetitors(ctx: Ctx) {
         .slice(0, 5)
       return { output: { competitors } as unknown as Json, usage: [r.usage] }
     },
-    { concurrency: LIMITS.concurrency },
+    { concurrency: LIMITS.concurrency, kinds: ["competitors"] },
   )
   const outs = await outputsOf<{ competitors: { domain: string; name: string }[] }>(ctx, "competitors")
   for (const o of outs) ctx.competitors[String(o.input.market)] = o.output?.competitors ?? []
   ctx.counts.competitors = Object.values(ctx.competitors).flat().length
+  // Saved as suggestions for the Competitors card (the first 5 become active if none are yet).
+  if (!ctx.gap) {
+    const seen = new Map<string, { domain: string; name: string; markets: number }>()
+    for (const c of Object.values(ctx.competitors).flat()) {
+      const e = seen.get(c.domain)
+      if (e) e.markets++
+      else seen.set(c.domain, { domain: c.domain, name: c.name, markets: 1 })
+    }
+    const ranked = [...seen.values()].sort((a, b) => b.markets - a.markets)
+    if (ranked.length) {
+      const { error } = await ctx.db.rpc("dfs_save_found_competitors", {
+        p_client_id: ctx.clientId,
+        p_items: ranked.map((f) => ({ domain: f.domain, name: f.name, evidence: { markets: f.markets, run: ctx.run.id } })) as unknown as Json,
+        p_source: "ai",
+      })
+      if (error) console.warn("[ai-search] couldn't save competitors", error.message)
+    }
+  }
   await ctx.db
     .from("ai_client_dossiers")
     .update({
@@ -726,7 +807,11 @@ async function stageResearch(ctx: Ctx) {
       const items = (parsed?.items ?? []).filter((x) => fromSources(x.url, r.sources)).slice(0, LIMITS.candidatesPerTask)
       return { output: { items, queries: r.queries } as unknown as Json, usage }
     },
-    { concurrency: LIMITS.concurrency, searchesPerTask: (t) => num((t.input as Rec).searches, SEARCHES.research) },
+    {
+      concurrency: LIMITS.concurrency,
+      searchesPerTask: (t) => num((t.input as Rec).searches, SEARCHES.research),
+      kinds: ["research", "footprint", "buyer_questions", "mentions"],
+    },
   )
 }
 
@@ -757,8 +842,10 @@ type Merged = {
   name: string
   url: string
   title: string
-  category: CategoryKey
+  /** A CategoryKey, or "competitor_links" until the page check says what the page is. */
+  category: string
   type: DirectoryType
+  gap?: GapSite
   markets: Set<string>
   foundBy: Set<string>
   evidence: { quote: string; url: string; query: string; finder: string; why?: string; action?: string }[]
@@ -769,15 +856,20 @@ type Merged = {
 async function stageMerge(ctx: Ctx) {
   await ensureTasks(ctx, [{ stage: 5, kind: "merge", key: "merge" }])
   await runStage(ctx, 5, async () => {
-    const competitorDomains = new Set(Object.values(ctx.competitors).flat().map((c) => c.domain))
+    const competitorDomains = new Set([...Object.values(ctx.competitors).flat(), ...ctx.gapCompetitors].map((c) => c.domain))
     const exclude = ctx.brief.exclude_terms.map((t) => t.toLowerCase()).filter(Boolean)
     const merged = new Map<string, Merged>()
-    const priority = (c: CategoryKey) => CATEGORIES.findIndex((x) => x.key === c)
+    // Research categories win over "competitor_links" (it's refined from the page later).
+    const priority = (c: string) => {
+      const i = CATEGORIES.findIndex((x) => x.key === c)
+      return i < 0 ? 99 : i
+    }
+    const typeOf = (c: string): DirectoryType => CATEGORY[c as CategoryKey]?.type ?? "other"
 
     const add = (raw: {
       url: string
       title: string
-      category: CategoryKey
+      category: string
       market: string | null
       finder: FinderKey | CategoryKey
       quote: string
@@ -795,7 +887,7 @@ async function stageMerge(ctx: Ctx) {
         if (existing.evidence.length < 8) existing.evidence.push(evidence)
         if (priority(raw.category) < priority(existing.category)) {
           existing.category = raw.category
-          existing.type = CATEGORY[raw.category].type
+          existing.type = typeOf(raw.category)
         }
         // Prefer a specific page over a homepage.
         if (/^https?:\/\/[^/]+\/?$/.test(existing.url) && !/^https?:\/\/[^/]+\/?$/.test(raw.url)) {
@@ -827,7 +919,7 @@ async function stageMerge(ctx: Ctx) {
         url: raw.url,
         title: raw.title.slice(0, 300),
         category: raw.category,
-        type: CATEGORY[raw.category].type,
+        type: typeOf(raw.category),
         markets: new Set(raw.market ? [raw.market] : []),
         foundBy: new Set([raw.finder]),
         evidence: [evidence],
@@ -863,12 +955,58 @@ async function stageMerge(ctx: Ctx) {
       }
     }
 
+    // Competitor backlinks: DataForSEO's linking sites, each on the competitor's linking page.
+    const [gapOut] = await outputsOf<{ mode: string; sites: GapSite[] }>(ctx, "gap")
+    for (const site of gapOut?.output?.sites ?? []) {
+      const best = [...site.links].sort((a, b) => linkScore(b) - linkScore(a))[0]
+      const url = best?.url_from && /^https?:\/\//.test(best.url_from) ? best.url_from : `https://${site.domain}/`
+      add({
+        url,
+        title: best?.title || site.domain,
+        category: GAP_CATEGORY,
+        market: null,
+        finder: "competitor_links",
+        quote: best?.text || best?.anchor || "",
+        query: `links to ${site.competitors.join(", ")}`,
+        why: `Links to ${site.shared} of ${ctx.gapCompetitors.length || site.shared} competitors`,
+      })
+      const sk = siteKeyOf(url)
+      const m = sk ? merged.get(sk.siteKey) : undefined
+      if (!m) continue
+      m.gap = site
+      m.url = url
+      if (best?.title) m.title = best.title.slice(0, 300)
+      if (m.status !== "filtered" && site.spam !== null && site.spam >= GAP_SPAM_LIMIT) {
+        m.status = "filtered"
+        m.filterReason = "spam"
+      }
+    }
+    // AI-only estimate: pages that feature the competitors (mentions, not confirmed links).
+    for (const r of await outputsOf<Candidates>(ctx, "gap_footprint")) {
+      for (const x of r.output?.items ?? []) {
+        add({
+          url: x.url,
+          title: x.title,
+          category: GAP_CATEGORY,
+          market: (r.input.market as string | null) ?? null,
+          finder: "gap_footprint",
+          quote: x.quote,
+          query: x.query,
+          why: x.why,
+          action: x.action,
+        })
+      }
+    }
+
     // Cap per category and market, then overall, by how many angles found the site.
-    const all = [...merged.values()].sort((a, b) => b.foundBy.size - a.foundBy.size || priority(a.category) - priority(b.category))
+    // Linking sites from DataForSEO are already capped (max sites per run), so they skip this.
+    const all = [...merged.values()].sort(
+      (a, b) => (b.gap?.shared ?? 0) - (a.gap?.shared ?? 0) || b.foundBy.size - a.foundBy.size || priority(a.category) - priority(b.category),
+    )
     const perBucket = new Map<string, number>()
     const kept: Merged[] = []
     for (const m of all) {
-      if (m.status === "filtered") {
+      if (m.status === "filtered" || m.gap) {
         kept.push(m)
         continue
       }
@@ -878,7 +1016,8 @@ async function stageMerge(ctx: Ctx) {
       perBucket.set(bucket, n + 1)
       kept.push(m)
     }
-    const live = kept.filter((m) => m.status !== "filtered").slice(0, LIMITS.maxCandidates)
+    const liveGap = kept.filter((m) => m.status !== "filtered" && m.gap)
+    const live = [...liveGap, ...kept.filter((m) => m.status !== "filtered" && !m.gap).slice(0, LIMITS.maxCandidates)]
     const hidden = kept.filter((m) => m.status === "filtered").slice(0, 100)
     const items = [...live, ...hidden].map((m) => ({
       site_key: m.siteKey,
@@ -894,6 +1033,8 @@ async function stageMerge(ctx: Ctx) {
       evidence: m.evidence,
       status: m.status,
       filter_reason: m.filterReason,
+      shared_count: m.gap?.shared ?? null,
+      competitor_links: m.gap?.links ?? [],
     }))
     let stored = 0
     let fresh = 0
@@ -904,6 +1045,7 @@ async function stageMerge(ctx: Ctx) {
       fresh += num((data as Rec | null)?.new)
     }
     ctx.counts.candidates = live.length
+    ctx.counts.gap_candidates = liveGap.length
     ctx.counts.filtered_early = hidden.length
     ctx.counts.new = fresh
     return { output: { stored, live: live.length, hidden: hidden.length } }
@@ -929,6 +1071,19 @@ async function runProspects(ctx: Ctx, opts: { verifiedOnly?: boolean } = {}) {
   if (error) throw new Error(error.message)
   const rows = (data ?? []) as unknown as ProspectRow[]
   return opts.verifiedOnly ? rows.filter((r) => (r.verification as Rec)?.checked_at) : rows
+}
+
+async function clientProspects(ctx: Ctx) {
+  const { data, error } = await ctx.db
+    .from("ai_link_prospects")
+    .select("*, directory:directories(site_key, domain)")
+    .eq("client_id", ctx.clientId)
+    .is("decided_by", null)
+    .in("status", ["pending_review", "reserve"])
+    .order("fit", { ascending: false, nullsFirst: false })
+    .limit(400)
+  if (error) throw new Error(error.message)
+  return (data ?? []) as unknown as ProspectRow[]
 }
 
 const filteredFor = (status: string, flags: RedFlag[], definite: boolean): string | null => {
@@ -981,6 +1136,7 @@ async function stageVerify(ctx: Ctx) {
                   text: pg.text.slice(0, 3500),
                   actions: pg.actionLinks.map((a) => `${a.label} → ${a.url}`).join("; ").slice(0, 600),
                   outbound: `${pg.outbound.total} (${pg.outbound.dofollow} followed, ${pg.outbound.nofollow} nofollow/sponsored)${pg.pageNofollow ? ", page is nofollow" : ""}`,
+                  competitorLinks: competitorLinksLine(row),
                 }
               }),
             ),
@@ -1026,6 +1182,7 @@ async function stageVerify(ctx: Ctx) {
           quote: read?.quote && quoteOk ? read.quote.slice(0, 300) : null,
           authority: read?.authority ?? null,
           ai_flags: (read?.red_flags ?? []).slice(0, 6),
+          how_to_get: read?.how_to_get?.slice(0, 200) ?? null,
         }
         const reason = filteredFor(pg.status, checks.flags, checks.definite)
         const update: Database["public"]["Tables"]["ai_link_prospects"]["Update"] = {
@@ -1034,11 +1191,38 @@ async function stageVerify(ctx: Ctx) {
           authority: read?.authority ?? null,
           updated_at: new Date().toISOString(),
         }
+        // Competitor backlinks: is their link still on this page, and can the client copy it?
+        const links = linksOf(row)
+        const fromGap = links.length > 0 || row.found_by.includes("gap_footprint")
+        if (links.length) {
+          const samePage = (u: string) => u.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "") === row.page_url!.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")
+          update.competitor_links = links.map((l) => ({
+            ...l,
+            still_there:
+              pg.status === "ok" && samePage(l.url_from)
+                ? pg.outboundHosts.some((h) => h === l.competitor || h.endsWith(`.${l.competitor}`))
+                : (l.still_there ?? null),
+          })) as unknown as Json
+        }
+        if (fromGap && read) {
+          const replicability = read.link_kind === "client_credit" ? "no" : read.replicability
+          update.link_kind = read.link_kind
+          update.replicability = replicability
+          const refined = KIND_CATEGORY[read.page_kind]
+          if (row.category === GAP_CATEGORY && refined) update.category = refined
+          if (!reason && replicability === "no") {
+            update.status = "filtered"
+            update.filter_reason = "not_replicable"
+            hidden++
+          }
+        }
         if (reason) {
           update.status = "filtered"
           update.filter_reason = reason
           hidden++
-        } else if (checks.flags.includes("language_mismatch") && !ctx.brief.reach.includes("global")) {
+        } else if (update.status === "filtered") {
+          // Already hidden above (can't be copied).
+        } else if (checks.flags.includes("language_mismatch") && !ctx.brief.reach.includes("global") && !links.length) {
           update.status = "filtered"
           update.filter_reason = "language_mismatch"
           hidden++
@@ -1069,9 +1253,47 @@ function compactRow(id: string, p: ProspectRow, ctx: Ctx) {
     `page: ${v.status ?? "unchecked"}; kind ${v.page_kind ?? "?"}; lists businesses ${v.lists_businesses ?? "?"}; way in: ${v.submit_url ? "submission link" : v.contact_url ? "contact" : v.has_form ? "a form" : "none seen"}; link type ${p.link_type ?? "unknown"}; authority ${p.authority ?? "?"}/5`,
     `flags: ${[...((v.flags as string[]) ?? []), ...((v.ai_flags as string[]) ?? [])].join(", ") || "none"}`,
     v.action ? `to get on it: ${String(v.action).slice(0, 160)}` : "",
+    gapLine(p),
   ]
     .filter(Boolean)
     .join("\n")
+}
+
+/** "competitors linked: 3 of 5 (a.com, b.com, c.com); …" for the judge and the editor. */
+function gapLine(p: ProspectRow) {
+  const links = linksOf(p)
+  if (!p.shared_count && !links.length) return ""
+  const comps = [...new Set(links.map((l) => l.competitor))]
+  const of = links.find((l) => l.of)?.of
+  const still = links.some((l) => l.still_there === true) ? "yes" : links.length && links.every((l) => l.still_there === false) ? "no" : "unknown"
+  return `competitors linked: ${p.shared_count ?? comps.length}${of ? ` of ${of}` : ""} (${comps.join(", ")}); link kind ${p.link_kind ?? "?"}; can copy: ${p.replicability ?? "?"}; their link still there: ${still}`
+}
+
+function linksOf(p: Pick<ProspectRow, "competitor_links">): GapLink[] {
+  return Array.isArray(p.competitor_links) ? (p.competitor_links as unknown as GapLink[]) : []
+}
+
+function competitorLinksLine(p: ProspectRow): string | null {
+  const links = linksOf(p)
+  if (!links.length) return null
+  return links
+    .slice(0, 5)
+    .map(
+      (l) =>
+        `${l.competitor}: "${(l.anchor ?? "").slice(0, 80)}" (${l.dofollow === false ? "nofollow" : "followed"}${l.location ? `, in ${l.location}` : ""}) on ${l.url_from}${l.text ? ` · "${l.text.slice(0, 200)}"` : ""}`,
+    )
+    .join("; ")
+}
+
+/** Which competitor link best shows how it was earned: in an article or listing over a footer. */
+function linkScore(l: GapLink) {
+  const loc = (l.location ?? "").toLowerCase()
+  let n = 0
+  if (/article|main|section|content|body/.test(loc)) n += 3
+  if (/footer|aside|sidebar|nav|header|menu/.test(loc)) n -= 2
+  if (l.dofollow) n += 1
+  if (l.anchor) n += 0.5
+  return n
 }
 
 function fitOf(j: Judgement["items"][number], p: ProspectRow) {
@@ -1085,6 +1307,15 @@ function fitOf(j: Judgement["items"][number], p: ProspectRow) {
   if (j.cost_type === "paid_only" || flags.includes("paid_only")) fit -= 15
   if (flags.includes("thin")) fit -= 5
   if (v.status && v.status !== "ok") fit -= 5
+  // Competitor backlinks: the more competitors a site links to, the more it matters.
+  const shared = p.shared_count ?? 0
+  if (shared >= 4) fit += 15
+  else if (shared === 3) fit += 10
+  else if (shared === 2) fit += 5
+  const links = linksOf(p)
+  if (links.some((l) => l.dofollow)) fit += 3
+  if (p.replicability === "hard") fit -= 10
+  if (links.length && links.every((l) => l.still_there === false)) fit -= 8
   return Math.max(0, Math.min(100, Math.round(fit)))
 }
 
@@ -1135,7 +1366,7 @@ async function stageJudge(ctx: Ctx) {
       }
       return { output: { judged }, usage: [r.usage] }
     },
-    { concurrency: LIMITS.concurrency },
+    { concurrency: LIMITS.concurrency, kinds: ["judge"] },
   )
 }
 
@@ -1155,7 +1386,8 @@ async function stagePick(ctx: Ctx): Promise<{ review: number; more: number; hidd
   await ensureTasks(ctx, [{ stage: 9, kind: "editor", key: "pick" }])
   let summary = { review: 0, more: 0, hidden: 0, ai: "used" }
   await runStage(ctx, 9, async (task) => {
-    const prospects = await runProspects(ctx)
+    // Every undecided place of the client (any run), so full and competitor runs share one top 30.
+    const prospects = await clientProspects(ctx)
     const keeps = prospects
       .filter((p) => p.verdict === "keep" || (!p.verdict && p.fit === null))
       .sort((a, b) => (b.fit ?? 0) - (a.fit ?? 0))
@@ -1183,7 +1415,10 @@ async function stagePick(ctx: Ctx): Promise<{ review: number; more: number; hidd
           schema: PicksSchema,
           system: P.system(["LINK_TACTICS"], client(ctx)),
           prompt: P.editorPrompt(
-            pool.map((p, i) => `c${i + 1} · ${p.directory?.site_key} · ${p.category} · fit ${p.fit ?? "?"} · ${p.effort ?? "?"} · ${p.cost_type ?? "?"} · ${p.link_type ?? "?"} · ${p.reason ?? p.page_title ?? ""}`),
+            pool.map(
+              (p, i) =>
+                `c${i + 1} · ${p.directory?.site_key} · ${p.category} · fit ${p.fit ?? "?"} · ${p.effort ?? "?"} · ${p.cost_type ?? "?"} · ${p.link_type ?? "?"}${p.shared_count ? ` · links to ${p.shared_count} competitors` : ""} · ${p.reason ?? p.page_title ?? ""}`,
+            ),
             AI_REVIEW_CAP,
           ),
           ...callCtx(ctx, 9, task.id),
@@ -1242,6 +1477,286 @@ async function stagePick(ctx: Ctx): Promise<{ review: number; more: number; hidd
   })
   const [o] = await outputsOf<typeof summary>(ctx, "editor")
   return o?.output ?? summary
+}
+
+// ---------------------------------------------------------------------------
+// Competitor backlinks · step 3: the top 5 competitors
+// ---------------------------------------------------------------------------
+
+async function stageGapCompetitors(ctx: Ctx) {
+  const g = ctx.gap!
+  await ensureTasks(ctx, [{ stage: 3, kind: "gap_competitors", key: "gap_competitors" }])
+  await runStage(
+    ctx,
+    3,
+    async () => {
+      const { data: saved } = await ctx.db
+        .from("client_competitors")
+        .select("domain, name, source, active, evidence")
+        .eq("client_id", ctx.clientId)
+      const savedList: CompetitorOption[] = (saved ?? []).map((c) => ({
+        domain: c.domain,
+        name: c.name,
+        source: c.source as CompetitorOption["source"],
+        active: c.active,
+      }))
+      const names = new Map(savedList.map((c) => [c.domain, c.name ?? c.domain]))
+
+      // What this run's step 3 found per place (full runs), saved as suggestions for the team.
+      const found = new Map<string, { domain: string; name: string; markets: number }>()
+      for (const list of Object.values(ctx.competitors)) {
+        for (const c of list) {
+          const e = found.get(c.domain)
+          if (e) e.markets++
+          else found.set(c.domain, { domain: c.domain, name: c.name, markets: 1 })
+        }
+      }
+      if (found.size) {
+        await ctx.db.rpc("dfs_save_found_competitors", {
+          p_client_id: ctx.clientId,
+          p_items: [...found.values()]
+            .sort((a, b) => b.markets - a.markets)
+            .map((f) => ({ domain: f.domain, name: f.name, evidence: { markets: f.markets, run: ctx.run.id } })) as unknown as Json,
+          p_source: "ai",
+        })
+        for (const f of found.values()) if (!names.has(f.domain)) names.set(f.domain, f.name)
+      }
+
+      let chosen = g.requested.slice(0, 5)
+      if (chosen.length < MIN_COMPETITORS) {
+        chosen = pickCompetitors({ saved: savedList, found: [...found.values()], clientDomain: ctx.domain })
+      }
+      // Still short: keyword-overlap competitors from DataForSEO Labs.
+      let suggested = 0
+      if (chosen.length < MIN_COMPETITORS && g.useDfs && hasDataForSeo() && ctx.domain) {
+        try {
+          const { data: countries } = await ctx.db
+            .from("backlink_targets")
+            .select("location_code, kind")
+            .in("id", ctx.run.target_ids)
+            .eq("kind", "country")
+            .limit(1)
+          const locationCode = countries?.[0]?.location_code ?? (ctx.markets.some((m) => m.countryIso === "US") ? 2840 : null)
+          if (locationCode) {
+            const labs = await labsCompetitors(
+              ctx.db,
+              { domain: ctx.domain, locationCode, languageCode: ctx.markets[0]?.language.code ?? null },
+              { clientId: ctx.clientId, ref: ctx.run.id },
+            )
+            suggested = labs.length
+            if (labs.length) {
+              await ctx.db.rpc("dfs_save_found_competitors", {
+                p_client_id: ctx.clientId,
+                p_items: labs.map((l) => ({ domain: l.domain, evidence: { keywords_shared: l.intersections } })) as unknown as Json,
+                p_source: "dataforseo",
+              })
+              chosen = pickCompetitors({
+                saved: savedList,
+                found: [...found.values(), ...labs.map((l) => ({ domain: l.domain, markets: 0 }))],
+                clientDomain: ctx.domain,
+              })
+            }
+          }
+        } catch (e) {
+          console.warn("[ai-search] Labs competitors failed", ctx.run.id, e instanceof Error ? e.message : e)
+        }
+      }
+      const competitors = chosen.map((d) => ({ domain: d, name: names.get(d) ?? d }))
+      return { output: { competitors, suggested } as unknown as Json }
+    },
+    { kinds: ["gap_competitors"] },
+  )
+  const [o] = await outputsOf<{ competitors: { domain: string; name: string }[] }>(ctx, "gap_competitors")
+  ctx.gapCompetitors = o?.output?.competitors ?? []
+  ctx.counts.gap_competitors = ctx.gapCompetitors.map((c) => c.domain)
+}
+
+// ---------------------------------------------------------------------------
+// Competitor backlinks · step 4: where they get links (DataForSEO, or AI searches as a fallback)
+// ---------------------------------------------------------------------------
+
+type GapOutput = { mode: "dataforseo"; sites: GapSite[]; total: number; cached: boolean; fetchedAt: string; cost: number }
+
+const GAP_FOOTPRINT_SEARCHES = 5
+
+async function queueGapFootprint(ctx: Ctx, why: string) {
+  ctx.counts.gap_mode = "ai_only"
+  ctx.counts.gap_note = why
+  await ensureTasks(
+    ctx,
+    ctx.gapCompetitors.map((c) => ({
+      stage: 4,
+      kind: "gap_footprint",
+      key: `gap_footprint:${c.domain}`,
+      input: { competitor: c.domain, name: c.name, market: ctx.markets[0]?.id ?? null, searches: GAP_FOOTPRINT_SEARCHES },
+    })),
+  )
+}
+
+async function stageGap(ctx: Ctx) {
+  const g = ctx.gap!
+  if (ctx.gapCompetitors.length < MIN_COMPETITORS) {
+    ctx.counts.gap_mode = "none"
+    ctx.counts.gap_note = "Fewer than 2 competitors: add them in the Competitors card."
+    return
+  }
+  const existing = await tasksOf(ctx, 4)
+  const started = existing.some((t) => t.kind === "gap" || t.kind === "gap_footprint")
+  if (!started) {
+    const { data: s } = await ctx.db
+      .from("dfs_settings")
+      .select("backlinks_access, last_balance_usd, low_balance_usd")
+      .eq("id", true)
+      .maybeSingle()
+    const lowBalance = s?.last_balance_usd != null && s.low_balance_usd != null && Number(s.last_balance_usd) < Number(s.low_balance_usd)
+    if (!g.useDfs) await queueGapFootprint(ctx, "DataForSEO was off for this run.")
+    else if (!hasDataForSeo()) await queueGapFootprint(ctx, "DataForSEO isn't set up.")
+    else if (s?.backlinks_access === "denied") await queueGapFootprint(ctx, "DataForSEO Backlinks access is off.")
+    else if (lowBalance) await queueGapFootprint(ctx, "The DataForSEO balance is low.")
+    else {
+      await ensureTasks(ctx, [{ stage: 4, kind: "gap", key: "gap", input: { competitors: ctx.gapCompetitors.map((c) => c.domain) } }])
+    }
+  }
+
+  const handler = async (task: Task): Promise<TaskResult> => {
+    if (task.kind === "gap") {
+      try {
+        const r = await competitorGap(
+          ctx.db,
+          {
+            competitors: ctx.gapCompetitors.map((c) => c.domain),
+            clientDomain: ctx.domain,
+            minShared: g.minShared,
+            includeSingle: g.includeSingle,
+            maxSites: g.maxSites,
+            refresh: g.refresh,
+          },
+          { clientId: ctx.clientId, ref: ctx.run.id },
+        )
+        // DataForSEO $ counts toward the run's cap too.
+        ctx.spent += r.cost
+        ctx.counts.gap_mode = "dataforseo"
+        ctx.counts.gap_sites = r.sites.length
+        ctx.counts.gap_total = r.total
+        ctx.counts.gap_cached = r.cached
+        ctx.counts.gap_fetched_at = r.fetchedAt
+        ctx.counts.gap_dfs_usd = Math.round(r.cost * 10000) / 10000
+        const output: GapOutput = { mode: "dataforseo", ...r }
+        return { output: output as unknown as Json }
+      } catch (e) {
+        if (!(e instanceof BacklinksAccessError)) throw e
+        await ctx.db
+          .from("dfs_settings")
+          .update({ backlinks_access: "denied", backlinks_access_checked_at: new Date().toISOString() })
+          .eq("id", true)
+        await queueGapFootprint(ctx, "DataForSEO Backlinks access is off.")
+        return { output: { mode: "ai_only" }, status: "skipped" }
+      }
+    }
+    // AI only: search the competitor's name for places that feature it.
+    const input = task.input as { competitor: string; name: string; market: string | null; searches: number }
+    const m = input.market ? ctx.markets.find((x) => x.id === input.market) ?? null : null
+    const usage: CallUsage[] = []
+    const r = await claudeResearch(ctx.db, {
+      system: P.system(["COMPETITOR_LINKS", "LINK_TACTICS"], client(ctx)),
+      prompt: P.gapFootprintPrompt(m, { domain: input.competitor, name: input.name }, input.searches),
+      ctx: callCtx(ctx, 4, task.id),
+      maxSearches: input.searches,
+      location: m ? { country: m.countryIso, city: m.city, region: m.kind === "region" ? m.region : null } : null,
+      blockedDomains: blocked(ctx),
+      maxTokens: 5000,
+    })
+    usage.push(r.usage)
+    const parsed = (await parseResearch(ctx, 4, task.id, CandidatesSchema, P.SHAPES.candidates, r.text, usage)) as Candidates | null
+    const items = (parsed?.items ?? []).filter((x) => fromSources(x.url, r.sources)).slice(0, LIMITS.candidatesPerTask)
+    return { output: { items, queries: r.queries } as unknown as Json, usage }
+  }
+  const opts = {
+    kinds: ["gap", "gap_footprint"],
+    concurrency: LIMITS.concurrency,
+    searchesPerTask: (t: Task) => (t.kind === "gap_footprint" ? num((t.input as Rec).searches, GAP_FOOTPRINT_SEARCHES) : 0),
+  }
+  await runStage(ctx, 4, handler, opts)
+
+  // The DataForSEO step failed for good (not access): fall back to the AI estimate.
+  const after = await tasksOf(ctx, 4)
+  const gapTask = after.find((t) => t.kind === "gap")
+  if (gapTask?.status === "failed" && !after.some((t) => t.kind === "gap_footprint")) {
+    await queueGapFootprint(ctx, `DataForSEO didn't answer: ${(gapTask.error ?? "").slice(0, 120)}`)
+  }
+  if (after.some((t) => t.kind === "gap_footprint" && t.status === "queued") || (await tasksOf(ctx, 4)).some((t) => t.kind === "gap_footprint" && t.status === "queued")) {
+    await runStage(ctx, 4, handler, opts)
+  }
+  if (ctx.counts.gap_mode === "ai_only") {
+    const outs = await outputsOf<Candidates>(ctx, "gap_footprint")
+    ctx.counts.gap_sites = outs.reduce((n, o) => n + (o.output?.items?.length ?? 0), 0)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Competitor backlinks · insights (after judging)
+// ---------------------------------------------------------------------------
+
+async function stageInsights(ctx: Ctx) {
+  if (ctx.counts.gap_mode !== "dataforseo" && ctx.counts.gap_mode !== "ai_only") return
+  await ensureTasks(ctx, [{ stage: 8, kind: "insights", key: "insights" }])
+  await runStage(
+    ctx,
+    8,
+    async (task) => {
+      const { data } = await ctx.db
+        .from("ai_link_prospects")
+        .select("shared_count, competitor_links, link_kind, replicability, directory:directories(site_key)")
+        .eq("client_id", ctx.clientId)
+        .eq("last_run_id", ctx.run.id)
+        .not("link_kind", "is", null)
+        .limit(500)
+      const rows = (data ?? []) as unknown as {
+        shared_count: number | null
+        competitor_links: Json
+        link_kind: string | null
+        replicability: string | null
+        directory: { site_key: string } | null
+      }[]
+      if (rows.length < 3) return { output: { insights: [] }, status: "skipped" }
+      const byKind: Record<string, Record<string, number>> = {}
+      for (const r of rows) {
+        const comps = linksOf(r).map((l) => l.competitor)
+        for (const c of comps.length ? comps : ["(mentions)"]) {
+          byKind[c] ??= {}
+          byKind[c][r.link_kind ?? "other"] = (byKind[c][r.link_kind ?? "other"] ?? 0) + 1
+        }
+      }
+      const top = [...rows]
+        .sort((a, b) => (b.shared_count ?? 0) - (a.shared_count ?? 0))
+        .slice(0, 12)
+        .map((r) => `${r.directory?.site_key ?? "?"} (${r.shared_count ?? 1}, ${r.link_kind ?? "?"}, ${r.replicability ?? "?"})`)
+      const r = await claudeJsonWithUsage(ctx.db, {
+        schema: InsightsSchema,
+        system: P.system(["COMPETITOR_LINKS"], client(ctx)),
+        prompt: P.insightsPrompt({
+          competitors: ctx.gapCompetitors.map((c) => c.domain),
+          byKind,
+          top,
+          credits: rows.filter((x) => x.link_kind === "client_credit").length,
+        }),
+        ...callCtx(ctx, 8, task.id),
+        feature: "ai_search.insights",
+        stage: "insights",
+        maxTokens: 1500,
+      })
+      const insights = r.data.insights
+        .slice(0, 4)
+        .map((x) => ({ title: x.title.slice(0, 80), detail: x.detail.slice(0, 240), kind: x.kind }))
+      return { output: { insights, by_kind: byKind } as unknown as Json, usage: [r.usage] }
+    },
+    { kinds: ["insights"] },
+  )
+  const [o] = await outputsOf<{ insights: unknown[]; by_kind: unknown }>(ctx, "insights")
+  if (o) {
+    ctx.counts.insights = o.output?.insights ?? []
+    ctx.counts.gap_by_kind = o.output?.by_kind ?? {}
+  }
 }
 
 /** For the dialog: the plan and estimate (no side effects). */

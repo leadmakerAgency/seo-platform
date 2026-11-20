@@ -8,9 +8,11 @@ import { BUYER_META, BUYERS, mixLabel, OFFERING_META, OFFERINGS, REACH_META, REA
 import { TargetsPanel } from "../../components/targets-panel"
 import type { AiSearchData } from "../queries"
 import { AiDossierCard } from "./ai-dossier-card"
+import { AiInsightsCard } from "./ai-insights-card"
 import { AiProspectsView } from "./ai-prospects-view"
 import { RunAiSearchButton } from "./ai-run-dialog"
 import { AiRunProgress } from "./ai-run-progress"
+import { CompetitorsCard } from "./competitors-card"
 
 /** The Shockwave AI Search tab (Backlinks, ?mode=ai). Plan §7. */
 export function AiSearchTab({
@@ -23,6 +25,7 @@ export function AiSearchTab({
   canDiscover,
   canReview,
   canStrategy,
+  canRefresh = false,
   isAdmin,
   claudeReady,
   nowIso,
@@ -36,6 +39,8 @@ export function AiSearchTab({
   canDiscover: boolean
   canReview: boolean
   canStrategy: boolean
+  /** Admins and managers can force a fresh pull of competitor link data. */
+  canRefresh?: boolean
   isAdmin: boolean
   claudeReady: boolean
   nowIso: string
@@ -58,6 +63,21 @@ export function AiSearchTab({
               : quota && quota.used >= quota.limit
                 ? `This client has used its ${quota.limit} AI searches this month.`
                 : null
+  // Competitor backlinks has its own monthly limit; everything else blocks it the same way.
+  const gapBlocked = !claudeReady
+    ? "Claude isn't connected yet. An admin adds ANTHROPIC_API_KEY on the server."
+    : clientStage === "paused" || clientStage === "churned"
+      ? "This client is paused or has left."
+      : open
+        ? "An AI search is running now."
+        : quota?.standardRunning
+          ? "A Standard Search is running. Wait for it to finish."
+          : data.briefMissing.length
+            ? `${data.briefMissing.join(". ")}.`
+            : targets.every((t) => !t.active)
+              ? "Add at least one place first."
+              : (quota?.budgetProblem ?? null)
+  const activeCompetitors = (quota?.competitors ?? []).filter((c) => c.active).map((c) => c.domain)
   const last = quota?.lastRun
   const hasResults = data.prospects.length > 0
 
@@ -94,6 +114,16 @@ export function AiSearchTab({
                 maxRunUsd={quota?.maxRunUsd ?? 4}
                 disabledReason={blocked}
                 hasRun={Boolean(last)}
+                gap={
+                  quota
+                    ? {
+                        competitors: activeCompetitors.length,
+                        maxSites: quota.gapMaxSites,
+                        fallback: quota.gapFallback,
+                        unavailable: null,
+                      }
+                    : null
+                }
               />
             )}
           </div>
@@ -119,6 +149,17 @@ export function AiSearchTab({
         nowIso={nowIso}
       />
 
+      {quota && (
+        <CompetitorsCard
+          key={(quota.competitors ?? []).map((c) => `${c.domain}:${c.active ? 1 : 0}`).join("|")}
+          clientId={clientId}
+          quota={quota}
+          canEdit={canDiscover}
+          canRefresh={canRefresh}
+          disabledReason={gapBlocked}
+        />
+      )}
+
       {open && (
         <AiRunProgress
           run={open}
@@ -131,7 +172,8 @@ export function AiSearchTab({
         <div className="flex gap-3 rounded-lg border border-warning/30 bg-warning-soft p-3 text-sm">
           <CircleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
           <p>
-            The last AI search didn&apos;t finish{last.error ? `: ${last.error}` : "."} Places found before it stopped are kept.
+            The last {last.kind === "competitors" ? "competitor backlinks search" : "AI search"} didn&apos;t finish
+            {last.error ? `: ${last.error}` : "."} Places found before it stopped are kept.
           </p>
         </div>
       )}
@@ -141,12 +183,23 @@ export function AiSearchTab({
         </p>
       )}
 
+      {!open && last?.status === "done" && typeof last.counts.gap_note === "string" && (
+        <p className="-mt-4 text-[13px] text-muted-foreground">Competitor backlinks: {last.counts.gap_note}</p>
+      )}
+
       {data.dossier && (
         <AiDossierCard data={data.dossier} briefHref={`${base}/strategy`} briefVersion={brief?.version ?? null} nowIso={nowIso} />
       )}
 
+      {data.insights && <AiInsightsCard insights={data.insights} />}
+
       {hasResults ? (
-        <AiProspectsView prospects={data.prospects} placeLabels={labels} canReview={canReview} />
+        <AiProspectsView
+          prospects={data.prospects}
+          placeLabels={labels}
+          canReview={canReview}
+          competitors={data.insights?.competitors.length ? data.insights.competitors : activeCompetitors}
+        />
       ) : (
         !open && (
           <div className="relative overflow-hidden rounded-xl border border-dashed bg-card">
@@ -186,6 +239,10 @@ function HowItWorks() {
     ["Check pages", "Every page is opened: is it live, does it list businesses, is there a way in, are links followed, any red flags."],
     ["Judge", "Relevant, real, reachable and worth it, each scored 1–5 against the brief."],
     ["Top 30", "The best mix to start with lands in Top 30, the rest in More, misfits in Hidden with the reason."],
+    [
+      "Competitor backlinks",
+      "Optional, or on its own: the sites that link to the top 5 competitors but not the client (DataForSEO link data), ranked by how many competitors share them. Each linking page is opened to check the link is still there and whether the client can get the same one.",
+    ],
   ]
   return (
     <details className="group rounded-lg border bg-card px-4 py-3 text-sm">

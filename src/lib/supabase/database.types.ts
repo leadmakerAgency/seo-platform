@@ -294,6 +294,7 @@ export type Database = {
           authority: number | null
           category: string
           client_id: string
+          competitor_links: Json
           cost_type: string | null
           created_at: string
           decided_at: string | null
@@ -307,6 +308,7 @@ export type Database = {
           found_by: string[]
           id: string
           last_run_id: string | null
+          link_kind: string | null
           link_type: string | null
           notes: string | null
           page_title: string | null
@@ -316,7 +318,9 @@ export type Database = {
           reject_reason:
             | Database["public"]["Enums"]["backlink_reject_reason"]
             | null
+          replicability: string | null
           scores: Json
+          shared_count: number | null
           shortlist_rank: number | null
           status: Database["public"]["Enums"]["opportunity_status"]
           target_ids: string[]
@@ -329,6 +333,7 @@ export type Database = {
           authority?: number | null
           category?: string
           client_id: string
+          competitor_links?: Json
           cost_type?: string | null
           created_at?: string
           decided_at?: string | null
@@ -342,6 +347,7 @@ export type Database = {
           found_by?: string[]
           id?: string
           last_run_id?: string | null
+          link_kind?: string | null
           link_type?: string | null
           notes?: string | null
           page_title?: string | null
@@ -351,7 +357,9 @@ export type Database = {
           reject_reason?:
             | Database["public"]["Enums"]["backlink_reject_reason"]
             | null
+          replicability?: string | null
           scores?: Json
+          shared_count?: number | null
           shortlist_rank?: number | null
           status?: Database["public"]["Enums"]["opportunity_status"]
           target_ids?: string[]
@@ -364,6 +372,7 @@ export type Database = {
           authority?: number | null
           category?: string
           client_id?: string
+          competitor_links?: Json
           cost_type?: string | null
           created_at?: string
           decided_at?: string | null
@@ -377,6 +386,7 @@ export type Database = {
           found_by?: string[]
           id?: string
           last_run_id?: string | null
+          link_kind?: string | null
           link_type?: string | null
           notes?: string | null
           page_title?: string | null
@@ -386,7 +396,9 @@ export type Database = {
           reject_reason?:
             | Database["public"]["Enums"]["backlink_reject_reason"]
             | null
+          replicability?: string | null
           scores?: Json
+          shared_count?: number | null
           shortlist_rank?: number | null
           status?: Database["public"]["Enums"]["opportunity_status"]
           target_ids?: string[]
@@ -437,6 +449,7 @@ export type Database = {
           attempts: number
           brief_version: number | null
           client_id: string
+          competitors: string[]
           cost_usd: number
           counts: Json
           created_at: string
@@ -446,6 +459,7 @@ export type Database = {
           finished_at: string | null
           heartbeat_at: string | null
           id: string
+          kind: string
           params: Json
           released_at: string | null
           stage: number
@@ -458,6 +472,7 @@ export type Database = {
           attempts?: number
           brief_version?: number | null
           client_id: string
+          competitors?: string[]
           cost_usd?: number
           counts?: Json
           created_at?: string
@@ -467,6 +482,7 @@ export type Database = {
           finished_at?: string | null
           heartbeat_at?: string | null
           id?: string
+          kind?: string
           params?: Json
           released_at?: string | null
           stage?: number
@@ -479,6 +495,7 @@ export type Database = {
           attempts?: number
           brief_version?: number | null
           client_id?: string
+          competitors?: string[]
           cost_usd?: number
           counts?: Json
           created_at?: string
@@ -488,6 +505,7 @@ export type Database = {
           finished_at?: string | null
           heartbeat_at?: string | null
           id?: string
+          kind?: string
           params?: Json
           released_at?: string | null
           stage?: number
@@ -924,6 +942,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      backlink_gap_cache: {
+        Row: {
+          client_domain: string | null
+          client_id: string | null
+          competitors: string[]
+          cost_usd: number
+          fetched_at: string
+          id: string
+          intersection: Json
+          key: string
+          pages: Json
+          rows: number
+        }
+        Insert: {
+          client_domain?: string | null
+          client_id?: string | null
+          competitors: string[]
+          cost_usd?: number
+          fetched_at?: string
+          id?: string
+          intersection?: Json
+          key: string
+          pages?: Json
+          rows?: number
+        }
+        Update: {
+          client_domain?: string | null
+          client_id?: string | null
+          competitors?: string[]
+          cost_usd?: number
+          fetched_at?: string
+          id?: string
+          intersection?: Json
+          key?: string
+          pages?: Json
+          rows?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backlink_gap_cache_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       backlink_opportunities: {
         Row: {
@@ -1727,6 +1792,60 @@ export type Database = {
           },
         ]
       }
+      client_competitors: {
+        Row: {
+          active: boolean
+          added_by: string | null
+          client_id: string
+          created_at: string
+          domain: string
+          evidence: Json
+          id: string
+          name: string | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          added_by?: string | null
+          client_id: string
+          created_at?: string
+          domain: string
+          evidence?: Json
+          id?: string
+          name?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          added_by?: string | null
+          client_id?: string
+          created_at?: string
+          domain?: string
+          evidence?: Json
+          id?: string
+          name?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_competitors_added_by_fkey"
+            columns: ["added_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_competitors_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_logins: {
         Row: {
           client_id: string
@@ -2290,6 +2409,9 @@ export type Database = {
       }
       dfs_settings: {
         Row: {
+          ai_gap_max_sites: number
+          ai_gap_min_shared: number
+          ai_gap_runs_per_client_month: number
           ai_monthly_budget_usd: number
           ai_search_max_run_usd: number
           ai_search_max_web_searches: number
@@ -2313,6 +2435,9 @@ export type Database = {
           web_search_price_usd: number
         }
         Insert: {
+          ai_gap_max_sites?: number
+          ai_gap_min_shared?: number
+          ai_gap_runs_per_client_month?: number
           ai_monthly_budget_usd?: number
           ai_search_max_run_usd?: number
           ai_search_max_web_searches?: number
@@ -2336,6 +2461,9 @@ export type Database = {
           web_search_price_usd?: number
         }
         Update: {
+          ai_gap_max_sites?: number
+          ai_gap_min_shared?: number
+          ai_gap_runs_per_client_month?: number
           ai_monthly_budget_usd?: number
           ai_search_max_run_usd?: number
           ai_search_max_web_searches?: number
@@ -4332,6 +4460,7 @@ export type Database = {
           attempts: number
           brief_version: number | null
           client_id: string
+          competitors: string[]
           cost_usd: number
           counts: Json
           created_at: string
@@ -4341,6 +4470,7 @@ export type Database = {
           finished_at: string | null
           heartbeat_at: string | null
           id: string
+          kind: string
           params: Json
           released_at: string | null
           stage: number
@@ -4452,6 +4582,10 @@ export type Database = {
         Args: { p_run_id: string }
         Returns: undefined
       }
+      dfs_save_found_competitors: {
+        Args: { p_client_id: string; p_items: Json; p_source: string }
+        Returns: number
+      }
       dfs_store_ai_prospects: {
         Args: { p_items: Json; p_run_id: string }
         Returns: Json
@@ -4463,6 +4597,10 @@ export type Database = {
       dfs_store_rank: {
         Args: { p_cost?: number; p_rank: Json; p_task_id: string }
         Returns: string
+      }
+      dfs_store_site_strength: {
+        Args: { p_ranks: Json; p_spam: Json }
+        Returns: number
       }
       dfs_store_strength: {
         Args: {
@@ -4585,16 +4723,29 @@ export type Database = {
         Args: { p_id: string; p_note: string }
         Returns: undefined
       }
-      request_ai_search: {
-        Args: {
-          p_brief_version: number
-          p_client_id: string
-          p_estimate: number
-          p_options: Json
-          p_target_ids: string[]
-        }
-        Returns: string
-      }
+      request_ai_search:
+        | {
+            Args: {
+              p_brief_version: number
+              p_client_id: string
+              p_estimate: number
+              p_options: Json
+              p_target_ids: string[]
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_brief_version: number
+              p_client_id: string
+              p_competitors: string[]
+              p_estimate: number
+              p_kind: string
+              p_options: Json
+              p_target_ids: string[]
+            }
+            Returns: string
+          }
       request_backlink_discovery:
         | {
             Args: { p_client_id: string; p_target_ids: string[] }
@@ -4651,6 +4802,10 @@ export type Database = {
         Returns: number
       }
       save_catalog_site: { Args: { p: Json }; Returns: string }
+      save_client_competitors: {
+        Args: { p_client_id: string; p_items: Json }
+        Returns: number
+      }
       set_anthropic_credit: { Args: { p_amount: number }; Returns: undefined }
       set_candidate_status: {
         Args: {

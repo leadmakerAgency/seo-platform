@@ -8,7 +8,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
  * and Claude's review. dfs_calls / ai_calls stay admin-only; the function returns the sums.
  */
 
-export type RunKind = "search" | "rerank" | "strength" | "ai"
+export type RunKind = "search" | "rerank" | "strength" | "ai" | "ai_competitors"
 
 export type RunEntry = {
   id: string
@@ -79,7 +79,7 @@ export async function getRunHistory(clientId: string): Promise<RunHistory | null
     },
     entries: ((h.entries as Rec[] | null) ?? []).map((e) => ({
       id: String(e.id),
-      kind: (["search", "rerank", "strength", "ai"].includes(String(e.kind)) ? e.kind : "search") as RunKind,
+      kind: (["search", "rerank", "strength", "ai", "ai_competitors"].includes(String(e.kind)) ? e.kind : "search") as RunKind,
       status: String(e.status),
       createdAt: String(e.created_at),
       finishedAt: (e.finished_at as string | null) ?? null,

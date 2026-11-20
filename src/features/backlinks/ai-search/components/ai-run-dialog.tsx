@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Clock, Globe2, MapPin, Search, Wallet } from "lucide-react"
+import { Check, Clock, Globe2, MapPin, Network, Search, Wallet } from "lucide-react"
 import { useMemo, useState, useTransition } from "react"
 import { toast } from "sonner"
 
@@ -21,7 +21,8 @@ import { cn } from "@/lib/utils"
 import type { Brief } from "../../brief"
 import type { Target } from "../../queries"
 import { startAiSearch } from "../actions"
-import { CATEGORIES, categoriesFor, MAX_MARKETS, planAiSearch, type CategoryKey } from "../config"
+import { MAX_COMPETITORS } from "../competitors"
+import { CATEGORIES, categoriesFor, MAX_MARKETS, planAiSearch, planGap, type CategoryKey } from "../config"
 import { CATEGORY_ICON } from "./ai-ui"
 
 /**
@@ -37,6 +38,7 @@ export function RunAiSearchButton({
   maxRunUsd,
   disabledReason,
   hasRun,
+  gap,
 }: {
   clientId: string
   targets: Target[]
@@ -46,11 +48,14 @@ export function RunAiSearchButton({
   maxRunUsd: number
   disabledReason: string | null
   hasRun: boolean
+  /** Competitor backlinks switch: null hides it. */
+  gap: { competitors: number; maxSites: number; fallback: string | null; unavailable: string | null } | null
 }) {
   const active = targets.filter((t) => t.active)
   const [open, setOpen] = useState(false)
   const [picked, setPicked] = useState<Set<string>>(() => new Set(active.slice(0, MAX_MARKETS).map((t) => t.id)))
   const [off, setOff] = useState<Set<CategoryKey>>(new Set())
+  const [gapOn, setGapOn] = useState(false)
   const [pending, startTransition] = useTransition()
 
   const markets = active.filter((t) => picked.has(t.id)).map((t) => ({ id: t.id, kind: t.kind }))
@@ -63,13 +68,24 @@ export function RunAiSearchButton({
   const plan = brief
     ? planAiSearch({ markets, brief, disabled: [...off], maxSearches, searchPrice })
     : null
-  const overCap = plan ? plan.estimateUsd > maxRunUsd : false
+  const gapPlan =
+    gap && gapOn && !gap.unavailable
+      ? planGap({
+          competitors: gap.competitors || MAX_COMPETITORS,
+          maxSites: gap.maxSites,
+          mode: gap.fallback ? "ai_only" : "dataforseo",
+          searchPrice,
+        })
+      : null
+  const total = plan ? Math.round((plan.estimateUsd + (gapPlan?.estimateUsd ?? 0)) * 1000) / 1000 : 0
+  const searches = (plan?.searches ?? 0) + (gapPlan?.searches ?? 0)
+  const overCap = plan ? total > maxRunUsd : false
   const reason =
     disabledReason ?? (active.length === 0 ? "Add at least one place first." : null)
 
   function start() {
     startTransition(async () => {
-      const r = await startAiSearch(clientId, [...picked], [...off])
+      const r = await startAiSearch(clientId, [...picked], [...off], { gap: Boolean(gapPlan) })
       if (!r.ok) {
         toast.error(r.error)
         return
@@ -191,6 +207,31 @@ export function RunAiSearchButton({
             </p>
           </section>
 
+          {gap && (
+            <section className="flex items-start gap-3 rounded-lg border px-3 py-2.5">
+              <Network className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span id="ai-gap-switch-label" className="text-sm font-medium">
+                  Find the competitors&apos; backlinks
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {gap.unavailable
+                    ? gap.unavailable
+                    : gap.fallback
+                      ? `${gap.fallback}: estimated from AI searches of their names.`
+                      : `Sites linking to ${gap.competitors >= 2 ? `the ${gap.competitors}` : "the top 5"} competitors but not the client, from DataForSEO link data.`}
+                  {gapPlan ? ` About $${gapPlan.estimateUsd.toFixed(2)} more.` : ""}
+                </span>
+              </div>
+              <Switch
+                checked={gapOn && !gap.unavailable}
+                disabled={Boolean(gap.unavailable)}
+                onChange={setGapOn}
+                labelledBy="ai-gap-switch-label"
+              />
+            </section>
+          )}
+
           {plan && (
             <section
               className={cn(
@@ -204,7 +245,7 @@ export function RunAiSearchButton({
                   Web searches
                 </span>
                 <span className="font-mono font-semibold tabular-nums">
-                  {plan.searches}
+                  {searches}
                   <span className="text-xs font-normal text-muted-foreground"> / {maxSearches}</span>
                 </span>
               </div>
@@ -214,7 +255,7 @@ export function RunAiSearchButton({
                   Estimated cost
                 </span>
                 <span className={cn("font-mono font-semibold tabular-nums", overCap && "text-warning")}>
-                  ≈ ${plan.estimateUsd.toFixed(2)}
+                  ≈ ${total.toFixed(2)}
                 </span>
               </div>
               <div className="flex flex-col gap-0.5 px-3 py-2.5">
@@ -247,5 +288,41 @@ export function RunAiSearchButton({
         </DialogContent>
       </Dialog>
     </>
+  )
+}
+
+/** A small accessible on/off switch. */
+function Switch({
+  checked,
+  disabled,
+  onChange,
+  labelledBy,
+}: {
+  checked: boolean
+  disabled?: boolean
+  onChange: (v: boolean) => void
+  labelledBy: string
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-labelledby={labelledBy}
+      disabled={disabled}
+      onClick={() => onChange(!checked)}
+      className={cn(
+        "relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:cursor-not-allowed disabled:opacity-50",
+        checked ? "border-primary bg-primary" : "border-border bg-muted",
+      )}
+    >
+      <span
+        aria-hidden
+        className={cn(
+          "inline-block size-3.5 rounded-full bg-background shadow-sm transition-transform motion-reduce:transition-none",
+          checked ? "translate-x-[18px]" : "translate-x-0.5",
+        )}
+      />
+    </button>
   )
 }

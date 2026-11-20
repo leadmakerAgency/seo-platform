@@ -18,9 +18,11 @@ export const PROMPT_VERSIONS = {
   mentions: "mentions.v1",
   buyer_questions: "buyer_questions.v1",
   repair: "repair.v1",
-  page_read: "page_read.v1",
-  judge: "judge.v1",
+  page_read: "page_read.v2",
+  judge: "judge.v2",
   editor: "editor.v1",
+  gap_footprint: "gap_footprint.v1",
+  insights: "insights.v1",
 } as const
 
 const RULES = `You are a careful SEO link researcher at an agency. You do one small task and answer only in the format asked.
@@ -171,19 +173,61 @@ export const SHAPES = {
 // ---------------------------------------------------------------------------
 
 export function pageReadPrompt(
-  rows: { id: string; url: string; title: string | null; lang: string | null; text: string; actions: string; outbound: string }[],
+  rows: {
+    id: string
+    url: string
+    title: string | null
+    lang: string | null
+    text: string
+    actions: string
+    outbound: string
+    /** For competitor backlinks: how each competitor is linked on this page. */
+    competitorLinks?: string | null
+  }[],
 ) {
   return `Task: for each page, say what kind of page it is, whether it lists or features businesses like the client, what the client would need to do to get on it, the submission or contact URL (only if it appears in the page's links below), when it was last updated (if the page says), a short quote proving it fits (copied exactly from the page text), an authority estimate from 1 (personal or thin site) to 5 (major publication, official body, leading platform), and red flags.
+For pages with "Competitor links", also say how the competitor got that link (link_kind), whether the client can get the same link (replicability: easy = an open listing or form, possible = a pitch, membership or sponsorship, hard = a relationship or past press, no = the competitor's own client saying "website by", the competitor's own network, or a paid link network) and how to get it, in one line (how_to_get). "client_credit" (a site credits the competitor as its builder or agency) is always replicability "no". For other pages these three are null.
 Answer for every id.
 
 ${rows
   .map((r) =>
     untrusted(
       r.id,
-      `URL: ${r.url}\nTitle: ${r.title ?? ""}\nLanguage: ${r.lang ?? "unknown"}\nLinks that look like a way in: ${r.actions || "none"}\nOutbound links: ${r.outbound}\nText: ${r.text}`,
+      `URL: ${r.url}\nTitle: ${r.title ?? ""}\nLanguage: ${r.lang ?? "unknown"}\nLinks that look like a way in: ${r.actions || "none"}\nOutbound links: ${r.outbound}${r.competitorLinks ? `\nCompetitor links: ${r.competitorLinks}` : ""}\nText: ${r.text}`,
     ),
   )
   .join("\n\n")}`
+}
+
+// ---------------------------------------------------------------------------
+// Competitor backlinks · AI-only estimate and insights
+// ---------------------------------------------------------------------------
+
+/** When DataForSEO can't be used: search the competitors' names for places that feature them. */
+export function gapFootprintPrompt(market: Market | null, competitor: { domain: string; name: string }, searches: number) {
+  return `Task: find directories, review sites, "best of" lists, associations, events, podcasts and articles${market ? ` in ${marketLine(market)}` : ""} that feature or link to the competitor ${competitor.name} (${competitor.domain}).
+Search for the competitor's name with words like directory, review, listed, featured, sponsor, conference, podcast, award${market ? `, in ${market.language.name}` : ""}. Don't use the competitor's own website. Use at most ${searches} web searches.
+Only pages where the client could also appear. Skip the competitor's own client sites ("website by …").
+
+${CANDIDATE_SHAPE}`
+}
+
+export function insightsPrompt(input: {
+  competitors: string[]
+  byKind: Record<string, Record<string, number>>
+  top: string[]
+  credits: number
+}) {
+  return `Task: from the counts below, write 2–4 short insights on how the client's competitors get their links and what the client should do first. Each: a title (≤ 8 words) and one detail line (≤ 200 characters). Kinds: "pattern" (what they all do), "quick_win" (easy links many of them have), "ask_clients" (when they get links from their own clients' sites, the client can ask theirs too), "watch_out" (paid or network links not to copy).
+Use only the numbers and sites given.
+
+${untrusted(
+  "gap",
+  `Competitors: ${input.competitors.join(", ")}
+Links by kind, per competitor: ${JSON.stringify(input.byKind)}
+Client-credit links ("website by"): ${input.credits}
+Sites most competitors share: ${input.top.join("; ")}`,
+)}`
 }
 
 // ---------------------------------------------------------------------------
@@ -194,6 +238,7 @@ export function judgePrompt(rows: string[]) {
   return `Task: judge each candidate for this client with the four tests (relevant, real, reachable, worth it), each 1–5 with one short note line in "notes".
 Then: a verdict, the action the team should take (≤ 15 words), effort (minutes, hours, days) and cost type, and one reason (≤ 160 characters) on why this site's readers or listing matter to the client's buyers.
 Use only the data given. "already_have" means the client is already listed there.
+Rows with "competitors linked" are sites that link to several of the client's competitors: the more share it, the more it matters, unless the link can't be copied (replicability "no" → verdict "not_a_link_opportunity").
 Answer for every id.
 
 ${untrusted("candidates", rows.join("\n"))}`

@@ -1,11 +1,13 @@
 import "server-only"
 
+import { hasDataForSeo } from "@/lib/env.server"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { snapshotOf, type BriefSnapshot } from "../brief"
 import type { OpportunityStatus, RejectReason } from "../constants"
 import type { Target } from "../queries"
 import { displayHost } from "../site-key"
 import type { CategoryKey } from "./config"
+import type { GapLink } from "./gap"
 import type { Dossier } from "./schemas"
 
 /** What the Shockwave AI Search tab reads (plan §7). */
@@ -31,6 +33,7 @@ export type AiVerification = {
   contact_url?: string | null
   updated?: string | null
   quote?: string | null
+  how_to_get?: string | null
 }
 
 export type AiProspect = {
@@ -61,10 +64,28 @@ export type AiProspect = {
   decidedAt: string | null
   createdAt: string
   alsoInStandard: boolean
+  /** Competitor backlinks: how many competitors this site links to, and their links. */
+  sharedCount: number | null
+  competitorLinks: GapLink[]
+  linkKind: string | null
+  replicability: "easy" | "possible" | "hard" | "no" | null
 }
+
+export type AiCompetitor = {
+  id: string
+  domain: string
+  name: string | null
+  source: "ai" | "dataforseo" | "team"
+  active: boolean
+  evidence: Record<string, unknown>
+}
+
+export type AiInsight = { title: string; detail: string; kind: "pattern" | "quick_win" | "ask_clients" | "watch_out" }
 
 export type AiOpenRun = {
   id: string
+  kind: "full" | "competitors"
+  competitors: string[]
   status: string
   stage: number
   counts: Record<string, unknown>
@@ -84,7 +105,24 @@ export type AiQuota = {
   budgetProblem: string | null
   standardRunning: boolean
   openRun: AiOpenRun | null
-  lastRun: { id: string; status: string; error: string | null; counts: Record<string, unknown>; createdAt: string; finishedAt: string | null } | null
+  lastRun: {
+    id: string
+    kind: "full" | "competitors"
+    status: string
+    error: string | null
+    counts: Record<string, unknown>
+    createdAt: string
+    finishedAt: string | null
+  } | null
+  /** Competitor backlinks. */
+  gapUsed: number
+  gapLimit: number
+  gapMaxSites: number
+  gapMinShared: number
+  gapCachedAt: string | null
+  competitors: AiCompetitor[]
+  /** Why link data would come from AI searches instead of DataForSEO (null: DataForSEO is used). */
+  gapFallback: string | null
 }
 
 export type AiDossier = {
@@ -107,6 +145,8 @@ export type AiSearchData = {
   quota: AiQuota | null
   dossier: AiDossier | null
   prospects: AiProspect[]
+  /** From the latest finished run with competitor backlinks. */
+  insights: { runId: string; at: string | null; items: AiInsight[]; competitors: string[]; mode: string | null } | null
   /** The latest places found by the open run (the live feed). */
   feed: { id: string; site: string; title: string | null; category: string; at: string }[]
 }
@@ -116,7 +156,7 @@ const num = (v: unknown) => Number(v ?? 0) || 0
 
 export async function getAiSearchData(clientId: string): Promise<AiSearchData> {
   const supabase = await createSupabaseServerClient()
-  const [{ data: quotaRaw }, { data: backlinkQuota }, { data: briefRow }, { data: dossierRow }, { data: rows }, { data: standard }] =
+  const [{ data: quotaRaw }, { data: backlinkQuota }, { data: briefRow }, { data: dossierRow }, { data: rows }, { data: standard }, { data: gapRuns }] =
     await Promise.all([
       supabase.rpc("ai_search_quota", { p_client_id: clientId }),
       supabase.rpc("backlink_quota", { p_client_id: clientId }),
@@ -134,6 +174,13 @@ export async function getAiSearchData(clientId: string): Promise<AiSearchData> {
         .eq("client_id", clientId)
         .neq("source", "ai")
         .neq("status", "filtered"),
+      supabase
+        .from("ai_search_runs")
+        .select("id, counts, finished_at")
+        .eq("client_id", clientId)
+        .eq("status", "done")
+        .order("created_at", { ascending: false })
+        .limit(10),
     ])
 
   const q = quotaRaw as Rec | null
@@ -149,9 +196,33 @@ export async function getAiSearchData(clientId: string): Promise<AiSearchData> {
         webSearchPrice: num(q.web_search_price),
         budgetProblem: (q.budget_problem as string | null) ?? null,
         standardRunning: Boolean(q.standard_running),
+        gapUsed: num(q.gap_used),
+        gapLimit: num(q.gap_limit),
+        gapMaxSites: num(q.gap_max_sites) || 150,
+        gapMinShared: num(q.gap_min_shared) || 2,
+        gapCachedAt: (q.gap_cached_at as string | null) ?? null,
+        competitors: ((q.competitors as Rec[] | null) ?? []).map((c) => ({
+          id: String(c.id),
+          domain: String(c.domain),
+          name: (c.name as string | null) ?? null,
+          source: (c.source as AiCompetitor["source"]) ?? "team",
+          active: Boolean(c.active),
+          evidence: (c.evidence ?? {}) as Record<string, unknown>,
+        })),
+        gapFallback: !hasDataForSeo()
+          ? "DataForSEO isn't set up"
+          : q.backlinks_access === "denied"
+            ? "DataForSEO Backlinks access is off"
+            : q.dfs_budget_problem
+              ? String(q.dfs_budget_problem)
+              : q.dfs_low_balance
+                ? "The DataForSEO balance is low"
+                : null,
         openRun: open
           ? {
               id: String(open.id),
+              kind: open.kind === "competitors" ? "competitors" : "full",
+              competitors: (open.competitors as string[] | null) ?? [],
               status: String(open.status),
               stage: num(open.stage),
               counts: (open.counts ?? {}) as Record<string, unknown>,
@@ -165,6 +236,7 @@ export async function getAiSearchData(clientId: string): Promise<AiSearchData> {
         lastRun: last
           ? {
               id: String(last.id),
+              kind: last.kind === "competitors" ? "competitors" : "full",
               status: String(last.status),
               error: (last.error as string | null) ?? null,
               counts: (last.counts ?? {}) as Record<string, unknown>,
@@ -219,6 +291,10 @@ export async function getAiSearchData(clientId: string): Promise<AiSearchData> {
       decidedAt: r.decided_at,
       createdAt: r.created_at,
       alsoInStandard: inStandard.has(r.directory_id),
+      sharedCount: r.shared_count,
+      competitorLinks: (Array.isArray(r.competitor_links) ? r.competitor_links : []) as unknown as GapLink[],
+      linkKind: r.link_kind,
+      replicability: (r.replicability as AiProspect["replicability"]) ?? null,
     }
   })
   prospects.sort(
@@ -232,6 +308,21 @@ export async function getAiSearchData(clientId: string): Promise<AiSearchData> {
         .slice(0, 6)
         .map((p) => ({ id: p.id, site: p.site, title: p.pageTitle, category: p.category, at: p.createdAt }))
     : []
+
+  const gapRun = (gapRuns ?? []).find((r) => {
+    const c = (r.counts ?? {}) as Rec
+    return c.gap_mode === "dataforseo" || c.gap_mode === "ai_only"
+  })
+  const gc = (gapRun?.counts ?? {}) as Rec
+  const insights = gapRun
+    ? {
+        runId: gapRun.id,
+        at: gapRun.finished_at,
+        items: (Array.isArray(gc.insights) ? gc.insights : []) as AiInsight[],
+        competitors: (Array.isArray(gc.gap_competitors) ? gc.gap_competitors : []) as string[],
+        mode: (gc.gap_mode as string | null) ?? null,
+      }
+    : null
 
   const d = dossierRow as Rec | null
   return {
@@ -249,6 +340,7 @@ export async function getAiSearchData(clientId: string): Promise<AiSearchData> {
         }
       : null,
     prospects,
+    insights,
     feed,
   }
 }

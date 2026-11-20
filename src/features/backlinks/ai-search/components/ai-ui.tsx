@@ -8,6 +8,7 @@ import {
   MapPin,
   MessagesSquare,
   Mic,
+  Network,
   Newspaper,
   PenLine,
   Search,
@@ -36,6 +37,8 @@ export const CATEGORY_ICON: Record<string, LucideIcon> = {
   communities: MessagesSquare,
   partners_vendors: Handshake,
   competitor_footprint: GitCompareArrows,
+  competitor_links: Network,
+  gap_footprint: GitCompareArrows,
   mentions: AtSign,
   buyer_questions: Sparkles,
   ranking: Search,
@@ -97,6 +100,51 @@ export const FILTER_LABEL: Record<string, string> = {
   language_mismatch: "Wrong language for the market",
   spam: "Spam or link seller",
   social_profile: "Social profile",
+  not_replicable: "Can't be copied (e.g. their client's site credit)",
+}
+
+/** How a competitor got its link (plan 11 §2.5). */
+export const LINK_KIND_LABEL: Record<string, string> = {
+  directory_listing: "Directory listing",
+  best_of_list: "Best-of list",
+  editorial_mention: "Editorial mention",
+  guest_article: "Guest article",
+  resource_page: "Resource page",
+  event_or_sponsorship: "Event or sponsorship",
+  press_release: "Press release",
+  partner_or_vendor: "Partner or vendor page",
+  client_credit: "Client credit (website by)",
+  forum_or_comment: "Forum or comment",
+  paid_or_sponsored: "Paid or sponsored",
+  link_network: "Link network",
+  other: "Other",
+}
+
+export const REPLICABILITY_META: Record<string, { label: string; tone: Tone }> = {
+  easy: { label: "Easy to copy", tone: "success" },
+  possible: { label: "Copy with a pitch", tone: "info" },
+  hard: { label: "Hard to copy", tone: "warning" },
+  no: { label: "Can't copy", tone: "neutral" },
+}
+
+/** "Links to 3 of 5": how many of the client's competitors this site links to. */
+export function SharedBadge({ shared, of, className }: { shared: number | null; of?: number | null; className?: string }) {
+  if (!shared) return null
+  const strong = shared >= 3
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs tabular-nums",
+        strong ? "border-primary/40 bg-brand-soft text-foreground" : "text-muted-foreground",
+        className,
+      )}
+      title="How many of the client's competitors this site links to"
+    >
+      <Network className="size-3 shrink-0" aria-hidden />
+      Links to {shared}
+      {of ? ` of ${of}` : ""}
+    </span>
+  )
 }
 
 export const VERDICT_LABEL: Record<string, string> = {

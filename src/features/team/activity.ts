@@ -203,9 +203,15 @@ export function describeActivity(entry: ActivityLike): string {
     case "backlink.brief_saved":
       return `saved the backlink strategy brief (version ${num(m.version) || 1})`
     case "backlink.ai_search_started":
+      if (str(m.kind) === "competitors")
+        return `started competitor backlinks for ${num(m.competitors) || 2} competitors`
       return `started a Shockwave AI Search for ${num(m.places) || 1} ${Number(m.places) === 1 ? "place" : "places"}`
     case "backlink.ai_search_finished":
+      if (str(m.kind) === "competitors")
+        return `finished competitor backlinks: ${num(m.gap_sites) || 0} linking sites, ${num(m.review) || 0} in the top 30`
       return `finished a Shockwave AI Search: ${num(m.review) || 0} in the top 30`
+    case "backlink.competitors_saved":
+      return `updated the client's competitors${num(m.count) ? ` (${num(m.count)})` : ""}`
     case "backlink.ai_reviewed":
       return `${str(m.decision) === "approve" ? "approved" : str(m.decision) === "reject" ? "rejected" : "restored"} ${num(m.count) || 1} AI-found ${Number(m.count) === 1 ? "place" : "places"}`
     case "backlink.reranked":

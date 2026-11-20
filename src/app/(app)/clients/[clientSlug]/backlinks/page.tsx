@@ -107,6 +107,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
           canDiscover={can(member.role, "backlinks.discover")}
           canReview={can(member.role, "backlinks.review")}
           canStrategy={can(member.role, "backlinks.strategy")}
+          canRefresh={can(member.role, "backlinks.library")}
           isAdmin={isAdmin}
           claudeReady={hasAnthropicKey()}
           nowIso={new Date().toISOString()}

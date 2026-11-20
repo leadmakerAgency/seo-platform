@@ -112,6 +112,28 @@ export const PAGE_KINDS = [
   "other",
 ] as const
 
+/** How a competitor got a link on a page (plan 11 §2.5). */
+export const LINK_KINDS = [
+  "directory_listing",
+  "best_of_list",
+  "editorial_mention",
+  "guest_article",
+  "resource_page",
+  "event_or_sponsorship",
+  "press_release",
+  "partner_or_vendor",
+  "client_credit",
+  "forum_or_comment",
+  "paid_or_sponsored",
+  "link_network",
+  "other",
+] as const
+export type LinkKind = (typeof LINK_KINDS)[number]
+
+/** Can the client get the same link? */
+export const REPLICABILITY = ["easy", "possible", "hard", "no"] as const
+export type Replicability = (typeof REPLICABILITY)[number]
+
 export const PageReadSchema = z.object({
   items: z.array(
     z.object({
@@ -125,10 +147,26 @@ export const PageReadSchema = z.object({
       quote: z.string(),
       authority: z.number().int().min(1).max(5),
       red_flags: z.array(z.string()),
+      /** Only for pages where a competitor has a link (null otherwise). */
+      link_kind: z.enum(LINK_KINDS).nullable(),
+      replicability: z.enum(REPLICABILITY).nullable(),
+      how_to_get: z.string().nullable(),
     }),
   ),
 })
 export type PageRead = z.infer<typeof PageReadSchema>
+
+/** What competitors do for links, in a few lines (competitor backlinks, plan 11 §2.5). */
+export const InsightsSchema = z.object({
+  insights: z.array(
+    z.object({
+      title: z.string(),
+      detail: z.string(),
+      kind: z.enum(["pattern", "quick_win", "ask_clients", "watch_out"]),
+    }),
+  ),
+})
+export type Insights = z.infer<typeof InsightsSchema>
 
 export const VERDICTS = [
   "keep",

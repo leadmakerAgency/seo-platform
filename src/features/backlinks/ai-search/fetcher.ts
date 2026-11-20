@@ -47,6 +47,8 @@ export type PageSignals = {
   hasForm: boolean
   /** Same-site links (for finding the client's About / Services pages), ≤ 80. */
   internalLinks: { url: string; label: string }[]
+  /** Hosts this page links out to (no www), ≤ 400; for "is the competitor's link still here". */
+  outboundHosts: string[]
 }
 
 const TIMEOUT_MS = 8000
@@ -146,6 +148,7 @@ const empty = (status: FetchStatus, extra: Partial<PageSignals> = {}): PageSigna
   actionLinks: [],
   hasForm: false,
   internalLinks: [],
+  outboundHosts: [],
   ...extra,
 })
 
@@ -245,6 +248,7 @@ export function parseHtml(html: string, base: URL, httpStatus: number, headerNof
   const actionLinks: { url: string; label: string }[] = []
   const internalLinks: { url: string; label: string }[] = []
   const seenAction = new Set<string>()
+  const outboundHosts = new Set<string>()
   const re = /<a\b([^>]*)>([\s\S]*?)<\/a>/gi
   let m: RegExpExecArray | null
   let count = 0
@@ -273,6 +277,7 @@ export function parseHtml(html: string, base: URL, httpStatus: number, headerNof
     } else {
       const rel = (attr(m[1], "rel") ?? "").toLowerCase().split(/\s+/).filter(Boolean)
       outbound.total++
+      if (outboundHosts.size < 400) outboundHosts.add(host)
       if (rel.includes("sponsored")) outbound.sponsored++
       if (rel.includes("ugc")) outbound.ugc++
       if (rel.includes("nofollow") || rel.includes("sponsored") || rel.includes("ugc")) outbound.nofollow++
@@ -301,6 +306,7 @@ export function parseHtml(html: string, base: URL, httpStatus: number, headerNof
     actionLinks,
     hasForm: /<form\b/i.test(body),
     internalLinks,
+    outboundHosts: [...outboundHosts],
   }
 }
 

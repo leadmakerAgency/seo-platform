@@ -8,6 +8,7 @@ import {
   History,
   ListOrdered,
   MapPin,
+  Network,
   ReceiptText,
   Search,
   Sparkles,
@@ -55,7 +56,7 @@ type Part = "google" | "maps" | "strength" | "ai"
 const PARTS: { key: Part; label: string; short: string; icon: LucideIcon; bg: string; text: string }[] = [
   { key: "google", label: "Google searches", short: "Google", icon: Search, bg: "bg-cost-google", text: "text-cost-google" },
   { key: "maps", label: "Google Maps", short: "Maps", icon: MapPin, bg: "bg-cost-maps", text: "text-cost-maps" },
-  { key: "strength", label: "Site strength", short: "Strength", icon: Gauge, bg: "bg-cost-strength", text: "text-cost-strength" },
+  { key: "strength", label: "Link data", short: "Link data", icon: Gauge, bg: "bg-cost-strength", text: "text-cost-strength" },
   { key: "ai", label: "Claude review", short: "Claude", icon: Sparkles, bg: "bg-cost-ai", text: "text-cost-ai" },
 ]
 const PART = Object.fromEntries(PARTS.map((p) => [p.key, p])) as Record<Part, (typeof PARTS)[number]>
@@ -65,6 +66,7 @@ const KIND: Record<RunEntry["kind"], { label: string; icon: LucideIcon; node: st
   rerank: { label: "Re-rank with the brief", icon: ListOrdered, node: "border-info/30 text-info" },
   strength: { label: "Strength check", icon: Gauge, node: "border-border text-muted-foreground" },
   ai: { label: "Shockwave AI Search", icon: Sparkles, node: "border-primary/30 text-primary" },
+  ai_competitors: { label: "Competitor backlinks", icon: Network, node: "border-primary/30 text-primary" },
 }
 
 function duration(from: string, to: string | null) {
@@ -96,6 +98,14 @@ function outcome(e: RunEntry): string[] {
     if (c.new !== undefined) parts.push(`${formatNumber(n(c.new))} new places${n(c.known) ? `, ${formatNumber(n(c.known))} known` : ""}`)
   }
   if (e.kind === "strength" && e.strengthDomains) parts.push(`${formatNumber(e.strengthDomains)} sites checked`)
+  if (c.gap_mode === "dataforseo" || c.gap_mode === "ai_only") {
+    const comps = Array.isArray(c.gap_competitors) ? c.gap_competitors.length : 0
+    parts.push(
+      c.gap_mode === "dataforseo"
+        ? `${formatNumber(n(c.gap_sites))} sites link to ${comps ? `${comps} competitors` : "the competitors"}${c.gap_cached ? " (link data reused)" : ""}`
+        : `competitor links estimated from mentions${typeof c.gap_note === "string" ? ` (${c.gap_note})` : ""}`,
+    )
+  }
   if (sl) {
     parts.push(`${formatNumber(sl.review ?? 0)} to Review, ${formatNumber(sl.more ?? 0)} to More, ${formatNumber(sl.hidden ?? 0)} hidden`)
     if (sl.ai && sl.ai !== "used") parts.push(`Claude's review skipped${sl.aiNote ? `: ${sl.aiNote}` : ""}`)
@@ -168,9 +178,11 @@ function Row({ e }: { e: RunEntry }) {
     },
     {
       key: "strength",
-      detail: e.strengthDomains ? `${formatNumber(e.strengthDomains)} sites` : "not needed",
+      detail: e.strengthDomains
+        ? `${formatNumber(e.strengthDomains)} sites${e.kind === "ai_competitors" || e.kind === "ai" ? ", DataForSEO backlinks" : ""}`
+        : "not needed",
       value: e.strength,
-      show: e.kind !== "ai" || e.strength > 0,
+      show: (e.kind !== "ai" && e.kind !== "ai_competitors") || e.strength > 0,
     },
     {
       key: "ai",

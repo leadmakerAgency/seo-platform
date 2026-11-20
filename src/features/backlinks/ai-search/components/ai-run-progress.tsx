@@ -13,7 +13,9 @@ import { CategoryChip } from "./ai-ui"
  * glides to each new value. Steps follow the pipeline (7, site strength, isn't used).
  */
 
-const STEPS: { stage: number; label: string; detail: string; weight: number }[] = [
+type Step = { stage: number; label: string; detail: string; weight: number }
+
+const STEPS: Step[] = [
   { stage: 1, label: "Read the client", detail: "Website, profile and brief", weight: 5 },
   { stage: 2, label: "Where to rank", detail: "Buyer searches in each place", weight: 12 },
   { stage: 3, label: "Competitors", detail: "Who ranks today", weight: 3 },
@@ -24,10 +26,29 @@ const STEPS: { stage: number; label: string; detail: string; weight: number }[] 
   { stage: 9, label: "Top 30", detail: "The best mix to start with", weight: 4 },
 ]
 
+/** Competitor backlinks on its own (plan 11): no ranking or research steps. */
+const GAP_STEPS: Step[] = [
+  { stage: 1, label: "Read the client", detail: "Reuses a recent dossier", weight: 4 },
+  { stage: 3, label: "Competitors", detail: "The top 5 to compare", weight: 3 },
+  { stage: 4, label: "Link data", detail: "Sites linking to the competitors, not the client", weight: 25 },
+  { stage: 5, label: "Merge", detail: "One entry per site", weight: 3 },
+  { stage: 6, label: "Check pages", detail: "Is their link there, can the client copy it", weight: 45 },
+  { stage: 8, label: "Judge", detail: "Fit, then what competitors do", weight: 15 },
+  { stage: 9, label: "Top 30", detail: "Shared with the full search", weight: 5 },
+]
+
+function stepsOf(run: AiOpenRun): Step[] {
+  if (run.kind === "competitors") return GAP_STEPS
+  if (Array.isArray(run.counts.gap_competitors)) {
+    return STEPS.map((s) => (s.stage === 4 ? { ...s, label: "Research", detail: "Lists, directories, press… and the competitors' links" } : s))
+  }
+  return STEPS
+}
+
 function percentOf(run: AiOpenRun) {
   if (run.stage === 0) return 0
   let done = 0
-  for (const s of STEPS) {
+  for (const s of stepsOf(run)) {
     if (s.stage < run.stage) done += s.weight
     else if (s.stage === run.stage) {
       const t = run.tasks[String(s.stage)]
@@ -78,7 +99,8 @@ export function AiRunProgress({
 }) {
   const pct = percentOf(run)
   const shown = useGlide(pct)
-  const current = STEPS.find((s) => s.stage === run.stage) ?? (run.stage === 0 ? null : STEPS[STEPS.length - 1])
+  const steps = stepsOf(run)
+  const current = steps.find((s) => s.stage === run.stage) ?? (run.stage === 0 ? null : steps[steps.length - 1])
   const t = current ? run.tasks[String(current.stage)] : null
   const [, force] = useState(0)
   useEffect(() => {
@@ -99,13 +121,17 @@ export function AiRunProgress({
         </span>
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <p className="text-[15px] leading-[22px] font-semibold">
-            {run.stage === 0 ? "Starting Shockwave AI Search" : current?.label ?? "Working"}
+            {run.stage === 0 ? (run.kind === "competitors" ? "Starting competitor backlinks" : "Starting Shockwave AI Search") : current?.label ?? "Working"}
           </p>
           <p className="text-sm text-muted-foreground">
             {run.stage === 0
               ? "Waiting for a worker; usually a few seconds."
               : `${current?.detail ?? ""}${t && t.total > 1 ? ` · ${t.done} of ${t.total}` : ""}`}
-            {places.length ? ` · ${places.join(", ")}` : ""}
+            {run.kind === "competitors" && run.competitors.length
+              ? ` · ${run.competitors.join(", ")}`
+              : places.length
+                ? ` · ${places.join(", ")}`
+                : ""}
           </p>
         </div>
         <div className="flex flex-col items-end">
@@ -131,7 +157,7 @@ export function AiRunProgress({
       </div>
 
       <ol className="flex flex-wrap gap-x-4 gap-y-2 px-4 pt-3 pb-4 text-xs sm:px-5">
-        {STEPS.map((s) => {
+        {steps.map((s) => {
           const done = run.stage > s.stage
           const now = run.stage === s.stage
           return (

@@ -72,7 +72,17 @@ export const AI_CITATION_SURFACES = `What AI assistants and answer engines cite:
 - "Best of" lists, review platforms (G2, Capterra, Clutch, Trustpilot, Yelp), Reddit and forum threads, YouTube, LinkedIn and industry publications are the usual cited sources.
 - For buyer questions, the sites the top results lean on are the places worth being mentioned.`
 
+/** Reading a competitor's backlinks (plan 11). Our own summary of common link-gap practice. */
+const COMPETITOR_LINKS = `Competitor link gap:
+- A site that links to several competitors but not the client is the strongest signal: it covers this market and links out to businesses like the client.
+- Copyable: directory and marketplace listings, "best of" lists that take suggestions, associations and chambers (membership), events and sponsorships, podcasts and interviews, resource pages, partner and vendor pages (if the client uses the same tools).
+- Pitch, not form: editorial mentions and guest articles. Say who to pitch and with what angle.
+- Not copyable: the competitor's own client sites ("website by", "designed by", "powered by" in a footer), the competitor's sister sites, paid link networks and link farms. Agencies can still ask their own clients for the same credit.
+- A footer or sidebar link on many pages is usually a credit or a paid placement; a link inside an article or a listing is usually earned.
+- An old link may be gone: if the page no longer links to the competitor, the opportunity is weaker.`
+
 export const KNOWLEDGE = {
+  COMPETITOR_LINKS,
   CLIENT_DISCOVERY,
   SEARCH_INTENT,
   LINK_TACTICS,

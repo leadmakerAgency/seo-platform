@@ -1,6 +1,19 @@
 "use client"
 
-import { ArrowUpRight, Check, CircleAlert, CornerUpLeft, ExternalLink, ListPlus, Quote, ShieldCheck, X } from "lucide-react"
+import {
+  ArrowUpRight,
+  Check,
+  CircleAlert,
+  CornerUpLeft,
+  ExternalLink,
+  LayoutList,
+  ListPlus,
+  Network,
+  Quote,
+  ShieldCheck,
+  Table2,
+  X,
+} from "lucide-react"
 import { useMemo, useState, useTransition } from "react"
 import { toast } from "sonner"
 
@@ -31,9 +44,13 @@ import {
   FILTER_LABEL,
   FitMeter,
   FLAG_LABEL,
+  LINK_KIND_LABEL,
   LinkTag,
+  REPLICABILITY_META,
+  SharedBadge,
   VERDICT_LABEL,
 } from "./ai-ui"
+import { GapTable } from "./gap-table"
 
 type Tab = "review" | "more" | "approved" | "rejected" | "hidden"
 const TABS: { key: Tab; label: string; note: string }[] = [
@@ -55,15 +72,29 @@ const tabOf = (p: AiProspect): Tab =>
           ? "more"
           : "review"
 
+type Source = "all" | "gap" | "research"
+const isGap = (p: AiProspect) => p.foundBy.includes("competitor_links") || p.foundBy.includes("gap_footprint")
+const ofCount = (p: AiProspect) => p.competitorLinks.find((l) => l.of)?.of ?? null
+
 export function AiProspectsView({
-  prospects,
+  prospects: all,
   placeLabels,
   canReview,
+  competitors = [],
 }: {
   prospects: AiProspect[]
   placeLabels: Record<string, string>
   canReview: boolean
+  /** The competitors of the latest competitor backlinks pass (columns of the comparison). */
+  competitors?: string[]
 }) {
+  const [source, setSource] = useState<Source>("all")
+  const [view, setView] = useState<"list" | "compare">("list")
+  const gapCount = useMemo(() => all.filter((p) => isGap(p) && p.status !== "filtered").length, [all])
+  const prospects = useMemo(
+    () => (source === "all" ? all : all.filter((p) => (source === "gap" ? isGap(p) : !isGap(p) || p.foundBy.length > 1))),
+    [all, source],
+  )
   const [tab, setTab] = useState<Tab>("review")
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [open, setOpen] = useState<AiProspect | null>(null)
@@ -95,6 +126,43 @@ export function AiProspectsView({
 
   return (
     <section className="flex flex-col gap-3" aria-label="Places found by Shockwave AI">
+      {gapCount > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex rounded-lg border bg-card p-0.5" role="group" aria-label="Where the places came from">
+            {(
+              [
+                ["all", "All"],
+                ["gap", `Competitor backlinks · ${gapCount}`],
+                ["research", "Research"],
+              ] as const
+            ).map(([k, label]) => (
+              <button
+                key={k}
+                type="button"
+                aria-pressed={source === k}
+                onClick={() => {
+                  setSource(k)
+                  setSelected(new Set())
+                  if (k !== "gap") setView("list")
+                }}
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-xs transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
+                  source === k ? "bg-muted font-medium text-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {k === "gap" && <Network className="mr-1 inline size-3 align-[-2px]" aria-hidden />}
+                {label}
+              </button>
+            ))}
+          </div>
+          {source === "gap" && (
+            <Button size="sm" variant="ghost" className="h-7 gap-1.5 text-xs" onClick={() => setView((v) => (v === "list" ? "compare" : "list"))}>
+              {view === "list" ? <Table2 className="size-3.5" aria-hidden /> : <LayoutList className="size-3.5" aria-hidden />}
+              {view === "list" ? "Compare competitors" : "Back to the list"}
+            </Button>
+          )}
+        </div>
+      )}
       <div className="flex flex-wrap gap-1.5" role="tablist" aria-label="Places by status">
         {TABS.map((t) => (
           <button
@@ -150,6 +218,8 @@ export function AiProspectsView({
 
       {rows.length === 0 ? (
         <p className="rounded-lg border border-dashed px-4 py-8 text-center text-sm text-muted-foreground">Nothing here.</p>
+      ) : view === "compare" ? (
+        <GapTable rows={rows.filter((r) => r.competitorLinks.length > 0)} competitors={competitors} onOpen={setOpen} />
       ) : (
         <div className="overflow-hidden rounded-lg border bg-card">
           <div className="hidden grid-cols-[2rem_2.5rem_minmax(0,1.6fr)_minmax(0,1fr)_7rem_6.5rem] items-center gap-3 border-b bg-muted/30 px-3 py-2 text-xs font-medium text-muted-foreground md:grid">
@@ -204,6 +274,12 @@ export function AiProspectsView({
                   <span className="w-full truncate text-xs text-muted-foreground">{p.pageTitle ?? p.pageUrl}</span>
                   <span className="flex flex-wrap gap-1">
                     <CategoryChip category={p.category} />
+                    <SharedBadge shared={p.sharedCount} of={ofCount(p)} />
+                    {!p.sharedCount && p.foundBy.includes("gap_footprint") && (
+                      <span className="rounded-md border border-dashed px-1.5 py-0.5 text-xs text-muted-foreground" title="Found from mentions of competitors, not confirmed links">
+                        Features competitors
+                      </span>
+                    )}
                     {p.effort && p.effort !== "unknown" && (
                       <span className="rounded-md border px-1.5 py-0.5 text-xs text-muted-foreground">{EFFORT_LABEL[p.effort]}</span>
                     )}
@@ -335,6 +411,58 @@ function ProspectSheet({
                   </Button>
                 )}
               </div>
+
+              {(p.competitorLinks.length > 0 || p.linkKind) && (
+                <section className="flex flex-col gap-2 rounded-lg border border-primary/20 bg-brand-soft/30 p-3">
+                  <h3 className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground uppercase">
+                    <Network className="size-3.5" aria-hidden />
+                    How competitors are linked here
+                    <SharedBadge shared={p.sharedCount} of={ofCount(p)} className="normal-case" />
+                  </h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {p.linkKind && (
+                      <span className="rounded-md border bg-card px-1.5 py-0.5 text-xs">{LINK_KIND_LABEL[p.linkKind] ?? p.linkKind}</span>
+                    )}
+                    {p.replicability && (
+                      <StatusTag tone={REPLICABILITY_META[p.replicability]?.tone ?? "neutral"} dot={false}>
+                        {REPLICABILITY_META[p.replicability]?.label ?? p.replicability}
+                      </StatusTag>
+                    )}
+                  </div>
+                  {v.how_to_get && (
+                    <p className="text-[13px]">
+                      <span className="font-medium">To get the same link:</span> {v.how_to_get}
+                    </p>
+                  )}
+                  <ul className="flex flex-col gap-1.5">
+                    {p.competitorLinks.map((l, i) => (
+                      <li key={`${l.competitor}-${i}`} className="rounded-md border bg-card px-2.5 py-2 text-[13px]">
+                        <p className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                          <span className="font-medium">{l.competitor}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {l.dofollow === false ? "nofollow" : "followed"}
+                            {l.location ? ` · in ${l.location}` : ""}
+                            {l.first_seen ? ` · since ${l.first_seen.slice(0, 7)}` : ""}
+                          </span>
+                          {l.still_there === true && <StatusTag tone="success" dot={false}>Still there</StatusTag>}
+                          {l.still_there === false && <StatusTag tone="warning" dot={false}>Gone now</StatusTag>}
+                        </p>
+                        {l.anchor && <p className="text-muted-foreground">Link text: “{l.anchor}”</p>}
+                        {l.text && <p className="line-clamp-2 text-xs text-muted-foreground">{l.text}</p>}
+                        <a
+                          href={l.url_from}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          className="mt-0.5 inline-flex max-w-full items-center gap-1 truncate text-xs text-brand hover:underline"
+                        >
+                          <span className="truncate">{l.url_from}</span>
+                          <ExternalLink className="size-3 shrink-0" aria-hidden />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
 
               {p.scores && (
                 <div className="grid grid-cols-4 divide-x divide-dashed rounded-lg border text-center">
