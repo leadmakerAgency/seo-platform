@@ -140,6 +140,17 @@
   --chart-4: oklch(0.38 0.08 272);
   --chart-5: oklch(0.66 0.15 20);
 
+  /* AI visibility: one fixed colour per tracked brand (slot 1 = the client). Validated with the
+     dataviz script (light: CVD and normal-vision pass; contrast relief by legend and table view). */
+  --series-1: oklch(0.5 0.235 300);
+  --series-2: oklch(0.6 0.11 195);
+  --series-3: oklch(0.64 0.17 25);
+  --series-4: oklch(0.5 0.14 250);
+  --series-5: oklch(0.72 0.14 75);
+  --series-6: oklch(0.47 0.12 330);
+  --series-7: oklch(0.66 0.13 140);
+  --series-8: oklch(0.55 0.12 60);
+
   /* Backlinks "Runs and costs": one fixed colour per cost part. Checked with the dataviz
      validator (lightness band, chroma, colour-blind and normal-vision separation). */
   --cost-google: oklch(0.5 0.235 300);
@@ -209,6 +220,15 @@
   --chart-3: oklch(0.655 0.14 75);
   --chart-4: oklch(0.7 0.06 260);
   --chart-5: oklch(0.72 0.15 20);
+
+  --series-1: oklch(0.64 0.19 300);
+  --series-2: oklch(0.65 0.11 195);
+  --series-3: oklch(0.66 0.16 25);
+  --series-4: oklch(0.58 0.14 250);
+  --series-5: oklch(0.665 0.14 80);
+  --series-6: oklch(0.55 0.14 335);
+  --series-7: oklch(0.66 0.14 140);
+  --series-8: oklch(0.52 0.11 55);
 
   --cost-google: oklch(0.64 0.19 300);
   --cost-maps: oklch(0.65 0.11 195);

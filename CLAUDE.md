@@ -101,6 +101,15 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   page (`setup.ts`, RPC `backlink_setup`); tabs get them as `setup` and never load them again. The
   tabs open only when `setup.complete` (the same `private.backlink_brief_missing` the run RPCs
   use); new Manual work checks `setupProblem`. Plan: `docs/plans/backlinks/12-shared-setup.md`.
+- **AI Visibility (`src/features/ai-visibility/`):** DataForSEO AI Optimization and SERP AI calls go
+  only through `src/lib/dataforseo/ai-optimization.ts` (normalised by `ai-normalize.ts`). AI answers
+  are untrusted text: fenced with `untrusted()` in every prompt, rendered only by `SafeAnswer` (never
+  as HTML), and Haiku's brand list is accepted only for names found in the answer. Team writes go
+  only through the `aiv_*` RPCs (0054); at most 50 active questions per client (RPC check). Runs are
+  checkpointed in `aiv_tasks`, claimed by `dfs_claim_aiv_run` and resumed by the cron
+  (`/api/cron/ai-visibility`); its spend is `private.aiv_month_spend()` and its Claude features are
+  `ai_visibility.*`. Brand colours are `--series-1…8` by `aiv_brands.color_slot` (never by rank).
+  Plan: `docs/plans/ai-visibility/`.
 - **Backlinks Manual Search (catalog + work list):** picks go only through `pick_catalog_sites` /
   `add_manual_site`; submissions change only through `update_submission` /
   `bulk_update_submissions` / `add_backlink_login`. Every approved opportunity (any tab) gets a

@@ -8,6 +8,7 @@ import {
   ChevronUp,
   RotateCcw,
   Search,
+  Radar,
   X,
 } from "lucide-react"
 import { useMemo, useState, useTransition } from "react"
@@ -398,6 +399,11 @@ export function BacklinksView({
                 </td>
                 <td className="px-3 py-2 align-top">
                   <TypeTag type={p.type} />
+                  {p.source === "ai_visibility" && (
+                    <span className="mt-1 flex w-fit items-center gap-1 rounded-sm bg-brand-soft px-1.5 py-0.5 text-xs text-brand">
+                      <Radar className="size-3" aria-hidden /> Cited by AI
+                    </span>
+                  )}
                 </td>
                 <td className="max-w-[200px] px-3 py-2 align-top">
                   <FoundFor place={p} labels={placeLabels} />

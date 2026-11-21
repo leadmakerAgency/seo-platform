@@ -41,6 +41,12 @@ function describe(n: NotificationItem) {
   if (n.kind === "backlinks_failed") {
     return `The backlink search for ${n.client?.name ?? "a client"} didn't finish`
   }
+  if (n.kind === "ai_visibility_ready") {
+    return `The AI visibility check for ${n.client?.name ?? "a client"} is ready`
+  }
+  if (n.kind === "ai_visibility_failed") {
+    return `The AI visibility check for ${n.client?.name ?? "a client"} didn't finish`
+  }
   if (n.kind === "backlink_follow_up") {
     return `Backlink listings for ${n.client?.name ?? "a client"} need a follow-up today`
   }
@@ -67,6 +73,9 @@ function hrefFor(n: NotificationItem) {
   if (n.kind === "dfs_low_balance") return "/dashboard"
   if ((n.kind === "backlinks_found" || n.kind === "backlinks_failed") && n.client) {
     return `${clientHref(n.client.slug, "backlinks")}?tab=review`
+  }
+  if ((n.kind === "ai_visibility_ready" || n.kind === "ai_visibility_failed") && n.client) {
+    return clientHref(n.client.slug, "ai-visibility")
   }
   if (n.kind === "backlink_follow_up" && n.client) {
     return `${clientHref(n.client.slug, "backlinks")}?mode=manual&stage=open&who=me`

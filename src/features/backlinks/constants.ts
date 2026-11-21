@@ -117,7 +117,8 @@ export function tabOf(p: { status: OpportunityStatus; source: string }): Tab {
   if (p.status === "rejected") return "rejected"
   if (p.status === "filtered") return "hidden"
   if (p.status === "reserve") return "more"
-  return p.source === "search" ? "review" : "basics"
+  // Places sent from AI Visibility are reviewed like searched ones (outside the top-30 cap).
+  return p.source === "search" || p.source === "ai_visibility" ? "review" : "basics"
 }
 
 export const TAB_LABELS: Record<Tab, string> = {

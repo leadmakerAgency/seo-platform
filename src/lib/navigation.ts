@@ -134,10 +134,10 @@ export const CLIENT_SECTIONS: ClientSection[] = [
     segment: "ai-visibility",
     title: "AI visibility",
     icon: Radar,
-    roles: ["admin", "manager", "viewer"],
-    comingSoon: true,
+    roles: ["admin", "manager", "va", "viewer"],
+    comingSoon: false,
     summary:
-      "How easily ChatGPT, Gemini and others can read and recommend this business, and what to fix.",
+      "How ChatGPT, Gemini, Google AI, Claude and Perplexity talk about this business and its competitors, and what to fix.",
   },
   {
     id: "backlinks",

@@ -324,3 +324,42 @@ export async function fetchMany<T>(items: T[], urlOf: (t: T) => string, concurre
   )
   return out
 }
+
+/** A small text file (robots.txt) with the same safety checks as fetchPage. Never throws. */
+export async function fetchText(rawUrl: string): Promise<{ ok: boolean; status: number | null; text: string }> {
+  let url: URL
+  try {
+    url = new URL(rawUrl)
+  } catch {
+    return { ok: false, status: null, text: "" }
+  }
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    if (url.protocol !== "http:" && url.protocol !== "https:") return { ok: false, status: null, text: "" }
+    if ((await safeHost(url.hostname)) !== "ok") return { ok: false, status: null, text: "" }
+    await politeWait(url.hostname)
+    let res: Response
+    try {
+      res = await fetch(url, {
+        redirect: "manual",
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+        headers: { "user-agent": USER_AGENT, accept: "text/plain,*/*;q=0.5" },
+      })
+    } catch {
+      return { ok: false, status: null, text: "" }
+    }
+    if (res.status >= 300 && res.status < 400) {
+      const loc = res.headers.get("location")
+      if (!loc) return { ok: false, status: res.status, text: "" }
+      try {
+        url = new URL(loc, url)
+      } catch {
+        return { ok: false, status: res.status, text: "" }
+      }
+      continue
+    }
+    if (res.status >= 400) return { ok: false, status: res.status, text: "" }
+    const text = await readCapped(res).catch(() => "")
+    return { ok: true, status: res.status, text: text.slice(0, 200_000) }
+  }
+  return { ok: false, status: null, text: "" }
+}

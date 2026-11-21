@@ -615,6 +615,890 @@ export type Database = {
           },
         ]
       }
+      aiv_actions: {
+        Row: {
+          client_id: string
+          created_at: string
+          created_by: string | null
+          created_run_id: string | null
+          detail: string | null
+          domain: string | null
+          done_at: string | null
+          done_by: string | null
+          evidence: Json
+          group: string
+          id: string
+          impact: string
+          opportunity_id: string | null
+          source: string
+          status: string
+          title: string
+          updated_at: string
+          url: string | null
+          work_item_id: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          created_run_id?: string | null
+          detail?: string | null
+          domain?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          evidence?: Json
+          group: string
+          id?: string
+          impact?: string
+          opportunity_id?: string | null
+          source?: string
+          status?: string
+          title: string
+          updated_at?: string
+          url?: string | null
+          work_item_id?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          created_run_id?: string | null
+          detail?: string | null
+          domain?: string | null
+          done_at?: string | null
+          done_by?: string | null
+          evidence?: Json
+          group?: string
+          id?: string
+          impact?: string
+          opportunity_id?: string | null
+          source?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          url?: string | null
+          work_item_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aiv_actions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_actions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_actions_created_run_id_fkey"
+            columns: ["created_run_id"]
+            isOneToOne: false
+            referencedRelation: "aiv_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_actions_done_by_fkey"
+            columns: ["done_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_actions_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "backlink_opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_actions_work_item_id_fkey"
+            columns: ["work_item_id"]
+            isOneToOne: false
+            referencedRelation: "work_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aiv_ads: {
+        Row: {
+          advertiser: string | null
+          chat_id: string
+          client_id: string
+          domain: string | null
+          id: number
+          run_date: string
+          title: string | null
+          url: string | null
+        }
+        Insert: {
+          advertiser?: string | null
+          chat_id: string
+          client_id: string
+          domain?: string | null
+          id?: never
+          run_date: string
+          title?: string | null
+          url?: string | null
+        }
+        Update: {
+          advertiser?: string | null
+          chat_id?: string
+          client_id?: string
+          domain?: string | null
+          id?: never
+          run_date?: string
+          title?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aiv_ads_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "aiv_chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_ads_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aiv_brands: {
+        Row: {
+          active: boolean
+          client_id: string
+          color_slot: number
+          created_at: string
+          created_by: string | null
+          display_name: string
+          domains: string[]
+          id: string
+          is_own: boolean
+          pattern: string | null
+          source: string
+          tracked_names: string[]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          client_id: string
+          color_slot?: number
+          created_at?: string
+          created_by?: string | null
+          display_name: string
+          domains?: string[]
+          id?: string
+          is_own?: boolean
+          pattern?: string | null
+          source?: string
+          tracked_names: string[]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          client_id?: string
+          color_slot?: number
+          created_at?: string
+          created_by?: string | null
+          display_name?: string
+          domains?: string[]
+          id?: string
+          is_own?: boolean
+          pattern?: string | null
+          source?: string
+          tracked_names?: string[]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aiv_brands_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_brands_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aiv_chats: {
+        Row: {
+          analysis_version: string | null
+          analyzed_at: string | null
+          answer: string | null
+          brand_hints: string[]
+          check_url: string | null
+          client_id: string
+          country: string
+          country_fallback: boolean
+          created_at: string
+          error: string | null
+          fan_out: string[]
+          fetched_at: string
+          has_ads: boolean
+          id: string
+          model: Database["public"]["Enums"]["aiv_model"]
+          model_version: string | null
+          prompt_id: string
+          run_date: string
+          run_id: string
+          status: string
+          task_id: string | null
+        }
+        Insert: {
+          analysis_version?: string | null
+          analyzed_at?: string | null
+          answer?: string | null
+          brand_hints?: string[]
+          check_url?: string | null
+          client_id: string
+          country: string
+          country_fallback?: boolean
+          created_at?: string
+          error?: string | null
+          fan_out?: string[]
+          fetched_at?: string
+          has_ads?: boolean
+          id?: string
+          model: Database["public"]["Enums"]["aiv_model"]
+          model_version?: string | null
+          prompt_id: string
+          run_date: string
+          run_id: string
+          status: string
+          task_id?: string | null
+        }
+        Update: {
+          analysis_version?: string | null
+          analyzed_at?: string | null
+          answer?: string | null
+          brand_hints?: string[]
+          check_url?: string | null
+          client_id?: string
+          country?: string
+          country_fallback?: boolean
+          created_at?: string
+          error?: string | null
+          fan_out?: string[]
+          fetched_at?: string
+          has_ads?: boolean
+          id?: string
+          model?: Database["public"]["Enums"]["aiv_model"]
+          model_version?: string | null
+          prompt_id?: string
+          run_date?: string
+          run_id?: string
+          status?: string
+          task_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aiv_chats_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_chats_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "aiv_prompts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_chats_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "aiv_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_chats_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: true
+            referencedRelation: "aiv_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aiv_domains: {
+        Row: {
+          by: string
+          classified_at: string
+          domain: string
+          type: string
+        }
+        Insert: {
+          by: string
+          classified_at?: string
+          domain: string
+          type: string
+        }
+        Update: {
+          by?: string
+          classified_at?: string
+          domain?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      aiv_locations: {
+        Row: {
+          country_iso: string
+          family: string
+          location_code: number
+          synced_at: string
+        }
+        Insert: {
+          country_iso: string
+          family: string
+          location_code: number
+          synced_at?: string
+        }
+        Update: {
+          country_iso?: string
+          family?: string
+          location_code?: number
+          synced_at?: string
+        }
+        Relationships: []
+      }
+      aiv_mentions: {
+        Row: {
+          brand_id: string | null
+          chat_id: string
+          client_id: string
+          id: number
+          model: Database["public"]["Enums"]["aiv_model"]
+          name: string
+          name_key: string
+          position: number
+          quote: string | null
+          run_date: string
+          sentiment: number | null
+        }
+        Insert: {
+          brand_id?: string | null
+          chat_id: string
+          client_id: string
+          id?: never
+          model: Database["public"]["Enums"]["aiv_model"]
+          name: string
+          name_key: string
+          position: number
+          quote?: string | null
+          run_date: string
+          sentiment?: number | null
+        }
+        Update: {
+          brand_id?: string | null
+          chat_id?: string
+          client_id?: string
+          id?: never
+          model?: Database["public"]["Enums"]["aiv_model"]
+          name?: string
+          name_key?: string
+          position?: number
+          quote?: string | null
+          run_date?: string
+          sentiment?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aiv_mentions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "aiv_brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_mentions_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "aiv_chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_mentions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aiv_projects: {
+        Row: {
+          brand_identity: string[]
+          brand_name: string
+          client_id: string
+          countries: string[]
+          created_at: string
+          description: string | null
+          frequency: string
+          industry: string | null
+          language: string
+          models: Database["public"]["Enums"]["aiv_model"][]
+          next_run_at: string | null
+          paused: boolean
+          personas: string[]
+          run_weekday: number
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          brand_identity?: string[]
+          brand_name: string
+          client_id: string
+          countries?: string[]
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          industry?: string | null
+          language?: string
+          models?: Database["public"]["Enums"]["aiv_model"][]
+          next_run_at?: string | null
+          paused?: boolean
+          personas?: string[]
+          run_weekday?: number
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          brand_identity?: string[]
+          brand_name?: string
+          client_id?: string
+          countries?: string[]
+          created_at?: string
+          description?: string | null
+          frequency?: string
+          industry?: string | null
+          language?: string
+          models?: Database["public"]["Enums"]["aiv_model"][]
+          next_run_at?: string | null
+          paused?: boolean
+          personas?: string[]
+          run_weekday?: number
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aiv_projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_projects_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aiv_prompts: {
+        Row: {
+          archived_at: string | null
+          branded: boolean
+          client_id: string
+          country: string
+          created_at: string
+          created_by: string | null
+          head_phrase: string | null
+          id: string
+          intent: Database["public"]["Enums"]["aiv_intent"] | null
+          language: string
+          persona: string | null
+          source: string
+          status: string
+          tags: string[]
+          text: string
+          topic_id: string | null
+          volume: number | null
+          volume_at: string | null
+          volume_raw: number | null
+        }
+        Insert: {
+          archived_at?: string | null
+          branded?: boolean
+          client_id: string
+          country: string
+          created_at?: string
+          created_by?: string | null
+          head_phrase?: string | null
+          id?: string
+          intent?: Database["public"]["Enums"]["aiv_intent"] | null
+          language?: string
+          persona?: string | null
+          source?: string
+          status?: string
+          tags?: string[]
+          text: string
+          topic_id?: string | null
+          volume?: number | null
+          volume_at?: string | null
+          volume_raw?: number | null
+        }
+        Update: {
+          archived_at?: string | null
+          branded?: boolean
+          client_id?: string
+          country?: string
+          created_at?: string
+          created_by?: string | null
+          head_phrase?: string | null
+          id?: string
+          intent?: Database["public"]["Enums"]["aiv_intent"] | null
+          language?: string
+          persona?: string | null
+          source?: string
+          status?: string
+          tags?: string[]
+          text?: string
+          topic_id?: string | null
+          volume?: number | null
+          volume_at?: string | null
+          volume_raw?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aiv_prompts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_prompts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_prompts_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "aiv_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aiv_runs: {
+        Row: {
+          attempts: number
+          client_id: string
+          cost_usd: number
+          counts: Json
+          created_at: string
+          created_by: string | null
+          error: string | null
+          estimate_usd: number
+          finished_at: string | null
+          heartbeat_at: string | null
+          id: string
+          params: Json
+          released_at: string | null
+          stage: number
+          started_at: string | null
+          status: Database["public"]["Enums"]["backlink_run_status"]
+          trigger: string
+        }
+        Insert: {
+          attempts?: number
+          client_id: string
+          cost_usd?: number
+          counts?: Json
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          estimate_usd?: number
+          finished_at?: string | null
+          heartbeat_at?: string | null
+          id?: string
+          params?: Json
+          released_at?: string | null
+          stage?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["backlink_run_status"]
+          trigger: string
+        }
+        Update: {
+          attempts?: number
+          client_id?: string
+          cost_usd?: number
+          counts?: Json
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          estimate_usd?: number
+          finished_at?: string | null
+          heartbeat_at?: string | null
+          id?: string
+          params?: Json
+          released_at?: string | null
+          stage?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["backlink_run_status"]
+          trigger?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aiv_runs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_runs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aiv_sources: {
+        Row: {
+          chat_id: string
+          cite_rank: number | null
+          cited: boolean
+          client_id: string
+          domain: string
+          id: number
+          model: Database["public"]["Enums"]["aiv_model"]
+          retrieved: boolean
+          run_date: string
+          title: string | null
+          url: string
+        }
+        Insert: {
+          chat_id: string
+          cite_rank?: number | null
+          cited?: boolean
+          client_id: string
+          domain: string
+          id?: never
+          model: Database["public"]["Enums"]["aiv_model"]
+          retrieved?: boolean
+          run_date: string
+          title?: string | null
+          url: string
+        }
+        Update: {
+          chat_id?: string
+          cite_rank?: number | null
+          cited?: boolean
+          client_id?: string
+          domain?: string
+          id?: never
+          model?: Database["public"]["Enums"]["aiv_model"]
+          retrieved?: boolean
+          run_date?: string
+          title?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aiv_sources_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "aiv_chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_sources_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aiv_suggestions: {
+        Row: {
+          client_id: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          key: string
+          kind: string
+          mentions: number
+          payload: Json
+          reason: string | null
+          status: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          key: string
+          kind: string
+          mentions?: number
+          payload?: Json
+          reason?: string | null
+          status?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          key?: string
+          kind?: string
+          mentions?: number
+          payload?: Json
+          reason?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aiv_suggestions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_suggestions_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aiv_tasks: {
+        Row: {
+          attempts: number
+          client_id: string
+          collected_at: string | null
+          cost_usd: number
+          country: string
+          dfs_task_id: string | null
+          error: string | null
+          id: string
+          key: string
+          model: Database["public"]["Enums"]["aiv_model"]
+          posted_at: string | null
+          prompt_id: string
+          run_id: string
+          status: string
+        }
+        Insert: {
+          attempts?: number
+          client_id: string
+          collected_at?: string | null
+          cost_usd?: number
+          country: string
+          dfs_task_id?: string | null
+          error?: string | null
+          id?: string
+          key: string
+          model: Database["public"]["Enums"]["aiv_model"]
+          posted_at?: string | null
+          prompt_id: string
+          run_id: string
+          status?: string
+        }
+        Update: {
+          attempts?: number
+          client_id?: string
+          collected_at?: string | null
+          cost_usd?: number
+          country?: string
+          dfs_task_id?: string | null
+          error?: string | null
+          id?: string
+          key?: string
+          model?: Database["public"]["Enums"]["aiv_model"]
+          posted_at?: string | null
+          prompt_id?: string
+          run_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aiv_tasks_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_tasks_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "aiv_prompts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aiv_tasks_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "aiv_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      aiv_topics: {
+        Row: {
+          client_id: string
+          created_at: string
+          id: string
+          name: string
+          sort: number
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          id?: string
+          name: string
+          sort?: number
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          sort?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aiv_topics_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alerts: {
         Row: {
           action_href: string | null
@@ -2417,6 +3301,16 @@ export type Database = {
           ai_search_max_web_searches: number
           ai_search_monthly_budget_usd: number
           ai_search_runs_per_client_month: number
+          aiv_access: string
+          aiv_access_checked_at: string | null
+          aiv_answer_retention_days: number
+          aiv_claude_model: string | null
+          aiv_last_cleanup_at: string | null
+          aiv_manual_runs_per_client_month: number
+          aiv_max_run_usd: number
+          aiv_monthly_budget_usd: number
+          aiv_perplexity_model: string | null
+          aiv_prompts_per_client: number
           anthropic_credit_at: string | null
           anthropic_credit_usd: number | null
           backlink_runs_per_client_month: number
@@ -2443,6 +3337,16 @@ export type Database = {
           ai_search_max_web_searches?: number
           ai_search_monthly_budget_usd?: number
           ai_search_runs_per_client_month?: number
+          aiv_access?: string
+          aiv_access_checked_at?: string | null
+          aiv_answer_retention_days?: number
+          aiv_claude_model?: string | null
+          aiv_last_cleanup_at?: string | null
+          aiv_manual_runs_per_client_month?: number
+          aiv_max_run_usd?: number
+          aiv_monthly_budget_usd?: number
+          aiv_perplexity_model?: string | null
+          aiv_prompts_per_client?: number
           anthropic_credit_at?: string | null
           anthropic_credit_usd?: number | null
           backlink_runs_per_client_month?: number
@@ -2469,6 +3373,16 @@ export type Database = {
           ai_search_max_web_searches?: number
           ai_search_monthly_budget_usd?: number
           ai_search_runs_per_client_month?: number
+          aiv_access?: string
+          aiv_access_checked_at?: string | null
+          aiv_answer_retention_days?: number
+          aiv_claude_model?: string | null
+          aiv_last_cleanup_at?: string | null
+          aiv_manual_runs_per_client_month?: number
+          aiv_max_run_usd?: number
+          aiv_monthly_budget_usd?: number
+          aiv_perplexity_model?: string | null
+          aiv_prompts_per_client?: number
           anthropic_credit_at?: string | null
           anthropic_credit_usd?: number | null
           backlink_runs_per_client_month?: number
@@ -4339,6 +5253,10 @@ export type Database = {
     }
     Functions: {
       account_balances: { Args: never; Returns: Json }
+      add_aiv_action: {
+        Args: { p: Json; p_client_id: string }
+        Returns: string
+      }
       add_backlink_login: {
         Args: {
           p_has_2fa: boolean
@@ -4383,6 +5301,89 @@ export type Database = {
       }
       add_manual_site: { Args: { p: Json; p_client_id: string }; Returns: Json }
       ai_search_quota: { Args: { p_client_id: string }; Returns: Json }
+      aiv_budget_problem: { Args: never; Returns: string }
+      aiv_chat: { Args: { p_chat_id: string }; Returns: Json }
+      aiv_chats_page: {
+        Args: {
+          f: Json
+          p_brand?: string
+          p_client_id: string
+          p_limit?: number
+          p_offset?: number
+          p_q?: string
+        }
+        Returns: Json
+      }
+      aiv_cleanup: { Args: never; Returns: undefined }
+      aiv_gap: {
+        Args: { f: Json; p_client_id: string; p_limit?: number }
+        Returns: Json
+      }
+      aiv_matrix: {
+        Args: { f: Json; p_client_id: string; p_cols: string; p_rows: string }
+        Returns: {
+          answers: number
+          avg_position: number
+          col_key: string
+          mentioned: number
+          row_key: string
+          sentiment: number
+          visibility: number
+          win_rate: number
+        }[]
+      }
+      aiv_overview: { Args: { f: Json; p_client_id: string }; Returns: Json }
+      aiv_prompt_table: {
+        Args: { f: Json; p_client_id: string }
+        Returns: {
+          answers: number
+          avg_position: number
+          last_date: string
+          mentioned: number
+          prompt_id: string
+          sentiment: number
+          visibility: number
+        }[]
+      }
+      aiv_quota: { Args: { p_client_id: string }; Returns: Json }
+      aiv_run_history: {
+        Args: { p_client_id: string; p_limit?: number }
+        Returns: Json
+      }
+      aiv_sources_domains: {
+        Args: {
+          f: Json
+          p_client_id: string
+          p_limit?: number
+          p_offset?: number
+          p_type?: string
+        }
+        Returns: Json
+      }
+      aiv_sources_urls: {
+        Args: {
+          f: Json
+          p_client_id: string
+          p_domain?: string
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: Json
+      }
+      aiv_trend: {
+        Args: { f: Json; p_bucket: string; p_client_id: string }
+        Returns: {
+          answers: number
+          avg_position: number
+          brand_id: string
+          brand_total: number
+          bucket: string
+          mentioned: number
+          named: number
+          sentiment: number
+          wins: number
+        }[]
+      }
       apply_onboarding_profile: {
         Args: { p_client_id: string; p_fields: string[] }
         Returns: undefined
@@ -4487,6 +5488,34 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      dfs_claim_aiv_run: {
+        Args: never
+        Returns: {
+          attempts: number
+          client_id: string
+          cost_usd: number
+          counts: Json
+          created_at: string
+          created_by: string | null
+          error: string | null
+          estimate_usd: number
+          finished_at: string | null
+          heartbeat_at: string | null
+          id: string
+          params: Json
+          released_at: string | null
+          stage: number
+          started_at: string | null
+          status: Database["public"]["Enums"]["backlink_run_status"]
+          trigger: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "aiv_runs"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       dfs_claim_backlink_run: {
         Args: never
         Returns: {
@@ -4578,11 +5607,13 @@ export type Database = {
       }
       dfs_finalize_runs: { Args: never; Returns: string[] }
       dfs_postback_config: { Args: never; Returns: Json }
+      dfs_queue_aiv_runs: { Args: { p_limit?: number }; Returns: string[] }
       dfs_queue_due_runs: { Args: { p_limit?: number }; Returns: number }
       dfs_release_ai_search_run: {
         Args: { p_run_id: string }
         Returns: undefined
       }
+      dfs_release_aiv_run: { Args: { p_run_id: string }; Returns: undefined }
       dfs_save_found_competitors: {
         Args: { p_client_id: string; p_items: Json; p_source: string }
         Returns: number
@@ -4590,6 +5621,22 @@ export type Database = {
       dfs_store_ai_prospects: {
         Args: { p_items: Json; p_run_id: string }
         Returns: Json
+      }
+      dfs_store_aiv_actions: {
+        Args: { p: Json; p_client_id: string; p_run_id: string }
+        Returns: number
+      }
+      dfs_store_aiv_analysis: {
+        Args: { p: Json; p_chat_id: string }
+        Returns: undefined
+      }
+      dfs_store_aiv_chat: {
+        Args: { p: Json; p_task_id: string }
+        Returns: string
+      }
+      dfs_store_aiv_suggestions: {
+        Args: { p: Json; p_client_id: string }
+        Returns: number
       }
       dfs_store_backlink_candidates: {
         Args: { p_items: Json; p_run_id: string }
@@ -4747,6 +5794,14 @@ export type Database = {
             }
             Returns: string
           }
+      request_aiv_run: {
+        Args: {
+          p_client_id: string
+          p_estimate: number
+          p_prompt_ids?: string[]
+        }
+        Returns: string
+      }
       request_backlink_discovery:
         | {
             Args: { p_client_id: string; p_target_ids: string[] }
@@ -4785,6 +5840,10 @@ export type Database = {
         }
         Returns: number
       }
+      review_aiv_suggestion: {
+        Args: { p_accept: boolean; p_id: string }
+        Returns: Json
+      }
       review_backlink_opportunities: {
         Args: {
           p_decision: string
@@ -4798,6 +5857,22 @@ export type Database = {
         Args: { p_accept: boolean; p_id: string }
         Returns: undefined
       }
+      save_aiv_brand: {
+        Args: { p: Json; p_client_id: string }
+        Returns: string
+      }
+      save_aiv_project: {
+        Args: { p: Json; p_client_id: string }
+        Returns: Json
+      }
+      save_aiv_prompts: {
+        Args: { p_client_id: string; p_items: Json }
+        Returns: Json
+      }
+      save_aiv_topic: {
+        Args: { p: Json; p_client_id: string }
+        Returns: string
+      }
       save_backlink_brief: {
         Args: { p: Json; p_client_id: string }
         Returns: number
@@ -4806,6 +5881,11 @@ export type Database = {
       save_client_competitors: {
         Args: { p_client_id: string; p_items: Json }
         Returns: number
+      }
+      seed_aiv_from_setup: { Args: { p_client_id: string }; Returns: boolean }
+      send_aiv_source_to_backlinks: {
+        Args: { p: Json; p_client_id: string }
+        Returns: Json
       }
       set_anthropic_credit: { Args: { p_amount: number }; Returns: undefined }
       set_candidate_status: {
@@ -4846,6 +5926,12 @@ export type Database = {
         Returns: Json
       }
       unblock_directory: { Args: { p_id: string }; Returns: number }
+      update_aiv_action: { Args: { p: Json; p_id: string }; Returns: undefined }
+      update_aiv_prompts: {
+        Args: { p: Json; p_ids: string[] }
+        Returns: number
+      }
+      update_aiv_settings: { Args: { p: Json }; Returns: undefined }
       update_backlink_target: {
         Args: { p_active: boolean; p_id: string; p_search_name: string }
         Returns: undefined
@@ -4855,6 +5941,7 @@ export type Database = {
         Returns: undefined
       }
       update_submission: { Args: { p: Json; p_id: string }; Returns: undefined }
+      verify_aiv_token: { Args: { p_token: string }; Returns: boolean }
       verify_backlinks_token: { Args: { p_token: string }; Returns: boolean }
       verify_catalog_site: { Args: { p_id: string }; Returns: undefined }
       verify_rankings_token: {
@@ -4866,6 +5953,18 @@ export type Database = {
     }
     Enums: {
       ai_tool: "chatgpt" | "perplexity" | "gemini" | "ai_overviews" | "claude"
+      aiv_intent:
+        | "informational"
+        | "commercial"
+        | "transactional"
+        | "navigational"
+      aiv_model:
+        | "chatgpt"
+        | "gemini"
+        | "ai_overview"
+        | "ai_mode"
+        | "claude"
+        | "perplexity"
       alert_severity: "needs_look" | "action_needed"
       app_role: "admin" | "manager" | "va" | "writer" | "viewer"
       backlink_reject_reason:
@@ -4933,6 +6032,7 @@ export type Database = {
         | "google_ads"
         | "appendix"
         | "backlinks"
+        | "ai_optimization"
       directory_status: "active" | "blocked"
       directory_type:
         | "business_directory"
@@ -4977,6 +6077,8 @@ export type Database = {
         | "backlinks_found"
         | "backlinks_failed"
         | "backlink_follow_up"
+        | "ai_visibility_ready"
+        | "ai_visibility_failed"
       onboarding_link_status: "active" | "revoked" | "expired"
       onboarding_status:
         | "not_started"
@@ -5187,6 +6289,20 @@ export const Constants = {
   public: {
     Enums: {
       ai_tool: ["chatgpt", "perplexity", "gemini", "ai_overviews", "claude"],
+      aiv_intent: [
+        "informational",
+        "commercial",
+        "transactional",
+        "navigational",
+      ],
+      aiv_model: [
+        "chatgpt",
+        "gemini",
+        "ai_overview",
+        "ai_mode",
+        "claude",
+        "perplexity",
+      ],
       alert_severity: ["needs_look", "action_needed"],
       app_role: ["admin", "manager", "va", "writer", "viewer"],
       backlink_reject_reason: [
@@ -5259,6 +6375,7 @@ export const Constants = {
         "google_ads",
         "appendix",
         "backlinks",
+        "ai_optimization",
       ],
       directory_status: ["active", "blocked"],
       directory_type: [
@@ -5300,6 +6417,8 @@ export const Constants = {
         "backlinks_found",
         "backlinks_failed",
         "backlink_follow_up",
+        "ai_visibility_ready",
+        "ai_visibility_failed",
       ],
       onboarding_link_status: ["active", "revoked", "expired"],
       onboarding_status: [

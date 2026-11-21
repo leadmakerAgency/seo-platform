@@ -199,6 +199,9 @@ export function PlaceSheet({
                 {place.source === "brief" && (
                   <p>Named in the strategy brief as a site the buyers trust.</p>
                 )}
+                {place.source === "ai_visibility" && (
+                  <p>Sent from AI visibility: AI answers rely on this site where competitors are named and the client isn&apos;t.</p>
+                )}
                 {place.isCore && (
                   <p>A core listing: every business in the client&apos;s country should have it.</p>
                 )}

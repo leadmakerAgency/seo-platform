@@ -41,7 +41,7 @@ export type Place = {
   /** The client's places whose searches found it. */
   targetIds: string[]
   /** search = found by Find places; core / brief = the Basics tab. */
-  source: "search" | "core" | "brief"
+  source: "search" | "core" | "brief" | "ai_visibility"
   matchedTopic: string | null
   topicFit: number | null
   aiFit: number | null

@@ -48,7 +48,9 @@ Browser ──> src/proxy.ts ──> app routes (thin) ──> features/<module>
 | `…/backlinks?mode=manual`           | Manual Search: pick from the catalog, add by hand, work every approved place to Live (`?stage=&from=&who=&sheet=`) | Built |
 | `/backlink-catalog`                 | The agency's backlink catalog: edit, check, retire, VA suggestions and problem reports, CSV            | Built       |
 | `/api/cron/backlinks`               | Every 15 minutes from pg_cron (Vault token): resume stopped searches, clean up (never starts one)     | Built       |
-| `/clients/[clientSlug]/[section]`   | AI visibility, content, reviews, report                                                               | Coming soon |
+| `/clients/[clientSlug]/ai-visibility` | AI visibility: questions asked on ChatGPT, Gemini, Google AI Overview / AI Mode, Claude and Perplexity; brands, answers, sources, gap sites, actions (`?tab=&range=&models=&tags=&sheet=`) | Built |
+| `/api/cron/ai-visibility`           | Every 10 minutes from pg_cron (Vault token): queue due checks, collect queued answers, read them, daily cleanup | Built |
+| `/clients/[clientSlug]/[section]`   | Content, reviews, report                                                                              | Coming soon |
 | `/api/clients/search?q=`            | Client search in the sidebar (Ctrl/Cmd+K focuses it)                                                  | Built       |
 | `/api/notifications`                | Latest notifications for the header bell                                                              | Built       |
 
@@ -208,8 +210,9 @@ Plan: `docs/plans/overview.md`. Migrations `0018`–`0022`.
   `health_reason`. Never set `health` from the app. A daily pg_cron job (`overview-daily`, 07:10
   UTC) re-checks pace and health and creates the month's plans.
 - **Where they show up.** `keywords`, `rank_checks` + `keyword_ranks` (engine `google`, `bing`,
-  `google_maps`) and `ai_checks` + `ai_answers` are written by the Rankings and AI visibility jobs
-  (service role). Composite foreign keys keep every rank/answer on its own client's check.
+  `google_maps`) are written by the Rankings jobs; AI answers come from AI Visibility checks
+  (`aiv_runs` / `aiv_chats` / `aiv_mentions`, service role; `private.ai_place` reads them since
+  0054 — the old `ai_checks` + `ai_answers` tables are unused and empty). Composite foreign keys keep every rank/answer on its own client's check.
   `client_visibility(client)` returns, per place, the latest check, the previous one and the
   baseline (first check on or after `started_on`): Google top 10, Bing top 10, map pack top 3,
   and AI answers naming the business. Only `status = 'done'` checks count. When a check finishes,
@@ -335,6 +338,31 @@ Plan: `docs/plans/backlinks/09-manual-search.md`; site list: `10-manual-catalog.
   days in Submitted.
 - **Logins**: `add_backlink_login` lets backlink workers save the directory account to the vault
   for a submission (password only in Vault).
+
+## AI Visibility
+
+Plan: `docs/plans/ai-visibility/` (00 research to 08 checks). Migrations `0052`–`0055`.
+
+- **Setup** (`aiv_projects`, `aiv_brands`, `aiv_topics`, `aiv_prompts`): seeded from the client
+  profile, backlink brief, places and `client_competitors` (`seed_aiv_from_setup`). Up to 50 active
+  questions; platforms `aiv_model` (chatgpt, gemini via LLM Scraper; ai_overview, ai_mode via SERP;
+  claude, perplexity via LLM Responses with web search); weekly by default (admins: twice a week,
+  daily).
+- **Runs** (`aiv_runs`, `aiv_tasks`): `dfs_queue_aiv_runs` (cron) or `request_aiv_run` (Run now);
+  stages plan → dispatch → collect → analyse → classify → insights → done in
+  `features/ai-visibility/pipeline.ts`. A worker works ≤4 minutes and releases the run while queued
+  answers come back; the 10-minute cron claims it again. Caps: `aiv_max_run_usd` per run,
+  `aiv_monthly_budget_usd` per month.
+- **Answers** (`aiv_chats`, `aiv_mentions`, `aiv_sources`, `aiv_ads`, `aiv_domains`): deterministic
+  brand matching plus Haiku's list (positions by first appearance, sentiment for tracked brands);
+  sources read vs cited; domain types by rules then Haiku (global cache).
+- **Metrics** (security-invoker reads `aiv_overview`, `aiv_trend`, `aiv_matrix`, `aiv_prompt_table`,
+  `aiv_sources_*`, `aiv_gap`, `aiv_chats_page`): visibility, share of voice, position, sentiment,
+  win rate; filters by date, platform, country, tags (any/all), topics.
+- **Actions** (`aiv_actions`): robots.txt AI-crawler checks and Haiku actions from gap sites; Done
+  inserts `work_items (kind 'ai_fixes', source 'ai_fix', source_id = action id)`. "Send to
+  Backlinks" (`send_aiv_source_to_backlinks`) creates a `pending_review` opportunity with source
+  `ai_visibility`, shown in Standard Search Review with a "Cited by AI" badge.
 
 ## Next widgets for the Dashboard (when their modules exist)
 

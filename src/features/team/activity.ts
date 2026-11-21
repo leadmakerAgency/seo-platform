@@ -197,7 +197,25 @@ export function describeActivity(entry: ActivityLike): string {
     }
     // Reserved for the AI visibility, Backlinks, Content, Reviews and Report pages.
     case "ai.check_finished":
-      return `finished an AI answers check${num(m.mentions) ? `: named in ${num(m.mentions)} answers` : ""}`
+      return `finished an AI visibility check${num(m.answers) ? `: named in ${num(m.mentions)} of ${num(m.answers)} answers` : num(m.mentions) ? `: named in ${num(m.mentions)} answers` : ""}`
+    case "ai.project_saved":
+      return m.seeded ? "set up AI visibility from the client's details" : "updated the AI visibility setup"
+    case "ai.brand_saved":
+      return `updated the tracked brand ${str(m.brand) || ""}`.trim()
+    case "ai.prompts_added":
+      return `added ${num(m.count) || 1} AI visibility ${Number(m.count) === 1 ? "question" : "questions"}`
+    case "ai.run_started":
+      return "started an AI visibility check"
+    case "ai.action_done":
+      return `marked an AI visibility fix done: ${str(m.title)}`
+    case "ai.action_in_progress":
+      return `started the AI visibility action: ${str(m.title)}`
+    case "ai.action_declined":
+      return `declined the AI visibility action: ${str(m.title)}`
+    case "ai.action_new":
+      return `reopened the AI visibility action: ${str(m.title)}`
+    case "ai.sent_to_backlinks":
+      return `sent ${str(m.site) || "a site"} from AI visibility to Backlinks`
     case "backlink.target_added":
       return `added ${str(m.place) || "a place"} to the places for backlinks`
     case "backlink.brief_saved":
