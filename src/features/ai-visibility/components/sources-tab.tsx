@@ -6,6 +6,7 @@ import { SOURCE_TYPE_LABEL } from "../config"
 import { getGap, getSourceDomains, getSourceUrls } from "../queries"
 import { aivHref, type AivParams } from "../search-params"
 import { ModelChip, pct, TypeTag } from "./bits"
+import { SourcePanel } from "./detail-panels"
 import { SendToBacklinks } from "./send-to-backlinks"
 
 const VIEWS = [
@@ -48,14 +49,15 @@ export async function SourcesTab({
           </Link>
         ))}
       </nav>
-      {view === "gap" && <GapView clientId={clientId} filter={filter} canWork={canWork} />}
+      {view === "gap" && <GapView clientId={clientId} base={base} params={params} filter={filter} canWork={canWork} />}
       {view === "domains" && <DomainsView clientId={clientId} base={base} params={params} filter={filter} type={typeFilter} />}
-      {view === "urls" && <UrlsView clientId={clientId} filter={filter} />}
+      {view === "urls" && <UrlsView clientId={clientId} base={base} params={params} filter={filter} />}
+      <SourcePanel clientId={clientId} base={base} params={params} filter={filter} />
     </div>
   )
 }
 
-async function GapView({ clientId, filter, canWork }: { clientId: string; filter: Record<string, unknown>; canWork: boolean }) {
+async function GapView({ clientId, base, params, filter, canWork }: { clientId: string; base: string; params: AivParams; filter: Record<string, unknown>; canWork: boolean }) {
   const rows = await getGap(clientId, filter, 50)
   if (!rows.length) {
     return (
@@ -74,7 +76,7 @@ async function GapView({ clientId, filter, canWork }: { clientId: string; filter
           <li key={r.domain} className="flex flex-col gap-2 px-4 py-3 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex min-w-0 flex-col gap-1">
               <span className="flex flex-wrap items-center gap-2">
-                <span className="font-medium">{r.domain}</span>
+                <Link href={aivHref(base, params, { site: r.domain })} scroll={false} className="font-medium hover:underline">{r.domain}</Link>
                 <TypeTag type={r.type} />
                 <span className="text-xs text-muted-foreground tabular-nums">score {r.gapScore}</span>
               </span>
@@ -128,7 +130,7 @@ async function DomainsView({ clientId, base, params, filter, type }: { clientId:
       <SourceTable
         head={["Domain", "Type", "Retrievals", "Read in", "Cited in", "Citation share", "Avg cite rank"]}
         rows={d.rows.map((r) => [
-          <span key="d" className={cn(r.isOwn && "font-medium text-brand")}>{r.domain}</span>,
+          <Link key="d" href={aivHref(base, params, { site: r.domain })} scroll={false} className={cn("hover:underline", r.isOwn && "font-medium text-brand")}>{r.domain}</Link>,
           <TypeTag key="t" type={r.isOwn ? "own" : r.brandId ? "competitor" : r.type} />,
           formatNumber(r.retrievals), pct(r.retrievedPct), pct(r.citedPct), pct(r.citationShare), r.avgCiteRank ?? "–",
         ])}
@@ -145,7 +147,7 @@ async function DomainsView({ clientId, base, params, filter, type }: { clientId:
   )
 }
 
-async function UrlsView({ clientId, filter }: { clientId: string; filter: Record<string, unknown> }) {
+async function UrlsView({ clientId, base, params, filter }: { clientId: string; base: string; params: AivParams; filter: Record<string, unknown> }) {
   const d = await getSourceUrls(clientId, filter, null, 100, 0)
   return (
     <SourceTable
@@ -153,7 +155,7 @@ async function UrlsView({ clientId, filter }: { clientId: string; filter: Record
       rows={d.rows.map((r) => [
         <span key="u" className="flex min-w-0 flex-col">
           <a href={r.url} target="_blank" rel="nofollow noopener noreferrer" className="truncate hover:underline">{r.title ?? r.url}</a>
-          <span className="text-xs text-muted-foreground">{r.domain}</span>
+          <Link href={aivHref(base, params, { site: r.domain })} scroll={false} className="text-xs text-muted-foreground hover:underline">{r.domain}</Link>
         </span>,
         formatNumber(r.retrievals), pct(r.retrievedPct), pct(r.citedPct), pct(r.citationShare), r.avgCiteRank ?? "–",
       ])}

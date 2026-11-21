@@ -122,3 +122,13 @@ Every phase must pass `npm run lint`, `npm run typecheck` and `npm run build` be
   rules, robots.txt, URL cleaning, three normalisers, estimate).
 - Typecheck, lint and `next build` pass.
 - Not done: phase 0 / live check, browser check (needs sign-in).
+
+## Finishing pass (2026-11-21)
+
+Built: the question panel (latest answer per platform + its trend), the source panel (questions,
+pages and weeks for one site), brand insights (KPIs, named vs its sites read, best and worst
+questions), the topics editor, "Check these now" for selected questions, the custom date range,
+filters kept when searching answers, AI Visibility checks in the shared "Runs and costs" panel
+(parts: Google AI answers, AI platform answers, Claude reading), monthly refresh of location codes.
+Migrations 0056 (detail reads, cost split) and 0057 (foreign-key indexes from the performance advisor).
+Rolled-back SQL for the 0056 functions passed; typecheck, lint and build pass.

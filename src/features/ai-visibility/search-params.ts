@@ -24,6 +24,8 @@ export type AivParams = {
   q: string | null
   page: number
   sheet: string | null
+  /** A source domain whose panel is open (Sources tab). */
+  site: string | null
   view: string | null
 }
 
@@ -67,6 +69,7 @@ export function parseAivParams(raw: Record<string, string | string[] | undefined
     q: (one(raw.q) ?? "").trim().slice(0, 80) || null,
     page: Number.isInteger(pageRaw) && pageRaw >= 1 && pageRaw <= 10_000 ? pageRaw : 1,
     sheet: UUID.test(one(raw.sheet) ?? "") ? one(raw.sheet)! : null,
+    site: /^[a-z0-9][a-z0-9.-]{0,251}\.[a-z0-9-]{2,}$/i.test(one(raw.site) ?? "") ? one(raw.site)!.toLowerCase() : null,
     view: (one(raw.view) ?? "").slice(0, 20) || null,
   }
 }
@@ -105,6 +108,7 @@ export function aivHref(base: string, p: AivParams, patch: Partial<AivParams>) {
   if (n.q) s.set("q", n.q)
   if (n.page > 1) s.set("page", String(n.page))
   if (n.sheet) s.set("sheet", n.sheet)
+  if (n.site) s.set("site", n.site)
   if (n.view) s.set("view", n.view)
   const qs = s.toString()
   return qs ? `${base}?${qs}` : base

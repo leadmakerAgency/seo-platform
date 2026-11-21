@@ -39,7 +39,17 @@ export async function ChatsTab({
         {/* Plain GET form keeps the other filters in hidden fields. */}
         <input type="hidden" name="tab" value="chats" />
         {params.range !== "30d" && <input type="hidden" name="range" value={params.range} />}
+        {params.range === "custom" && (
+          <>
+            <input type="hidden" name="from" value={params.from} />
+            <input type="hidden" name="to" value={params.to} />
+          </>
+        )}
         {params.models.length > 0 && <input type="hidden" name="models" value={params.models.join(",")} />}
+        {params.countries.length > 0 && <input type="hidden" name="countries" value={params.countries.join(",")} />}
+        {params.tags.length > 0 && <input type="hidden" name="tags" value={params.tags.join(",")} />}
+        {params.tagsAll && <input type="hidden" name="tagmode" value="all" />}
+        {params.topics.length > 0 && <input type="hidden" name="topics" value={params.topics.join(",")} />}
         <input name="q" defaultValue={params.q ?? ""} placeholder="Search questions" className="h-8 w-60 rounded-md border bg-card px-2 text-sm" aria-label="Search questions" />
         <select name="brand" defaultValue={params.brand ?? ""} className="h-8 rounded-md border bg-card px-2 text-sm" aria-label="Answers that name">
           <option value="">Any brand</option>

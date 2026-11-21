@@ -5301,6 +5301,15 @@ export type Database = {
       }
       add_manual_site: { Args: { p: Json; p_client_id: string }; Returns: Json }
       ai_search_quota: { Args: { p_client_id: string }; Returns: Json }
+      aiv_brand_insight: {
+        Args: {
+          f: Json
+          p_brand_id: string
+          p_bucket: string
+          p_client_id: string
+        }
+        Returns: Json
+      }
       aiv_budget_problem: { Args: never; Returns: string }
       aiv_chat: { Args: { p_chat_id: string }; Returns: Json }
       aiv_chats_page: {
@@ -5333,6 +5342,7 @@ export type Database = {
         }[]
       }
       aiv_overview: { Args: { f: Json; p_client_id: string }; Returns: Json }
+      aiv_prompt_detail: { Args: { p_prompt_id: string }; Returns: Json }
       aiv_prompt_table: {
         Args: { f: Json; p_client_id: string }
         Returns: {
@@ -5348,6 +5358,10 @@ export type Database = {
       aiv_quota: { Args: { p_client_id: string }; Returns: Json }
       aiv_run_history: {
         Args: { p_client_id: string; p_limit?: number }
+        Returns: Json
+      }
+      aiv_source_detail: {
+        Args: { f: Json; p_client_id: string; p_domain: string }
         Returns: Json
       }
       aiv_sources_domains: {

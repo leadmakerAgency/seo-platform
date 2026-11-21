@@ -9,6 +9,7 @@ import {
   ListOrdered,
   MapPin,
   Network,
+  Radar,
   ReceiptText,
   Search,
   Sparkles,
@@ -61,12 +62,24 @@ const PARTS: { key: Part; label: string; short: string; icon: LucideIcon; bg: st
 ]
 const PART = Object.fromEntries(PARTS.map((p) => [p.key, p])) as Record<Part, (typeof PARTS)[number]>
 
+/** Other modules (AI Visibility) reuse the panel with their own names for the four cost parts. */
+export type PartLabels = Partial<Record<Part, { label: string; short: string }>>
+const partsWith = (labels?: PartLabels) => PARTS.map((p) => ({ ...p, ...(labels?.[p.key] ?? {}) }))
+
+/** AI Visibility checks name the parts by what they paid for. */
+export const AIV_PART_LABELS: PartLabels = {
+  google: { label: "Google AI answers", short: "Google AI" },
+  maps: { label: "AI platform answers", short: "AI answers" },
+  ai: { label: "Claude reading", short: "Claude" },
+}
+
 const KIND: Record<RunEntry["kind"], { label: string; icon: LucideIcon; node: string }> = {
   search: { label: "Find places", icon: Search, node: "border-brand/30 text-brand" },
   rerank: { label: "Re-rank with the brief", icon: ListOrdered, node: "border-info/30 text-info" },
   strength: { label: "Strength check", icon: Gauge, node: "border-border text-muted-foreground" },
   ai: { label: "Shockwave AI Search", icon: Sparkles, node: "border-primary/30 text-primary" },
   ai_competitors: { label: "Competitor backlinks", icon: Network, node: "border-primary/30 text-primary" },
+  ai_visibility: { label: "AI visibility check", icon: Radar, node: "border-primary/30 text-primary" },
 }
 
 function duration(from: string, to: string | null) {
@@ -88,6 +101,14 @@ function outcome(e: RunEntry): string[] {
     | { review?: number; more?: number; hidden?: number; ai?: string; aiNote?: string | null }
     | undefined
   const parts: string[] = []
+  if (e.kind === "ai_visibility") {
+    const answers = Number(c.answers ?? 0)
+    if (answers) parts.push(`${formatNumber(answers)} answers`)
+    if (typeof c.visibility === "number") parts.push(`client named in ${c.visibility}%`)
+    if (Number(c.new_actions ?? 0)) parts.push(`${formatNumber(Number(c.new_actions))} new actions`)
+    if (c.capped) parts.push("stopped at its cost limit")
+    return parts
+  }
   if (e.kind === "search") {
     if (e.searches) {
       const failed = n(c.failed)
@@ -115,9 +136,9 @@ function outcome(e: RunEntry): string[] {
 }
 
 /** Thin segmented bar of each part's share. Every segment names itself on hover. */
-function ShareBar({ values, total, label }: { values: Record<Part, number>; total: number; label: string }) {
+function ShareBar({ values, total, label, labels }: { values: Record<Part, number>; total: number; label: string; labels?: PartLabels }) {
   if (total <= 0) return <div className="h-1.5 rounded-full bg-muted" aria-hidden />
-  const shown = PARTS.filter((p) => values[p.key] > 0)
+  const shown = partsWith(labels).filter((p) => values[p.key] > 0)
   return (
     <div
       className="flex h-1.5 gap-0.5"
@@ -137,8 +158,8 @@ function ShareBar({ values, total, label }: { values: Record<Part, number>; tota
 }
 
 /** "Google searches · 113 calls ......... $0.28" */
-function LedgerLine({ part, detail, value }: { part: Part; detail: string; value: number }) {
-  const p = PART[part]
+function LedgerLine({ part, detail, value, label }: { part: Part; detail: string; value: number; label?: string }) {
+  const p = { ...PART[part], ...(label ? { label } : {}) }
   const Icon = p.icon
   return (
     <li className="flex items-baseline gap-2 text-[13px]">
@@ -163,7 +184,23 @@ function Row({ e }: { e: RunEntry }) {
   const d = new Date(e.createdAt)
   const kind = KIND[e.kind]
   const Icon = kind.icon
-  const lines: { key: Part; detail: string; value: number; show: boolean }[] = [
+  const aiv = e.kind === "ai_visibility"
+  const labels = aiv ? AIV_PART_LABELS : undefined
+  const lines: { key: Part; detail: string; value: number; show: boolean }[] = aiv
+    ? [
+        { key: "google", detail: `AI Overview and AI Mode, ${formatNumber(e.googleCalls)} ${e.googleCalls === 1 ? "call" : "calls"}`, value: e.google, show: e.google > 0 || e.googleCalls > 0 },
+        { key: "maps", detail: `ChatGPT, Gemini, Claude and Perplexity answers, ${formatNumber(e.mapsCalls)} ${e.mapsCalls === 1 ? "call" : "calls"}`, value: e.maps, show: true },
+        { key: "strength", detail: "", value: 0, show: false },
+        {
+          key: "ai",
+          detail: e.aiCalls
+            ? `Haiku 5.5, ${formatNumber(e.aiCalls)} ${e.aiCalls === 1 ? "call" : "calls"}, ${formatNumber(e.aiInputTokens ?? 0)} in / ${formatNumber(e.aiOutputTokens ?? 0)} out tokens`
+            : "not used",
+          value: e.ai,
+          show: true,
+        },
+      ]
+    : [
     {
       key: "google",
       detail: `${formatNumber(e.googleCalls)} ${e.googleCalls === 1 ? "call" : "calls"}${e.searches && e.googleCalls > e.searches ? " incl. retries" : ""}`,
@@ -243,12 +280,13 @@ function Row({ e }: { e: RunEntry }) {
             values={{ google: e.google, maps: e.maps, strength: e.strength, ai: e.ai }}
             total={e.total}
             label="Where this run's cost went"
+            labels={labels}
           />
           <ul className="flex flex-col gap-1.5">
             {lines
               .filter((l) => l.show)
               .map((l) => (
-                <LedgerLine key={l.key} part={l.key} detail={l.detail} value={l.value} />
+                <LedgerLine key={l.key} part={l.key} detail={l.detail} value={l.value} label={labels?.[l.key]?.label} />
               ))}
           </ul>
           <div className="flex items-baseline justify-between gap-3 border-t border-dashed pt-2 text-[13px]">
@@ -411,10 +449,17 @@ export function RunHistoryPanel({
   history,
   accounts,
   nowIso,
+  labels,
+  description = "What every search, re-rank and strength check cost, down to the cent.",
+  empty = "No runs yet. Find places, Re-rank and strength checks show up here with what they cost.",
 }: {
   history: RunHistory
   accounts: AccountBalances | null
   nowIso: string
+  /** Names for the four cost parts when another module reuses the panel. */
+  labels?: PartLabels
+  description?: string
+  empty?: string
 }) {
   const { totals, entries } = history
   const recent = entries.slice(0, VISIBLE)
@@ -447,7 +492,7 @@ export function RunHistoryPanel({
             Runs and costs
           </h2>
           <p className="text-sm text-muted-foreground">
-            What every search, re-rank and strength check cost, down to the cent.
+            {description}
           </p>
         </div>
         <span className="text-xs text-muted-foreground">Arizona time · months start on the 1st</span>
@@ -475,9 +520,9 @@ export function RunHistoryPanel({
             })}
           </dl>
           <div className="flex flex-col gap-2">
-            <ShareBar values={byPart} total={totals.allTime} label="Where all the cost went" />
+            <ShareBar values={byPart} total={totals.allTime} label="Where all the cost went" labels={labels} />
             <ul className="flex flex-wrap gap-x-5 gap-y-1 text-xs">
-              {PARTS.map((p) => {
+              {partsWith(labels).filter((p) => !labels || labels[p.key] || byPart[p.key] > 0).map((p) => {
                 const Icon = p.icon
                 return (
                   <li key={p.key} className="flex items-center gap-1.5">
@@ -493,7 +538,7 @@ export function RunHistoryPanel({
 
         {entries.length === 0 ? (
           <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-            No runs yet. Find places, Re-rank and strength checks show up here with what they cost.
+            {empty}
           </p>
         ) : (
           <div className="flex flex-col gap-3">

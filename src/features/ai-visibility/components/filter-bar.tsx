@@ -2,7 +2,7 @@
 
 import { Check, ChevronDown, X } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
-import { useTransition } from "react"
+import { useState, useTransition } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -50,6 +50,7 @@ export function FilterBar({
             {RANGE_LABEL[r]}
           </button>
         ))}
+        <CustomRange params={params} onApply={(from, to) => go({ range: "custom", from, to })} />
       </div>
       <Multi
         label="Platforms"
@@ -94,6 +95,41 @@ export function FilterBar({
         />
       )}
     </div>
+  )
+}
+
+function CustomRange({ params, onApply }: { params: AivParams; onApply: (from: string, to: string) => void }) {
+  const [from, setFrom] = useState(params.from)
+  const [to, setTo] = useState(params.to)
+  const active = params.range === "custom"
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          aria-pressed={active}
+          className={cn(
+            "h-7 rounded-md px-2.5 text-xs whitespace-nowrap transition-colors",
+            active ? "bg-foreground text-background dark:bg-muted dark:text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          )}
+        >
+          {active ? `${params.from} – ${params.to}` : "Custom"}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="flex w-64 flex-col gap-2 p-3">
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+          From
+          <input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} className="h-8 rounded-md border bg-card px-2 text-sm text-foreground" />
+        </label>
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+          To
+          <input type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} className="h-8 rounded-md border bg-card px-2 text-sm text-foreground" />
+        </label>
+        <Button size="sm" disabled={!from || !to || from > to} onClick={() => onApply(from, to)}>
+          Show this range
+        </Button>
+      </PopoverContent>
+    </Popover>
   )
 }
 

@@ -12,6 +12,7 @@ import { ActionsTab } from "@/features/ai-visibility/components/actions-tab"
 import { SectionCard } from "@/features/ai-visibility/components/bits"
 import { BrandsTab } from "@/features/ai-visibility/components/brands-tab"
 import { ChatsTab } from "@/features/ai-visibility/components/chats-tab"
+import { PromptPanel } from "@/features/ai-visibility/components/detail-panels"
 import { FilterBar } from "@/features/ai-visibility/components/filter-bar"
 import { ExportMenu, RunNowButton } from "@/features/ai-visibility/components/header-actions"
 import { OverviewTab } from "@/features/ai-visibility/components/overview-tab"
@@ -22,10 +23,14 @@ import { SourcesTab } from "@/features/ai-visibility/components/sources-tab"
 import { STAGES, TAB_LABEL, TABS, type AivTab } from "@/features/ai-visibility/config"
 import { getActions, getAivBase, getPromptStats, getRunHistory } from "@/features/ai-visibility/queries"
 import { aivHref, filterOf, parseAivParams } from "@/features/ai-visibility/search-params"
+import { TopicsEditor } from "@/features/ai-visibility/components/topics-editor"
+import { getAccountBalances } from "@/features/backlinks/accounts"
+import { AIV_PART_LABELS, RunHistoryPanel } from "@/features/backlinks/components/run-history-panel"
+import type { RunEntry, RunHistory } from "@/features/backlinks/run-history"
 import { getClientBySlug } from "@/features/clients/queries"
 import { OverviewRefresher } from "@/features/overview/components/overview-refresher"
 import { getCurrentMember } from "@/lib/auth"
-import { agencyToday } from "@/lib/dates"
+import { agencyMonth, agencyToday } from "@/lib/dates"
 import { hasDataForSeo } from "@/lib/env.server"
 import { formatNumber, formatRelative } from "@/lib/format"
 import { clientHref, findClientSection } from "@/lib/navigation"
@@ -160,6 +165,16 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
 
       {tab === "overview" && setupDone && <OverviewTab clientId={client.id} base={base} params={p} filter={filter} brands={brands} />}
       {tab === "prompts" && project && (
+        <PromptPanel
+          clientId={client.id}
+          base={base}
+          params={p}
+          filter={filter}
+          prompt={data.prompts.find((x) => x.id === p.sheet) ?? null}
+          brands={brands}
+        />
+      )}
+      {tab === "prompts" && project && (
         <PromptsTab
           clientId={client.id}
           prompts={data.prompts}
@@ -202,13 +217,16 @@ async function SettingsBody({
   nowIso: string
 }) {
   const db = await createSupabaseServerClient()
-  const [{ data: places }, runs] = await Promise.all([
+  const [{ data: places }, runs, accounts] = await Promise.all([
     db.from("backlink_targets").select("country_iso").eq("client_id", clientId).eq("active", true),
     getRunHistory(clientId),
+    getAccountBalances(isAdmin),
   ])
+  const history = runHistoryOf(runs, nowIso)
+  const topicCounts: Record<string, number> = {}
+  for (const q of data.prompts) if (q.topicId) topicCounts[q.topicId] = (topicCounts[q.topicId] ?? 0) + 1
   const placeCountries = [...new Set((places ?? []).map((x) => x.country_iso.toUpperCase()))]
   const own = data.brands.find((b) => b.isOwn) ?? null
-  const now = new Date(nowIso)
   return (
     <div className="flex flex-col gap-8">
       <SettingsForm
@@ -225,44 +243,67 @@ async function SettingsBody({
           <BudgetForm monthlyBudget={data.quota.monthlyBudget} maxRun={data.quota.maxRunUsd} manualRuns={data.quota.manualLimit} monthSpend={data.quota.monthSpend} />
         </SectionCard>
       )}
-      <SectionCard title="Checks and costs" description="Every check for this client, with what it cost.">
-        {runs.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No checks yet.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-xs text-muted-foreground">
-                <tr className="border-b">
-                  <th className="py-2 pr-2 text-left font-medium">Started</th>
-                  <th className="px-2 py-2 text-left font-medium">Kind</th>
-                  <th className="px-2 py-2 text-left font-medium">Status</th>
-                  <th className="px-2 py-2 text-right font-medium">Answers</th>
-                  <th className="px-2 py-2 text-right font-medium">Client named</th>
-                  <th className="px-2 py-2 text-right font-medium">DataForSEO</th>
-                  <th className="px-2 py-2 text-right font-medium">Claude</th>
-                  <th className="py-2 pl-2 text-right font-medium">Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {runs.map((r) => (
-                  <tr key={r.id}>
-                    <td className="py-2 pr-2 whitespace-nowrap">{formatRelative(r.createdAt, now)}{r.createdBy ? ` · ${r.createdBy}` : ""}</td>
-                    <td className="px-2 py-2">{r.trigger === "schedule" ? "Scheduled" : r.trigger === "new_prompts" ? "New questions" : "Manual"}</td>
-                    <td className="px-2 py-2">{r.status === "done" ? "Done" : r.status === "failed" ? `Failed${r.error ? `: ${r.error}` : ""}` : "Running"}</td>
-                    <td className="px-2 py-2 text-right tabular-nums">{formatNumber(r.answers)}</td>
-                    <td className="px-2 py-2 text-right tabular-nums">{typeof r.counts.visibility === "number" ? `${r.counts.visibility}%` : "–"}</td>
-                    <td className="px-2 py-2 text-right tabular-nums">${r.dfsUsd.toFixed(3)}</td>
-                    <td className="px-2 py-2 text-right tabular-nums">${r.aiUsd.toFixed(3)}</td>
-                    <td className="py-2 pl-2 text-right font-medium tabular-nums">${(r.dfsUsd + r.aiUsd).toFixed(2)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      <SectionCard title="Topics" description="Group questions for the filters. One topic per question.">
+        <TopicsEditor clientId={clientId} topics={data.topics} counts={topicCounts} canManage={canManage} />
       </SectionCard>
+      <RunHistoryPanel
+        history={history}
+        accounts={accounts}
+        nowIso={nowIso}
+        labels={AIV_PART_LABELS}
+        description="What every AI visibility check for this client cost, down to the cent."
+        empty="No checks yet. Every scheduled and manual check shows up here with what it cost."
+      />
     </div>
   )
+}
+
+/** AI Visibility runs in the shared "Runs and costs" shape: Google AI, AI platform answers, Claude. */
+function runHistoryOf(runs: Awaited<ReturnType<typeof getRunHistory>>, nowIso: string): RunHistory {
+  const month = agencyMonth(new Date(nowIso)).slice(0, 7)
+  const [y, m] = month.split("-").map(Number)
+  const last = `${m === 1 ? y - 1 : y}-${String(m === 1 ? 12 : m - 1).padStart(2, "0")}`
+  const monthOf = (iso: string) => agencyMonth(new Date(iso)).slice(0, 7)
+  const entries: RunEntry[] = runs.map((r) => ({
+    id: r.id,
+    kind: "ai_visibility",
+    status: r.status,
+    createdAt: r.createdAt,
+    finishedAt: r.finishedAt,
+    searches: null,
+    counts: r.counts,
+    error: r.error,
+    places: [r.trigger === "schedule" ? "Scheduled" : r.trigger === "new_prompts" ? "Chosen questions" : "Manual"],
+    by: r.createdBy || null,
+    google: r.serpUsd,
+    googleCalls: r.serpCalls,
+    maps: r.llmUsd,
+    mapsCalls: r.llmCalls,
+    strength: 0,
+    strengthDomains: 0,
+    ai: r.aiUsd,
+    aiCalls: r.aiCalls,
+    aiInputTokens: r.aiIn,
+    aiOutputTokens: r.aiOut,
+    webSearches: 0,
+    total: r.dfsUsd + r.aiUsd,
+  }))
+  const sum = (list: RunEntry[], k: "total" | "google" | "maps" | "ai") => list.reduce((s, e) => s + e[k], 0)
+  const thisMonth = entries.filter((e) => monthOf(e.createdAt) === month)
+  return {
+    totals: {
+      allTime: sum(entries, "total"),
+      thisMonth: sum(thisMonth, "total"),
+      lastMonth: sum(entries.filter((e) => monthOf(e.createdAt) === last), "total"),
+      runs: entries.length,
+      runsThisMonth: thisMonth.length,
+      google: sum(entries, "google"),
+      maps: sum(entries, "maps"),
+      strength: 0,
+      ai: sum(entries, "ai"),
+    },
+    entries,
+  }
 }
 
 function RunProgress({ run }: { run: NonNullable<Awaited<ReturnType<typeof getAivBase>>["quota"]["openRun"]> }) {

@@ -45,7 +45,18 @@ function valueOf(p: TrendPoint, metric: TrendMetric): number | null {
 
 const fmtDay = (iso: string) => new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`))
 
-export function TrendChart({ points, series, initial = "visibility" }: { points: TrendPoint[]; series: TrendSeries[]; initial?: TrendMetric }) {
+export function TrendChart({
+  points,
+  series,
+  initial = "visibility",
+  metrics,
+}: {
+  points: TrendPoint[]
+  series: TrendSeries[]
+  initial?: TrendMetric
+  /** Limit the metric switch (default: all five). */
+  metrics?: TrendMetric[]
+}) {
   const [metric, setMetric] = useState<TrendMetric>(initial)
   const [hover, setHover] = useState<number | null>(null)
   const [asTable, setAsTable] = useState(false)
@@ -111,7 +122,7 @@ export function TrendChart({ points, series, initial = "visibility" }: { points:
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-1" role="group" aria-label="Metric">
-          {METRICS.map((m) => (
+          {METRICS.filter((m) => !metrics || metrics.includes(m.key)).map((m) => (
             <Button key={m.key} size="xs" variant={metric === m.key ? "secondary" : "ghost"} aria-pressed={metric === m.key} onClick={() => setMetric(m.key)}>
               {m.label}
             </Button>

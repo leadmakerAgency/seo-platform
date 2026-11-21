@@ -23,6 +23,8 @@ export async function POST(request: Request) {
   if (Date.now() - last > 23 * 3_600_000) {
     const { error } = await db.rpc("aiv_cleanup")
     if (error) console.error("[ai-visibility] cleanup failed", error.message)
+    // Location codes older than 30 days are dropped; the next check fetches them again.
+    await db.from("aiv_locations").delete().lt("synced_at", new Date(Date.now() - 30 * 86_400_000).toISOString())
   }
 
   const { data: queued, error } = await db.rpc("dfs_queue_aiv_runs", { p_limit: 10 })

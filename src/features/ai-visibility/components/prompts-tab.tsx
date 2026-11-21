@@ -1,6 +1,8 @@
 "use client"
 
-import { Archive, ArchiveRestore, Check, Loader2, Plus, Sparkles, Tag, Trash2, X } from "lucide-react"
+import { Archive, ArchiveRestore, Check, Loader2, Play, Plus, Sparkles, Tag, Trash2, X } from "lucide-react"
+import Link from "next/link"
+import { usePathname, useSearchParams } from "next/navigation"
 import { useMemo, useState, useTransition } from "react"
 import { toast } from "sonner"
 
@@ -20,7 +22,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
-import { addPrompts, reviewSuggestion, suggestPromptsNow, updatePrompts } from "../actions"
+import { addPrompts, reviewSuggestion, runNow, suggestPromptsNow, updatePrompts } from "../actions"
 import { INTENT_LABEL, PROMPT_MAX, type AivIntent } from "../config"
 import type { AivPrompt, AivSuggestion, AivTopic, PromptStats } from "../queries"
 import { pct } from "./bits"
@@ -54,6 +56,14 @@ export function PromptsTab({
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [tagInput, setTagInput] = useState("")
   const [pending, start] = useTransition()
+  const path = usePathname()
+  const search = useSearchParams()
+  const sheetHref = (id: string) => {
+    const s = new URLSearchParams(search.toString())
+    s.set("tab", "prompts")
+    s.set("sheet", id)
+    return `${path}?${s.toString()}`
+  }
   const topicName = new Map(topics.map((t) => [t.id, t.name]))
   const active = prompts.filter((p) => p.status === "active").length
 
@@ -201,6 +211,23 @@ export function PromptsTab({
               <ArchiveRestore /> Track again
             </Button>
           )}
+          {show === "active" && (
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={pending}
+              title="Ask just these questions now, on every platform (counts as a manual check)"
+              onClick={() =>
+                run(async () => {
+                  const r = await runNow(clientId, ids)
+                  if (r.ok) toast.success(`Checking ${ids.length} ${ids.length === 1 ? "question" : "questions"} now, about $${r.data.estimate.toFixed(2)}`)
+                  return r
+                })
+              }
+            >
+              <Play /> Check these now
+            </Button>
+          )}
           <Button size="sm" variant="ghost" className="text-danger" disabled={pending} onClick={() => setConfirmDelete(true)}>
             <Trash2 /> Delete
           </Button>
@@ -255,7 +282,7 @@ export function PromptsTab({
                       </td>
                     )}
                     <td className="px-3 py-2 align-top">
-                      <p>{p.text}</p>
+                      <Link href={sheetHref(p.id)} scroll={false} className="hover:underline">{p.text}</Link>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         {p.country}
                         {p.branded && " · names the client"}

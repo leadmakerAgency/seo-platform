@@ -359,6 +359,7 @@ export async function getActions(clientId: string): Promise<AivAction[]> {
 export type AivRun = {
   id: string; trigger: string; status: string; createdAt: string; finishedAt: string | null; counts: Rec; error: string | null
   estimateUsd: number; dfsUsd: number; aiUsd: number; answers: number; createdBy: string | null
+  serpUsd: number; serpCalls: number; llmUsd: number; llmCalls: number; aiCalls: number; aiIn: number | null; aiOut: number | null
 }
 
 export async function getRunHistory(clientId: string): Promise<AivRun[]> {
@@ -369,5 +370,70 @@ export async function getRunHistory(clientId: string): Promise<AivRun[]> {
     finishedAt: (r.finished_at as string | null) ?? null, counts: (r.counts ?? {}) as Rec, error: (r.error as string | null) ?? null,
     estimateUsd: Number(r.estimate_usd ?? 0), dfsUsd: Number(r.dfs_usd ?? 0), aiUsd: Number(r.ai_usd ?? 0),
     answers: Number(r.answers ?? 0), createdBy: (r.created_by as string | null) ?? null,
+    serpUsd: Number(r.serp_usd ?? 0), serpCalls: Number(r.serp_calls ?? 0), llmUsd: Number(r.llm_usd ?? 0), llmCalls: Number(r.llm_calls ?? 0),
+    aiCalls: Number(r.ai_calls ?? 0), aiIn: num(r.ai_in), aiOut: num(r.ai_out),
   }))
+}
+
+// ---------------------------------------------------------------------------
+// Detail panels
+// ---------------------------------------------------------------------------
+
+export type PromptLatest = {
+  chatId: string; model: AivModel; runDate: string; status: string; error: string | null; ownMentioned: boolean
+  ownPosition: number | null; mentions: { name: string; position: number; brandId: string | null }[]; sources: number
+}
+
+export async function getPromptDetail(promptId: string): Promise<PromptLatest[]> {
+  const db = await createSupabaseServerClient()
+  const { data } = await db.rpc("aiv_prompt_detail", { p_prompt_id: promptId })
+  return ((data ?? []) as Rec[]).map((r) => ({
+    chatId: String(r.chat_id), model: r.model as AivModel, runDate: String(r.run_date), status: String(r.status),
+    error: (r.error as string | null) ?? null, ownMentioned: Boolean(r.own_mentioned), ownPosition: num(r.own_position),
+    mentions: ((r.mentions as Rec[] | null) ?? []).map((m) => ({ name: String(m.name), position: Number(m.position), brandId: (m.brand_id as string | null) ?? null })),
+    sources: Number(r.sources ?? 0),
+  }))
+}
+
+export type SourceDetail = {
+  domain: string; type: string; answers: number; cited: number
+  prompts: { promptId: string; text: string; models: AivModel[]; answers: number; cited: number; lastDate: string }[]
+  urls: { url: string; title: string | null; answers: number; cited: number }[]
+  weeks: { week: string; answers: number }[]
+}
+
+export async function getSourceDetail(clientId: string, f: Filter, domain: string): Promise<SourceDetail> {
+  const db = await createSupabaseServerClient()
+  const { data } = await db.rpc("aiv_source_detail", { p_client_id: clientId, f: f as never, p_domain: domain })
+  const d = (data ?? {}) as Rec
+  return {
+    domain: String(d.domain ?? domain), type: String(d.type ?? "other"), answers: Number(d.answers ?? 0), cited: Number(d.cited ?? 0),
+    prompts: ((d.prompts as Rec[] | null) ?? []).map((p) => ({
+      promptId: String(p.prompt_id), text: String(p.text), models: (p.models as AivModel[] | null) ?? [], answers: Number(p.answers ?? 0),
+      cited: Number(p.cited ?? 0), lastDate: String(p.last_date),
+    })),
+    urls: ((d.urls as Rec[] | null) ?? []).map((u) => ({ url: String(u.url), title: (u.title as string | null) ?? null, answers: Number(u.answers ?? 0), cited: Number(u.cited ?? 0) })),
+    weeks: ((d.weeks as Rec[] | null) ?? []).map((w) => ({ week: String(w.week), answers: Number(w.answers ?? 0) })),
+  }
+}
+
+export type BrandInsight = {
+  trend: { bucket: string; answers: number; mentioned: number; position: number | null; sentiment: number | null; read: number }[]
+  prompts: { promptId: string; text: string; answers: number; mentioned: number; visibility: number | null; position: number | null }[]
+}
+
+export async function getBrandInsight(clientId: string, f: Filter, brandId: string, bucket: "day" | "week" | "month"): Promise<BrandInsight> {
+  const db = await createSupabaseServerClient()
+  const { data } = await db.rpc("aiv_brand_insight", { p_client_id: clientId, f: f as never, p_brand_id: brandId, p_bucket: bucket })
+  const d = (data ?? {}) as Rec
+  return {
+    trend: ((d.trend as Rec[] | null) ?? []).map((t) => ({
+      bucket: String(t.bucket), answers: Number(t.answers ?? 0), mentioned: Number(t.mentioned ?? 0), position: num(t.position),
+      sentiment: num(t.sentiment), read: Number(t.read ?? 0),
+    })),
+    prompts: ((d.prompts as Rec[] | null) ?? []).map((p) => ({
+      promptId: String(p.prompt_id), text: String(p.text), answers: Number(p.answers ?? 0), mentioned: Number(p.mentioned ?? 0),
+      visibility: num(p.visibility), position: num(p.position),
+    })),
+  }
 }

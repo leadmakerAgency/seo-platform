@@ -8,7 +8,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
  * and Claude's review. dfs_calls / ai_calls stay admin-only; the function returns the sums.
  */
 
-export type RunKind = "search" | "rerank" | "strength" | "ai" | "ai_competitors"
+export type RunKind = "search" | "rerank" | "strength" | "ai" | "ai_competitors" | "ai_visibility"
 
 export type RunEntry = {
   id: string

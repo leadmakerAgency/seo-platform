@@ -5,6 +5,7 @@ import { MODEL_META, type AivModel } from "../config"
 import { getMatrix, getOverview, type AivBrand, type AivSuggestion, type AivTopic } from "../queries"
 import { aivHref, type AivParams } from "../search-params"
 import { BrandDot, fixed, pct, SectionCard } from "./bits"
+import { BrandInsights } from "./brand-insights"
 import { BrandManager } from "./brand-manager"
 import { BrandTable } from "./overview-tab"
 
@@ -75,6 +76,8 @@ export async function BrandsTab({
           </p>
         )}
       </SectionCard>
+
+      <BrandInsights clientId={clientId} base={base} params={params} filter={filter} brands={brands} rows={overview.brands} />
 
       <SectionCard
         title="Compare"
