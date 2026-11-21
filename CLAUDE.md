@@ -96,6 +96,11 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   by `request_backlink_discovery`); Review never holds more than 30 searched places; Claude's picks
   only reach the database through `dfs_apply_shortlist`; search-result text in prompts is untrusted
   data (say so in the prompt, accept only known candidate ids). Plan: `docs/plans/backlinks/`.
+- **Backlinks setup (shared by all three tabs):** the strategy brief and the places are edited only
+  in the setup sheet (`components/setup-sheet.tsx`, `?setup=brief|places`) and loaded once by the
+  page (`setup.ts`, RPC `backlink_setup`); tabs get them as `setup` and never load them again. The
+  tabs open only when `setup.complete` (the same `private.backlink_brief_missing` the run RPCs
+  use); new Manual work checks `setupProblem`. Plan: `docs/plans/backlinks/12-shared-setup.md`.
 - **Backlinks Manual Search (catalog + work list):** picks go only through `pick_catalog_sites` /
   `add_manual_site`; submissions change only through `update_submission` /
   `bulk_update_submissions` / `add_backlink_login`. Every approved opportunity (any tab) gets a

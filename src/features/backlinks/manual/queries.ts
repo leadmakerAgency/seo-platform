@@ -1,7 +1,6 @@
 import "server-only"
 
 import { createSupabaseServerClient } from "@/lib/supabase/server"
-import { snapshotOf, type BriefSnapshot } from "../brief"
 import { displayHost } from "../site-key"
 import type {
   CatalogCategory,
@@ -159,9 +158,8 @@ export type ManualData = {
   otherDecisions: OtherDecision[]
   submissions: Submission[]
   events: SubmissionEvent[]
-  brief: BriefSnapshot | null
+  /** The brief's competitors; the brief and the places come from the shared setup (../setup.ts). */
   competitors: string[]
-  places: { label: string; city: string | null; country: string; active: boolean }[]
   profile: KitProfile | null
   client: {
     name: string
@@ -237,7 +235,6 @@ export async function getManualData(clientId: string): Promise<ManualData> {
     subsRes,
     eventsRes,
     briefRes,
-    targetsRes,
     clientRes,
     profileRes,
     loginsRes,
@@ -260,12 +257,7 @@ export async function getManualData(clientId: string): Promise<ManualData> {
       .eq("client_id", clientId)
       .order("at", { ascending: false })
       .limit(1000),
-    supabase.from("backlink_briefs").select("*").eq("client_id", clientId).maybeSingle(),
-    supabase
-      .from("backlink_targets")
-      .select("label, city, country_iso, active")
-      .eq("client_id", clientId)
-      .order("created_at"),
+    supabase.from("backlink_briefs").select("competitors").eq("client_id", clientId).maybeSingle(),
     supabase
       .from("clients")
       .select("name, website, city, region, country_code, industry, backlinks_target")
@@ -398,14 +390,7 @@ export async function getManualData(clientId: string): Promise<ManualData> {
     })),
     submissions,
     events,
-    brief: snapshotOf(briefRes.data),
     competitors: (briefRes.data?.competitors ?? []) as string[],
-    places: (targetsRes.data ?? []).map((t) => ({
-      label: t.label,
-      city: t.city,
-      country: t.country_iso,
-      active: t.active,
-    })),
     profile: (profileRes.data as KitProfile | null) ?? null,
     client: {
       name: c?.name ?? "",

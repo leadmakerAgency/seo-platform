@@ -1,9 +1,7 @@
 "use client"
 
-import { Check, CircleAlert, Plus } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useState, useTransition, type ReactNode } from "react"
+import { ArrowRight, Check, CircleAlert, Plus } from "lucide-react"
+import { useEffect, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { ChipsInput } from "@/components/common/chips-input"
@@ -32,24 +30,31 @@ import { adjacentIdeas } from "../topic-ideas"
 
 type Values = Brief
 
-/** The strategy brief form (docs/plans/backlinks/07-strategy-brief.md). */
+/**
+ * The strategy brief form (docs/plans/backlinks/07-strategy-brief.md), step 1 of the backlink
+ * setup sheet (12-shared-setup.md). Saving moves on to the places step via `onSaved`.
+ */
 export function StrategyForm({
   clientId,
-  backHref,
   initial,
   isNew,
   ideasText,
   canEdit,
+  onSaved,
+  onCancel,
+  onDirtyChange,
 }: {
   clientId: string
-  backHref: string
   initial: Values
   isNew: boolean
   /** Services, category and industry: what the idea chips are based on. */
   ideasText: string
   canEdit: boolean
+  /** After a save (or Next with nothing changed): go to the places step. */
+  onSaved: () => void
+  onCancel: () => void
+  onDirtyChange?: (dirty: boolean) => void
 }) {
-  const router = useRouter()
   const [v, setV] = useState<Values>(initial)
   const [typesTouched, setTypesTouched] = useState(!isNew)
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -71,9 +76,15 @@ export function StrategyForm({
   const topics = v.core_topics.length + v.adjacent_topics.length
   const ideas = adjacentIdeas(ideasText, [...v.core_topics, ...v.adjacent_topics]).slice(0, 12)
   const siteIdeas = trustedSiteIdeas(v).filter((d) => !v.trusted_sites.includes(d))
+  const dirty = isNew || JSON.stringify(v) !== JSON.stringify(initial)
+
+  useEffect(() => {
+    onDirtyChange?.(dirty && canEdit)
+  }, [dirty, canEdit, onDirtyChange])
 
   function save() {
     setFormError(null)
+    if (!dirty) return onSaved()
     startTransition(async () => {
       const r = await saveBrief(clientId, v)
       if (!r.ok) {
@@ -82,15 +93,16 @@ export function StrategyForm({
         return
       }
       toast.success(`Brief saved (version ${r.data?.version ?? 1})`)
-      router.push(backHref)
+      onDirtyChange?.(false)
+      onSaved()
     })
   }
 
   const disabled = !canEdit || pending
 
   return (
-    <div className="flex flex-col">
-      <div className="flex max-w-4xl flex-col gap-10 pb-10">
+    <div className="flex min-h-full flex-col">
+      <div className="flex flex-col gap-10 px-4 pt-5 pb-10 sm:px-6">
         <Section n={1} title="Who the client sells to" description="This decides which kinds of sites are searched and how they're ranked.">
           <MultiChoice
             label="Where the customers are"
@@ -277,7 +289,7 @@ export function StrategyForm({
         </Section>
       </div>
 
-      <div className="sticky bottom-0 z-20 -mx-4 -mb-6 border-t bg-background px-4 py-3 md:-mx-8 md:-mb-8 md:px-8">
+      <div className="sticky bottom-0 z-20 mt-auto border-t bg-popover px-4 py-3 sm:px-6">
         <div className="flex flex-wrap items-center justify-end gap-3">
           {formError && (
             <p className="mr-auto flex items-center gap-1.5 text-sm text-danger" role="alert">
@@ -285,13 +297,20 @@ export function StrategyForm({
               {formError}
             </p>
           )}
-          <Button asChild variant="outline">
-            <Link href={backHref}>{canEdit ? "Cancel" : "Back"}</Link>
+          <Button variant="outline" onClick={onCancel}>
+            {canEdit ? "Cancel" : "Close"}
           </Button>
-          {canEdit && (
+          {canEdit ? (
             <Button onClick={save} disabled={pending}>
-              {pending ? "Saving…" : "Save brief"}
+              {pending ? "Saving…" : dirty ? "Save and continue" : "Next"}
+              {!pending && <ArrowRight />}
             </Button>
+          ) : (
+            !isNew && (
+              <Button onClick={onSaved}>
+                Next <ArrowRight />
+              </Button>
+            )
           )}
         </div>
       </div>

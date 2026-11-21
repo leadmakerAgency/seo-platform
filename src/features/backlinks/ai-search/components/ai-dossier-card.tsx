@@ -1,7 +1,7 @@
 import { ArrowUpRight, Brain, CircleAlert, Swords, Target, Users } from "lucide-react"
-import Link from "next/link"
 
 import { formatRelative } from "@/lib/format"
+import { OpenSetupLink } from "../../components/setup-sheet"
 import type { AiDossier } from "../queries"
 
 /** "What Shockwave AI understood": the dossier, where to rank and the competitors, per place. */
@@ -25,12 +25,10 @@ const label = (v: string) => VERTICAL_LABEL[v] ?? v.charAt(0).toUpperCase() + v.
 
 export function AiDossierCard({
   data,
-  briefHref,
   briefVersion,
   nowIso,
 }: {
   data: AiDossier
-  briefHref: string
   briefVersion: number | null
   nowIso: string
 }) {
@@ -134,9 +132,7 @@ export function AiDossierCard({
         )}
         <p className="text-xs text-muted-foreground">
           Looks wrong? Correct it in the{" "}
-          <Link href={briefHref} className="underline underline-offset-2 hover:text-foreground">
-            strategy brief
-          </Link>{" "}
+          <OpenSetupLink step="brief">strategy brief</OpenSetupLink>{" "}
           and run again.
         </p>
       </div>

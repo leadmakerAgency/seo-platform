@@ -1,4 +1,4 @@
-import { Hand, Search, type LucideIcon } from "lucide-react"
+import { Hand, Lock, Search, type LucideIcon } from "lucide-react"
 import Link from "next/link"
 
 import { ShockwaveMark } from "@/components/brand/logo"
@@ -56,48 +56,66 @@ function ModeIcon({ mode, active }: { mode: Mode; active: boolean }) {
   )
 }
 
-export function ModeTabs({ base, mode }: { base: string; mode: Mode }) {
+/** `locked`: the backlink setup isn't complete, so the tabs show a lock and can't be opened. */
+export function ModeTabs({ base, mode, locked = false }: { base: string; mode: Mode; locked?: boolean }) {
   return (
-    <nav aria-label="How to find backlinks" className="-mt-3 border-b">
+    <nav aria-label="How to find backlinks" className={cn("border-b", locked && "select-none")}>
       {/* Phones: three equal columns, icon over a short name. Wider: icon beside the full name. */}
       <ul className="-mb-px grid grid-cols-3 gap-1 sm:flex sm:gap-2 sm:overflow-x-auto sm:[scrollbar-width:none]">
         {MODES.map((m) => {
           const meta = MODE_META[m]
-          const active = m === mode
+          const active = m === mode && !locked
+          const className = cn(
+            "group/mode relative flex flex-col items-center gap-1.5 rounded-t-lg px-1 pt-2 pb-3 text-center outline-none",
+            "sm:flex-row sm:gap-2.5 sm:px-3 sm:text-left",
+            "focus-visible:ring-2 focus-visible:ring-ring/35",
+            // Active underline, drawn under the tab and over the bar's border.
+            "after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:transition-colors",
+            active ? "after:bg-primary" : "after:bg-transparent",
+            locked ? "cursor-not-allowed opacity-60" : !active && "hover:after:bg-border",
+          )
+          const inner = (
+            <>
+              <ModeIcon mode={m} active={active} />
+              <span className="flex min-w-0 flex-col items-center sm:items-start">
+                <span
+                  className={cn(
+                    "flex items-center gap-1.5 text-xs whitespace-nowrap sm:text-sm",
+                    active
+                      ? "font-semibold text-foreground"
+                      : cn("font-medium text-muted-foreground", !locked && "group-hover/mode:text-foreground"),
+                  )}
+                >
+                  <span className="sm:hidden">{meta.short}</span>
+                  <span className="hidden sm:inline">{meta.label}</span>
+                  {locked && <Lock className="size-3 shrink-0" aria-hidden />}
+                  {meta.soon && (
+                    <span className="hidden rounded-[4px] border border-dashed px-1 py-px text-[10px] leading-none font-medium tracking-wide text-muted-foreground uppercase sm:inline">
+                      Soon
+                    </span>
+                  )}
+                </span>
+                <span className="hidden text-xs whitespace-nowrap text-muted-foreground xl:block">{meta.caption}</span>
+              </span>
+            </>
+          )
           return (
             <li key={m} className="min-w-0 sm:shrink-0">
-              <Link
-                href={modeHref(base, m)}
-                scroll={false}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "group/mode relative flex flex-col items-center gap-1.5 rounded-t-lg px-1 pt-2 pb-3 text-center outline-none",
-                  "sm:flex-row sm:gap-2.5 sm:px-3 sm:text-left",
-                  "focus-visible:ring-2 focus-visible:ring-ring/35",
-                  // Active underline, drawn under the tab and over the bar's border.
-                  "after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:transition-colors",
-                  active ? "after:bg-primary" : "after:bg-transparent hover:after:bg-border",
-                )}
-              >
-                <ModeIcon mode={m} active={active} />
-                <span className="flex min-w-0 flex-col items-center sm:items-start">
-                  <span
-                    className={cn(
-                      "flex items-center gap-1.5 text-xs whitespace-nowrap sm:text-sm",
-                      active ? "font-semibold text-foreground" : "font-medium text-muted-foreground group-hover/mode:text-foreground",
-                    )}
-                  >
-                    <span className="sm:hidden">{meta.short}</span>
-                    <span className="hidden sm:inline">{meta.label}</span>
-                    {meta.soon && (
-                      <span className="hidden rounded-[4px] border border-dashed px-1 py-px text-[10px] leading-none font-medium tracking-wide text-muted-foreground uppercase sm:inline">
-                        Soon
-                      </span>
-                    )}
-                  </span>
-                  <span className="hidden text-xs whitespace-nowrap text-muted-foreground xl:block">{meta.caption}</span>
+              {locked ? (
+                <span
+                  role="link"
+                  aria-disabled="true"
+                  title="Finish the backlink setup first"
+                  className={className}
+                >
+                  {inner}
+                  <span className="sr-only"> (locked: finish the backlink setup first)</span>
                 </span>
-              </Link>
+              ) : (
+                <Link href={modeHref(base, m)} scroll={false} aria-current={active ? "page" : undefined} className={className}>
+                  {inner}
+                </Link>
+              )}
             </li>
           )
         })}

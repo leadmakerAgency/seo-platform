@@ -254,7 +254,11 @@ Plan: `docs/plans/rankings/` (00-overview to 04-page-and-polish). Migrations `00
 
 Plan: `docs/plans/backlinks/` (00-overview to 07-strategy-brief). Migrations `0031`–`0034`, `0036`–`0038`.
 
-- **Strategy brief** (`backlink_briefs`, `/clients/[slug]/backlinks/strategy`, migration `0038`): reach
+- **Backlink setup** (`12-shared-setup.md`, migration `0051`): the brief and the places are one setup
+  above the three tabs, edited in a sheet (`?setup=brief|places`; the old `/backlinks/strategy` URL
+  redirects there) and loaded once by `setup.ts` (`backlink_setup` RPC). The tabs stay locked and load
+  nothing until it is complete.
+- **Strategy brief** (`backlink_briefs`, edited in the setup sheet, migration `0038`): reach
   (local/national/global), buyer (B2B/B2C/both), offering (services/software/products), audience,
   1–5 core + up to 12 adjacent topics, trusted sites, competitors, exclude terms, kinds of sites.
   Saved by `save_backlink_brief` (admins, managers; versioned). Find places needs it (plus a city or

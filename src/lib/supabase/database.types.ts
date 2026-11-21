@@ -4396,6 +4396,7 @@ export type Database = {
         Args: { p_client_id: string; p_limit?: number }
         Returns: Json
       }
+      backlink_setup: { Args: { p_client_id: string }; Returns: Json }
       block_directory: {
         Args: { p_id: string; p_reason: string }
         Returns: number

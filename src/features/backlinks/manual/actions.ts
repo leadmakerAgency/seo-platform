@@ -9,6 +9,7 @@ import type { Permission } from "@/lib/roles"
 import type { Json } from "@/lib/supabase/database.types"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { DIRECTORY_TYPES } from "../constants"
+import { setupProblem } from "../setup"
 import { siteKeyOf } from "../site-key"
 import {
   BLOCK_REASONS,
@@ -60,6 +61,9 @@ export async function pickCatalogSites(
   if (!isUuid(clientId)) return { ok: false, error: "Unknown client." }
   if (ids.length === 0) return { ok: false, error: "Tick at least one site." }
   if (ids.length > MAX_PICK) return { ok: false, error: `Add at most ${MAX_PICK} sites at a time.` }
+  // New work needs the shared backlink setup (12-shared-setup.md); existing listings can still be worked.
+  const notReady = await setupProblem(clientId)
+  if (notReady) return { ok: false, error: notReady }
   const supabase = await createSupabaseServerClient()
   const { data, error } = await supabase.rpc("pick_catalog_sites", {
     p_client_id: clientId,
@@ -87,6 +91,8 @@ export async function addManualSite(
   const denied = await guard("backlinks.manual")
   if (denied) return { ok: false, error: denied }
   if (!isUuid(clientId)) return { ok: false, error: "Unknown client." }
+  const notReady = await setupProblem(clientId)
+  if (notReady) return { ok: false, error: notReady }
   const parsed = addSiteSchema.safeParse(input)
   if (!parsed.success) {
     const first = parsed.error.issues[0]

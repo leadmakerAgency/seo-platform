@@ -2,9 +2,7 @@ import "server-only"
 
 import { hasDataForSeo } from "@/lib/env.server"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
-import { snapshotOf, type BriefSnapshot } from "../brief"
 import type { OpportunityStatus, RejectReason } from "../constants"
-import type { Target } from "../queries"
 import { displayHost } from "../site-key"
 import type { CategoryKey } from "./config"
 import type { GapLink } from "./gap"
@@ -138,10 +136,8 @@ export type AiDossier = {
   briefVersion: number | null
 }
 
+/** The brief and the places come from the shared backlink setup (../setup.ts). */
 export type AiSearchData = {
-  brief: BriefSnapshot | null
-  briefMissing: string[]
-  targets: Target[]
   quota: AiQuota | null
   dossier: AiDossier | null
   prospects: AiProspect[]
@@ -156,11 +152,9 @@ const num = (v: unknown) => Number(v ?? 0) || 0
 
 export async function getAiSearchData(clientId: string): Promise<AiSearchData> {
   const supabase = await createSupabaseServerClient()
-  const [{ data: quotaRaw }, { data: backlinkQuota }, { data: briefRow }, { data: dossierRow }, { data: rows }, { data: standard }, { data: gapRuns }] =
+  const [{ data: quotaRaw }, { data: dossierRow }, { data: rows }, { data: standard }, { data: gapRuns }] =
     await Promise.all([
       supabase.rpc("ai_search_quota", { p_client_id: clientId }),
-      supabase.rpc("backlink_quota", { p_client_id: clientId }),
-      supabase.from("backlink_briefs").select("*").eq("client_id", clientId).maybeSingle(),
       supabase.from("ai_client_dossiers").select("*").eq("client_id", clientId).maybeSingle(),
       supabase
         .from("ai_link_prospects")
@@ -184,7 +178,6 @@ export async function getAiSearchData(clientId: string): Promise<AiSearchData> {
     ])
 
   const q = quotaRaw as Rec | null
-  const bq = backlinkQuota as Rec | null
   const open = q?.open_run as Rec | null
   const last = q?.last_run as Rec | null
   const quota: AiQuota | null = q
@@ -247,18 +240,6 @@ export async function getAiSearchData(clientId: string): Promise<AiSearchData> {
       }
     : null
 
-  const targets: Target[] = ((bq?.targets as Rec[] | null) ?? []).map((t) => ({
-    id: String(t.id),
-    label: String(t.label),
-    kind: t.kind as Target["kind"],
-    countryIso: String(t.country_iso),
-    locationName: String(t.location_name),
-    searchName: String(t.search_name),
-    active: Boolean(t.active),
-    lastSearchedAt: (t.last_searched_at as string | null) ?? null,
-    searchableAt: (t.searchable_at as string | null) ?? null,
-    places: Number(t.places ?? 0),
-  }))
 
   const inStandard = new Set((standard ?? []).map((s) => s.directory_id))
   const prospects: AiProspect[] = (rows ?? []).map((r) => {
@@ -326,9 +307,6 @@ export async function getAiSearchData(clientId: string): Promise<AiSearchData> {
 
   const d = dossierRow as Rec | null
   return {
-    brief: snapshotOf(briefRow),
-    briefMissing: Array.isArray(bq?.brief_missing) ? (bq!.brief_missing as string[]) : [],
-    targets,
     quota,
     dossier: d
       ? {

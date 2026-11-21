@@ -1,12 +1,13 @@
 import { StatStrip, type StatItem } from "@/components/common/stat-strip"
-import { PageHeader } from "@/components/layout/page-header"
 import { agencyMonth, agencyToday } from "@/lib/dates"
 import { countryName } from "@/lib/countries"
 import { formatNumber } from "@/lib/format"
 import { hasDataForSeo } from "@/lib/env.server"
 import { can, type AppRole } from "@/lib/roles"
 import { clientHref } from "@/lib/navigation"
-import { ModeTabs, MODE_META } from "../../components/mode-tabs"
+import type { ReactNode } from "react"
+import { BacklinksHeader } from "../../components/backlinks-header"
+import type { BacklinkSetup } from "../../setup"
 import { hasLocal } from "../../brief"
 import { isStage, ORIGINS, stageHas, STAGE_LABELS, type Origin, type Stage } from "../constants"
 import { listingKit } from "../listing-kit"
@@ -29,10 +30,18 @@ export async function ManualSearch({
   client,
   member,
   search,
+  setup,
+  chrome,
+  description,
 }: {
   client: { id: string; slug: string; name: string }
   member: { id: string; role: AppRole }
   search: Record<string, string | string[] | undefined>
+  /** The shared backlink setup (brief + places), docs/plans/backlinks/12-shared-setup.md. */
+  setup: BacklinkSetup
+  /** The setup bar and the tabs, drawn under this tab's header. */
+  chrome: ReactNode
+  description: string
 }) {
   const data = await getManualData(client.id)
   const base = clientHref(client.slug, "backlinks")
@@ -53,11 +62,10 @@ export async function ManualSearch({
   const canStrength = can(member.role, "backlinks.strength")
   const strengthBlocked = hasDataForSeo() ? null : "DataForSEO isn't connected yet."
 
-  // Countries: the brief's places (Standard Search), else the client's own country.
-  const placeCountries = [
-    ...new Set(data.places.filter((pl) => pl.active).map((pl) => pl.country.toUpperCase())),
-  ]
-  const brief = data.brief
+  // Countries: the setup's places, else the client's own country.
+  const activePlaces = setup.targets.filter((pl) => pl.active)
+  const placeCountries = [...new Set(activePlaces.map((pl) => pl.countryIso.toUpperCase()))]
+  const brief = setup.brief
   const p = data.profile
   const ctx: MatchContext = {
     countries: placeCountries.length ? placeCountries : [data.client.country],
@@ -108,7 +116,7 @@ export async function ManualSearch({
     services: p?.services?.length
       ? p.services
       : [p?.primary_category ?? data.client.industry ?? ""],
-    places: data.places.filter((pl) => pl.active).map((pl) => pl.label),
+    places: activePlaces.map((pl) => pl.label),
     competitors: data.competitors,
     clientName: data.client.name,
     clientHost,
@@ -149,10 +157,9 @@ export async function ManualSearch({
 
   return (
     <>
-      <PageHeader
-        eyebrow={client.name}
-        title="Backlinks"
-        description={MODE_META.manual.caption}
+      <BacklinksHeader
+        clientName={client.name}
+        description={description}
         actions={
           canWork ? (
             <ManualActions
@@ -166,7 +173,7 @@ export async function ManualSearch({
           ) : null
         }
       />
-      <ModeTabs base={base} mode="manual" />
+      {chrome}
 
       {subs.length > 0 && <StatStrip items={stats} label="Backlink listings by status" />}
       {subs.length === 0 && canWork && (

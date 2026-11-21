@@ -1,6 +1,6 @@
 "use client"
 
-import { Loader2, MapPin, Plus, Trash2 } from "lucide-react"
+import { Check, Circle, Loader2, MapPin, Plus, Trash2 } from "lucide-react"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { toast } from "sonner"
 
@@ -30,13 +30,15 @@ import {
   updateTarget,
   type LocationOption,
 } from "../actions"
+import type { Reach } from "../brief"
 import type { Target } from "../queries"
 
 const KIND_LABEL: Record<Target["kind"], string> = { city: "City", region: "Region", country: "Country" }
 
 /**
- * "Where the client wants to be found": the places Find places searches. Each one is a
- * DataForSEO location (so searches run from there) with editable search words.
+ * "Where the client wants to be found": the places every Backlinks tab searches from, step 2 of
+ * the backlink setup sheet. Each one is a DataForSEO location (so searches run from there) with
+ * editable search words.
  */
 export function TargetsPanel({
   clientId,
@@ -45,6 +47,9 @@ export function TargetsPanel({
   suggestions,
   canEdit,
   nowIso,
+  needs,
+  reach,
+  heading = true,
 }: {
   clientId: string
   targets: Target[]
@@ -53,26 +58,63 @@ export function TargetsPanel({
   suggestions: string[]
   canEdit: boolean
   nowIso: string
+  /** What the brief needs from the places (a live checklist above the list). */
+  needs?: { label: string; done: boolean }[]
+  /** The brief's reach, to warn before removing the last place it needs. */
+  reach?: Reach[]
+  heading?: boolean
 }) {
   const now = new Date(nowIso)
+  const active = targets.filter((t) => t.active)
+  const lockNote = (t: Target) => {
+    if (!reach || !t.active) return null
+    const others = active.filter((x) => x.id !== t.id)
+    if (t.kind === "country" && reach.some((r) => r !== "local") && !others.some((x) => x.kind === "country")) {
+      return "This is the only country, and the brief has national or global customers. The backlink tabs lock until another country is added."
+    }
+    if (t.kind !== "country" && reach.includes("local") && !others.some((x) => x.kind !== "country")) {
+      return "This is the only city or region, and the brief has local customers. The backlink tabs lock until another one is added."
+    }
+    return null
+  }
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="targets-title">
-      <div className="flex flex-col gap-0.5">
-        <h2 id="targets-title" className="text-[15px] leading-[22px] font-semibold">
-          Where the client wants to be found
-        </h2>
-        <p className="max-w-[72ch] text-sm text-muted-foreground">
-          Find places searches Google from each of these places for directories, chambers,
-          associations and local sites. Add every city, region or country where the client wants
-          customers. The client&apos;s own address doesn&apos;t matter here.
-        </p>
-      </div>
+    <section className="flex flex-col gap-3" aria-labelledby={heading ? "targets-title" : undefined} aria-label={heading ? undefined : "Places"}>
+      {heading && (
+        <div className="flex flex-col gap-0.5">
+          <h2 id="targets-title" className="text-[15px] leading-[22px] font-semibold">
+            Where the client wants to be found
+          </h2>
+          <p className="max-w-[72ch] text-sm text-muted-foreground">
+            Every Backlinks tab searches from these places. Add every city, region or country where the client
+            wants customers. The client&apos;s own address doesn&apos;t matter here.
+          </p>
+        </div>
+      )}
+
+      {needs && needs.length > 0 && (
+        <div className="flex flex-col gap-1.5 rounded-lg border bg-muted/30 px-3 py-2.5">
+          <p className="text-xs font-medium text-muted-foreground">This brief needs</p>
+          <ul className="flex flex-col gap-1">
+            {needs.map((n) => (
+              <li key={n.label} className={cn("flex items-center gap-2 text-sm", n.done ? "text-foreground" : "text-warning")}>
+                {n.done ? (
+                  <Check className="size-3.5 shrink-0 text-success" strokeWidth={3} aria-hidden />
+                ) : (
+                  <Circle className="size-3.5 shrink-0" aria-hidden />
+                )}
+                {n.label}
+                <span className="sr-only">{n.done ? "(done)" : "(missing)"}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="rounded-lg border bg-card">
         {targets.length > 0 ? (
           <ul className="divide-y">
             {targets.map((t) => (
-              <TargetRow key={t.id} target={t} canEdit={canEdit} now={now} />
+              <TargetRow key={t.id} target={t} canEdit={canEdit} now={now} lockNote={lockNote(t)} />
             ))}
           </ul>
         ) : (
@@ -92,7 +134,17 @@ export function TargetsPanel({
   )
 }
 
-function TargetRow({ target: t, canEdit, now }: { target: Target; canEdit: boolean; now: Date }) {
+function TargetRow({
+  target: t,
+  canEdit,
+  now,
+  lockNote,
+}: {
+  target: Target
+  canEdit: boolean
+  now: Date
+  lockNote: string | null
+}) {
   const [words, setWords] = useState(t.searchName)
   const [pending, startTransition] = useTransition()
 
@@ -163,6 +215,11 @@ function TargetRow({ target: t, canEdit, now }: { target: Target; canEdit: boole
                   It won&apos;t be searched any more. Places already found for it stay in the list.
                   To pause it instead, untick On.
                 </AlertDialogDescription>
+                {lockNote && (
+                  <p className="rounded-md border border-warning/30 bg-warning-soft px-3 py-2 text-sm text-foreground">
+                    {lockNote}
+                  </p>
+                )}
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>

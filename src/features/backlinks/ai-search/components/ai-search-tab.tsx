@@ -1,12 +1,16 @@
 import { CircleAlert, Search } from "lucide-react"
-import Link from "next/link"
+import type { ReactNode } from "react"
 
 import { ShockwaveMark } from "@/components/brand/logo"
-import { Button } from "@/components/ui/button"
 import { OverviewRefresher } from "@/features/overview/components/overview-refresher"
-import { BUYER_META, BUYERS, mixLabel, OFFERING_META, OFFERINGS, REACH_META, REACHES, topicCount } from "../../brief"
-import { TargetsPanel } from "../../components/targets-panel"
-import type { AiSearchData } from "../queries"
+import { hasAnthropicKey } from "@/lib/env.server"
+import { can, type AppRole } from "@/lib/roles"
+import { getAccountBalances } from "../../accounts"
+import { BacklinksHeader } from "../../components/backlinks-header"
+import { RunHistoryPanel } from "../../components/run-history-panel"
+import { getRunHistory } from "../../run-history"
+import type { BacklinkSetup } from "../../setup"
+import { getAiSearchData } from "../queries"
 import { AiDossierCard } from "./ai-dossier-card"
 import { AiInsightsCard } from "./ai-insights-card"
 import { AiProspectsView } from "./ai-prospects-view"
@@ -14,38 +18,39 @@ import { RunAiSearchButton } from "./ai-run-dialog"
 import { AiRunProgress } from "./ai-run-progress"
 import { CompetitorsCard } from "./competitors-card"
 
-/** The Shockwave AI Search tab (Backlinks, ?mode=ai). Plan §7. */
-export function AiSearchTab({
-  clientId,
-  clientStage,
-  defaultCountry,
-  suggestions,
-  base,
-  data,
-  canDiscover,
-  canReview,
-  canStrategy,
-  canRefresh = false,
-  isAdmin,
-  claudeReady,
-  nowIso,
+/**
+ * The Shockwave AI Search tab (Backlinks, ?mode=ai). Plan §7. The brief and the places come from
+ * the shared backlink setup (docs/plans/backlinks/12-shared-setup.md), edited in the setup sheet.
+ */
+export async function AiSearchTab({
+  client,
+  member,
+  setup,
+  chrome,
 }: {
-  clientId: string
-  clientStage: string
-  defaultCountry: string
-  suggestions: string[]
+  client: { id: string; name: string; stage: string }
+  member: { role: AppRole }
   base: string
-  data: AiSearchData
-  canDiscover: boolean
-  canReview: boolean
-  canStrategy: boolean
-  /** Admins and managers can force a fresh pull of competitor link data. */
-  canRefresh?: boolean
-  isAdmin: boolean
-  claudeReady: boolean
-  nowIso: string
+  setup: BacklinkSetup
+  /** The setup bar and the tabs, drawn under this tab's header. */
+  chrome: ReactNode
 }) {
-  const { brief, quota, targets } = data
+  const isAdmin = can(member.role, "integrations.manage")
+  const canDiscover = can(member.role, "backlinks.discover")
+  const canReview = can(member.role, "backlinks.review")
+  // Admins and managers can force a fresh pull of competitor link data.
+  const canRefresh = can(member.role, "backlinks.library")
+  const claudeReady = hasAnthropicKey()
+  const nowIso = new Date().toISOString()
+  const [data, history, accounts] = await Promise.all([
+    getAiSearchData(client.id),
+    getRunHistory(client.id),
+    getAccountBalances(isAdmin),
+  ])
+  const { brief, targets } = setup
+  const { quota } = data
+  const clientId = client.id
+  const clientStage = client.stage
   const open = quota?.openRun ?? null
   const labels = Object.fromEntries(targets.map((t) => [t.id, t.label]))
   const blocked = !claudeReady
@@ -56,8 +61,8 @@ export function AiSearchTab({
         ? "An AI search is running now."
         : quota?.standardRunning
           ? "A Standard Search is running. Wait for it to finish."
-          : data.briefMissing.length
-            ? `${data.briefMissing.join(". ")}.`
+          : setup.missing.length
+            ? `${setup.missing.join(". ")}.`
             : quota?.budgetProblem
               ? quota.budgetProblem
               : quota && quota.used >= quota.limit
@@ -72,82 +77,44 @@ export function AiSearchTab({
         ? "An AI search is running now."
         : quota?.standardRunning
           ? "A Standard Search is running. Wait for it to finish."
-          : data.briefMissing.length
-            ? `${data.briefMissing.join(". ")}.`
-            : targets.every((t) => !t.active)
-              ? "Add at least one place first."
-              : (quota?.budgetProblem ?? null)
+          : setup.missing.length
+            ? `${setup.missing.join(". ")}.`
+            : (quota?.budgetProblem ?? null)
   const activeCompetitors = (quota?.competitors ?? []).filter((c) => c.active).map((c) => c.domain)
   const last = quota?.lastRun
   const hasResults = data.prospects.length > 0
 
   return (
     <>
-      <section className="flex flex-col gap-3 rounded-lg border bg-card p-4" aria-labelledby="ai-strategy-title">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-col gap-1">
-            <h2 id="ai-strategy-title" className="text-[15px] leading-[22px] font-semibold">
-              Strategy brief
-            </h2>
-            {brief ? (
-              <p className="text-sm text-muted-foreground">
-                {mixLabel(brief.reach, REACHES, REACH_META)} · {mixLabel(brief.buyer, BUYERS, BUYER_META)} ·{" "}
-                {mixLabel(brief.offering, OFFERINGS, OFFERING_META)} · {topicCount(brief)} topics ({brief.core_topics.join(", ")})
-              </p>
-            ) : (
-              <p className="max-w-[72ch] text-sm text-muted-foreground">
-                Shockwave AI researches from the strategy brief and the places below. Write the brief first.
-              </p>
-            )}
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button asChild variant="outline" size="sm">
-              <Link href={`${base}/strategy`}>{brief ? (canStrategy ? "Edit brief" : "View brief") : "Write the brief"}</Link>
-            </Button>
-            {canDiscover && (
-              <RunAiSearchButton
-                clientId={clientId}
-                targets={targets}
-                brief={brief}
-                maxSearches={quota?.maxWebSearches ?? 80}
-                searchPrice={quota?.webSearchPrice ?? 0.01}
-                maxRunUsd={quota?.maxRunUsd ?? 4}
-                disabledReason={blocked}
-                hasRun={Boolean(last)}
-                gap={
-                  quota
-                    ? {
-                        competitors: activeCompetitors.length,
-                        maxSites: quota.gapMaxSites,
-                        fallback: quota.gapFallback,
-                        unavailable: null,
-                      }
-                    : null
-                }
-              />
-            )}
-          </div>
-        </div>
-        {data.briefMissing.length > 0 && (
-          <ul className="flex flex-col gap-1 text-[13px] text-warning">
-            {data.briefMissing.map((m) => (
-              <li key={m} className="flex items-center gap-1.5">
-                <CircleAlert className="size-3.5 shrink-0" aria-hidden />
-                {m}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <TargetsPanel
-        clientId={clientId}
-        targets={targets}
-        defaultCountry={defaultCountry}
-        suggestions={suggestions}
-        canEdit={canDiscover}
-        nowIso={nowIso}
+      <BacklinksHeader
+        clientName={client.name}
+        description="Shockwave AI researches where this client should get listed, from the backlink setup"
+        actions={
+          canDiscover ? (
+            <RunAiSearchButton
+              clientId={clientId}
+              targets={targets}
+              brief={brief}
+              maxSearches={quota?.maxWebSearches ?? 80}
+              searchPrice={quota?.webSearchPrice ?? 0.01}
+              maxRunUsd={quota?.maxRunUsd ?? 4}
+              disabledReason={blocked}
+              hasRun={Boolean(last)}
+              gap={
+                quota
+                  ? {
+                      competitors: activeCompetitors.length,
+                      maxSites: quota.gapMaxSites,
+                      fallback: quota.gapFallback,
+                      unavailable: null,
+                    }
+                  : null
+              }
+            />
+          ) : null
+        }
       />
+      {chrome}
 
       {quota && (
         <CompetitorsCard
@@ -188,7 +155,7 @@ export function AiSearchTab({
       )}
 
       {data.dossier && (
-        <AiDossierCard data={data.dossier} briefHref={`${base}/strategy`} briefVersion={brief?.version ?? null} nowIso={nowIso} />
+        <AiDossierCard data={data.dossier} briefVersion={brief?.version ?? null} nowIso={nowIso} />
       )}
 
       {data.insights && <AiInsightsCard insights={data.insights} />}
@@ -225,6 +192,7 @@ export function AiSearchTab({
       )}
 
       <HowItWorks />
+      {history && history.entries.length > 0 && <RunHistoryPanel history={history} accounts={accounts} nowIso={nowIso} />}
       {open && <OverviewRefresher every={5_000} />}
     </>
   )
@@ -232,8 +200,8 @@ export function AiSearchTab({
 
 function HowItWorks() {
   const steps = [
-    ["Read the client", "Its website, profile and the strategy brief, into a short dossier."],
-    ["Where to rank", "The searches buyers make in each place, in the local language, and who ranks for them."],
+    ["Read the client", "Its website, profile and the setup's strategy brief, into a short dossier."],
+    ["Where to rank", "The searches buyers make in each of the setup's places, in the local language, and who ranks for them."],
     ["Competitors", "The businesses that really compete in each place."],
     ["Research", "Best-of lists, directories, associations, press, review sites, podcasts, communities, partners, lists that feature competitors, and pages that mention the client."],
     ["Check pages", "Every page is opened: is it live, does it list businesses, is there a way in, are links followed, any red flags."],
