@@ -42,13 +42,15 @@ export const taskFormSchema = z.object({
 })
 
 /**
- * The usual "counts toward" for a task type (used when creating a task). Backlink tasks count
- * nothing: a backlink counts once, when its listing goes Live on the Backlinks page (Manual Search).
+ * The usual "counts toward" for a task type (used when creating a task). Backlink and content
+ * tasks count nothing by default: a backlink counts once, when its listing goes Live on the
+ * Backlinks page, and an article or Google post counts once, when the Content page publishes it.
+ * Pick "Articles" by hand for an article published outside the Content page.
  */
+const DEFAULT_COUNTS_AS: Partial<Record<string, string>> = {}
+
 export function defaultCountsAs(type: string): string {
-  if (type === "backlinks") return "none"
-  if (type === "content") return "articles"
-  return "none"
+  return DEFAULT_COUNTS_AS[type] ?? "none"
 }
 
 export type TaskFormInput = z.input<typeof taskFormSchema>

@@ -50,6 +50,8 @@ const PERMISSIONS = {
   "ai_visibility.manage": ["admin", "manager"],
   "ai_visibility.work": ["admin", "manager", "va"],
   "ai_visibility.frequency": ["admin"],
+  "content.write": ["admin", "manager", "writer"],
+  "content.settings": ["admin", "manager"],
   "requests.create": ["admin", "manager", "va", "writer"],
   "requests.manage": ["admin", "manager"],
   "connections.manage": ["admin", "manager"],
@@ -84,9 +86,12 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   "ai_visibility.manage": "Set up AI visibility: brands, platforms, questions and checks",
   "ai_visibility.work": "Work AI visibility actions and send cited sites to Backlinks (VAs: clients in their tasks)",
   "ai_visibility.frequency": "Check a client's AI visibility more often than weekly, and set its budgets",
+  "content.write":
+    "Write, schedule and publish social posts and blog articles, and upload media (writers: clients in their tasks)",
+  "content.settings": "Change a client's content settings: time zone, button link, WordPress blog and defaults",
   "requests.create": "Ask clients for codes, files and approvals (VAs: clients in their tasks)",
   "requests.manage": "Turn on or replace a client's private link",
-  "connections.manage": "Connect and disconnect a client's Google and social accounts",
+  "connections.manage": "Connect and disconnect a client's Google, social and WordPress accounts",
   "onboarding.manage": "Send onboarding links and apply what clients submit",
   "vault.reveal":
     "Open stored client logins (VAs and writers: clients in their tasks; every view is logged)",

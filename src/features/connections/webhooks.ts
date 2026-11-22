@@ -1,5 +1,6 @@
 import "server-only"
 
+import { processPostEvent } from "@/features/content/server"
 import { syncClient, type Db } from "./sync"
 
 const MAX_ATTEMPTS = 5
@@ -22,6 +23,24 @@ export async function processWebhookEvent(db: Db, eventId: string) {
       .from("zernio_webhook_events")
       .update({ processed_at: new Date().toISOString(), attempts: event.attempts + 1, ...fields })
       .eq("id", event.id)
+
+  // Content: a post changed. We read the post back from Zernio (the payload is only a hint).
+  if (event.event.startsWith("post.")) {
+    try {
+      const clientId = await processPostEvent(db, event.payload)
+      await done({ client_id: clientId, last_error: clientId ? null : "Not one of our posts (ignored)." })
+    } catch (error) {
+      await db
+        .from("zernio_webhook_events")
+        .update({
+          attempts: event.attempts + 1,
+          last_error: (error instanceof Error ? error.message : String(error)).slice(0, 1000),
+        })
+        .eq("id", event.id)
+      console.error("[zernio] post webhook failed", event.id, error)
+    }
+    return
+  }
 
   if (!event.event.startsWith("account.")) {
     await done({ last_error: null })

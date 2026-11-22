@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 import { syncClient, type Db } from "@/features/connections/sync"
+import { setupWordPress } from "@/features/content/server"
 import { requestOrigin } from "@/lib/origin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
@@ -87,5 +88,11 @@ export async function GET(request: NextRequest) {
     })
     .eq("id", attempt.id)
     .eq("status", "pending")
+  // A WordPress site: remember it for the Content page and pick its blog.
+  if (attempt.platform === "wordpress") {
+    await setupWordPress(supabase, attempt.client_id, account.id).catch((e) =>
+      console.error("[content] WordPress setup after connect failed", e),
+    )
+  }
   return result({ result: "connected" })
 }

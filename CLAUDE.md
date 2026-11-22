@@ -110,6 +110,16 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   (`/api/cron/ai-visibility`); its spend is `private.aiv_month_spend()` and its Claude features are
   `ai_visibility.*`. Brand colours are `--series-1…8` by `aiv_brands.color_slot` (never by rank).
   Plan: `docs/plans/ai-visibility/`.
+- **Content (`src/features/content/`):** social posts and WordPress articles go out only through
+  Zernio (`src/lib/zernio/content.ts`), with an `Idempotency-Key` per post/article version
+  (`sendKey`) and one send at a time (`content_claim_send`). Team writes go only through the 0060
+  RPCs; what Zernio says is stored only by the service-role `zernio_store_post_result` /
+  `zernio_store_article_result` (webhooks read the post back with `getPost`; the payload is a hint).
+  Article HTML is cleaned by `sanitize.ts` on save and again before sending. WordPress is a
+  `social_platform` but a website (`WEBSITE_PLATFORMS`), never a post target or an onboarding social.
+  WordPress application passwords go straight to Zernio and are never stored or logged. Published
+  articles and Google posts become `work_items` in triggers; content tasks don't count by default.
+  Plan: `docs/plans/content/`.
 - **Backlinks Manual Search (catalog + work list):** picks go only through `pick_catalog_sites` /
   `add_manual_site`; submissions change only through `update_submission` /
   `bulk_update_submissions` / `add_backlink_login`. Every approved opportunity (any tab) gets a

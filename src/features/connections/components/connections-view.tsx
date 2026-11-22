@@ -48,10 +48,12 @@ import {
   PLATFORM_META,
   PLATFORMS,
   STATUS_META,
+  WEBSITE_PLATFORMS,
   type SocialPlatform,
 } from "../constants"
 import type { ConnectedAccount, ConnectionsData } from "../queries"
 import { ClientLinkButton, ConnectButton, CopyButton } from "./connect-buttons"
+import { WordPressPasswordButton } from "./wordpress-connect"
 
 type Props = {
   clientId: string
@@ -138,6 +140,28 @@ export function ConnectionsView({
           />
         ))}
       </ul>
+
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-col gap-0.5">
+          <h2 className="text-[15px] font-semibold tracking-tight">Website</h2>
+          <p className="text-sm text-muted-foreground">
+            The client&apos;s WordPress site, for publishing blog articles from the Content page.
+          </p>
+        </div>
+        <ul aria-label="Website" className="flex flex-col divide-y rounded-lg border bg-card">
+          {WEBSITE_PLATFORMS.map((platform) => (
+            <PlatformRow
+              key={platform}
+              platform={platform}
+              accounts={byPlatform.get(platform) ?? []}
+              clientId={clientId}
+              now={now}
+              canManage={canManage}
+              zernioReady={zernioReady}
+            />
+          ))}
+        </ul>
+      </section>
 
       {data.links.length > 0 && (
         <section className="flex flex-col gap-3">
@@ -241,6 +265,7 @@ function PlatformRow({
   zernioReady: boolean
 }) {
   const meta = PLATFORM_META[platform]
+  const website = WEBSITE_PLATFORMS.includes(platform)
   const active = accounts.filter((a) => a.status !== "removed")
   const broken = active.some((a) => a.status === "needs_reconnect")
   const canAct = canManage && zernioReady
@@ -271,13 +296,23 @@ function PlatformRow({
               clientId={clientId}
               platform={platform}
               variant={active.length ? "outline" : "default"}
-              label={active.length ? "Connect another" : "Connect"}
+              label={
+                website
+                  ? "WordPress.com sign-in"
+                  : active.length
+                    ? "Connect another"
+                    : "Connect"
+              }
             />
-            <ClientLinkButton
-              clientId={clientId}
-              platform={platform}
-              variant={active.length ? "ghost" : "outline"}
-            />
+            {website ? (
+              <WordPressPasswordButton clientId={clientId} variant={active.length ? "ghost" : "outline"} />
+            ) : (
+              <ClientLinkButton
+                clientId={clientId}
+                platform={platform}
+                variant={active.length ? "ghost" : "outline"}
+              />
+            )}
           </div>
         )}
       </div>

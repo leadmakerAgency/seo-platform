@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 
 import { syncAll, type Db } from "@/features/connections/sync"
 import { retryWebhookEvents } from "@/features/connections/webhooks"
+import { reconcileContent } from "@/features/content/server"
 import { hasZernioApiKey } from "@/lib/env.server"
 import { createSupabaseAdminClient, hasSupabaseSecretKey } from "@/lib/supabase/admin"
 
@@ -29,6 +30,11 @@ export async function POST(request: Request) {
   const now = new Date().toISOString()
   const totals = await syncAll(db)
   const retried = await retryWebhookEvents(db)
+  // Posts and articles whose time passed (missed webhooks; WordPress has none).
+  const content = await reconcileContent(db).catch((error) => {
+    console.error("[content] reconcile failed", error)
+    return null
+  })
   await db
     .from("social_connect_attempts")
     .update({ status: "expired", completed_at: now })
@@ -39,5 +45,5 @@ export async function POST(request: Request) {
     .delete()
     .lt("received_at", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
 
-  return NextResponse.json({ ok: true, ...totals, retriedEvents: retried })
+  return NextResponse.json({ ok: true, ...totals, retriedEvents: retried, content })
 }

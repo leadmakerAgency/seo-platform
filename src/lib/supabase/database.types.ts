@@ -3205,6 +3205,537 @@ export type Database = {
           },
         ]
       }
+      content_articles: {
+        Row: {
+          author: string | null
+          body_html: string
+          client_id: string
+          created_at: string
+          created_by: string | null
+          excerpt: string | null
+          featured_media_id: string | null
+          focus_keyword: string | null
+          id: string
+          keyword_id: string | null
+          last_error: string | null
+          last_synced_at: string | null
+          meta_description: string | null
+          publish_at: string | null
+          published_at: string | null
+          sending_at: string | null
+          sent_version: number | null
+          seo_pasted_at: string | null
+          seo_title: string | null
+          slug: string | null
+          status: Database["public"]["Enums"]["content_status"]
+          tags: string[]
+          title: string
+          topic: string | null
+          updated_at: string
+          updated_by: string | null
+          version: number
+          word_count: number
+          wp_account_id: string | null
+          wp_article_id: string | null
+          wp_blog_id: string | null
+          wp_status: string | null
+          wp_url: string | null
+        }
+        Insert: {
+          author?: string | null
+          body_html?: string
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          featured_media_id?: string | null
+          focus_keyword?: string | null
+          id?: string
+          keyword_id?: string | null
+          last_error?: string | null
+          last_synced_at?: string | null
+          meta_description?: string | null
+          publish_at?: string | null
+          published_at?: string | null
+          sending_at?: string | null
+          sent_version?: number | null
+          seo_pasted_at?: string | null
+          seo_title?: string | null
+          slug?: string | null
+          status?: Database["public"]["Enums"]["content_status"]
+          tags?: string[]
+          title?: string
+          topic?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+          word_count?: number
+          wp_account_id?: string | null
+          wp_article_id?: string | null
+          wp_blog_id?: string | null
+          wp_status?: string | null
+          wp_url?: string | null
+        }
+        Update: {
+          author?: string | null
+          body_html?: string
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          excerpt?: string | null
+          featured_media_id?: string | null
+          focus_keyword?: string | null
+          id?: string
+          keyword_id?: string | null
+          last_error?: string | null
+          last_synced_at?: string | null
+          meta_description?: string | null
+          publish_at?: string | null
+          published_at?: string | null
+          sending_at?: string | null
+          sent_version?: number | null
+          seo_pasted_at?: string | null
+          seo_title?: string | null
+          slug?: string | null
+          status?: Database["public"]["Enums"]["content_status"]
+          tags?: string[]
+          title?: string
+          topic?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+          word_count?: number
+          wp_account_id?: string | null
+          wp_article_id?: string | null
+          wp_blog_id?: string | null
+          wp_status?: string | null
+          wp_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_articles_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_articles_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_articles_featured_media_id_fkey"
+            columns: ["featured_media_id"]
+            isOneToOne: false
+            referencedRelation: "content_media"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_articles_keyword_id_fkey"
+            columns: ["keyword_id"]
+            isOneToOne: false
+            referencedRelation: "keywords"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_articles_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_articles_wp_account_id_fkey"
+            columns: ["wp_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_events: {
+        Row: {
+          actor_id: string | null
+          article_id: string | null
+          at: string
+          client_id: string
+          detail: Json
+          id: number
+          kind: string
+          post_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          article_id?: string | null
+          at?: string
+          client_id: string
+          detail?: Json
+          id?: never
+          kind: string
+          post_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          article_id?: string | null
+          at?: string
+          client_id?: string
+          detail?: Json
+          id?: never
+          kind?: string
+          post_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_events_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "content_articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_events_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "content_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_media: {
+        Row: {
+          alt_text: string | null
+          bytes: number
+          client_id: string
+          created_at: string
+          created_by: string | null
+          duration_s: number | null
+          file_name: string
+          height: number | null
+          id: string
+          kind: Database["public"]["Enums"]["content_media_kind"]
+          mime: string
+          storage_path: string
+          thumb_path: string | null
+          title: string | null
+          width: number | null
+          zernio_uploaded_at: string | null
+          zernio_url: string | null
+        }
+        Insert: {
+          alt_text?: string | null
+          bytes: number
+          client_id: string
+          created_at?: string
+          created_by?: string | null
+          duration_s?: number | null
+          file_name: string
+          height?: number | null
+          id?: string
+          kind: Database["public"]["Enums"]["content_media_kind"]
+          mime: string
+          storage_path: string
+          thumb_path?: string | null
+          title?: string | null
+          width?: number | null
+          zernio_uploaded_at?: string | null
+          zernio_url?: string | null
+        }
+        Update: {
+          alt_text?: string | null
+          bytes?: number
+          client_id?: string
+          created_at?: string
+          created_by?: string | null
+          duration_s?: number | null
+          file_name?: string
+          height?: number | null
+          id?: string
+          kind?: Database["public"]["Enums"]["content_media_kind"]
+          mime?: string
+          storage_path?: string
+          thumb_path?: string | null
+          title?: string | null
+          width?: number | null
+          zernio_uploaded_at?: string | null
+          zernio_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_media_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_media_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_post_targets: {
+        Row: {
+          account_name: string | null
+          client_id: string
+          custom_content: string | null
+          custom_media_ids: string[] | null
+          error_category: string | null
+          error_message: string | null
+          error_source: string | null
+          id: string
+          platform: Database["public"]["Enums"]["social_platform"]
+          platform_post_id: string | null
+          platform_post_url: string | null
+          post_id: string
+          published_at: string | null
+          settings: Json
+          social_account_id: string | null
+          status: Database["public"]["Enums"]["content_target_status"]
+          updated_at: string
+          zernio_account_id: string
+        }
+        Insert: {
+          account_name?: string | null
+          client_id: string
+          custom_content?: string | null
+          custom_media_ids?: string[] | null
+          error_category?: string | null
+          error_message?: string | null
+          error_source?: string | null
+          id?: string
+          platform: Database["public"]["Enums"]["social_platform"]
+          platform_post_id?: string | null
+          platform_post_url?: string | null
+          post_id: string
+          published_at?: string | null
+          settings?: Json
+          social_account_id?: string | null
+          status?: Database["public"]["Enums"]["content_target_status"]
+          updated_at?: string
+          zernio_account_id: string
+        }
+        Update: {
+          account_name?: string | null
+          client_id?: string
+          custom_content?: string | null
+          custom_media_ids?: string[] | null
+          error_category?: string | null
+          error_message?: string | null
+          error_source?: string | null
+          id?: string
+          platform?: Database["public"]["Enums"]["social_platform"]
+          platform_post_id?: string | null
+          platform_post_url?: string | null
+          post_id?: string
+          published_at?: string | null
+          settings?: Json
+          social_account_id?: string | null
+          status?: Database["public"]["Enums"]["content_target_status"]
+          updated_at?: string
+          zernio_account_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_post_targets_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_post_targets_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "content_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_post_targets_social_account_id_fkey"
+            columns: ["social_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_posts: {
+        Row: {
+          client_id: string
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          last_error: string | null
+          last_event_at: string | null
+          last_synced_at: string | null
+          media_ids: string[]
+          published_at: string | null
+          scheduled_for: string | null
+          sending_at: string | null
+          sent_version: number | null
+          status: Database["public"]["Enums"]["content_status"]
+          timezone: string | null
+          title: string | null
+          updated_at: string
+          updated_by: string | null
+          version: number
+          zernio_post_id: string | null
+        }
+        Insert: {
+          client_id: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_error?: string | null
+          last_event_at?: string | null
+          last_synced_at?: string | null
+          media_ids?: string[]
+          published_at?: string | null
+          scheduled_for?: string | null
+          sending_at?: string | null
+          sent_version?: number | null
+          status?: Database["public"]["Enums"]["content_status"]
+          timezone?: string | null
+          title?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+          zernio_post_id?: string | null
+        }
+        Update: {
+          client_id?: string
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_error?: string | null
+          last_event_at?: string | null
+          last_synced_at?: string | null
+          media_ids?: string[]
+          published_at?: string | null
+          scheduled_for?: string | null
+          sending_at?: string | null
+          sent_version?: number | null
+          status?: Database["public"]["Enums"]["content_status"]
+          timezone?: string | null
+          title?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+          zernio_post_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_posts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_posts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_posts_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_settings: {
+        Row: {
+          client_id: string
+          default_cta_url: string | null
+          signature: string | null
+          timezone: string
+          updated_at: string
+          updated_by: string | null
+          wp_account_id: string | null
+          wp_blog_id: string | null
+          wp_blog_name: string | null
+          wp_default_author: string | null
+          wp_default_tags: string[]
+          wp_site_url: string | null
+        }
+        Insert: {
+          client_id: string
+          default_cta_url?: string | null
+          signature?: string | null
+          timezone?: string
+          updated_at?: string
+          updated_by?: string | null
+          wp_account_id?: string | null
+          wp_blog_id?: string | null
+          wp_blog_name?: string | null
+          wp_default_author?: string | null
+          wp_default_tags?: string[]
+          wp_site_url?: string | null
+        }
+        Update: {
+          client_id?: string
+          default_cta_url?: string | null
+          signature?: string | null
+          timezone?: string
+          updated_at?: string
+          updated_by?: string | null
+          wp_account_id?: string | null
+          wp_blog_id?: string | null
+          wp_blog_name?: string | null
+          wp_default_author?: string | null
+          wp_default_tags?: string[]
+          wp_site_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_settings_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: true
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_settings_wp_account_id_fkey"
+            columns: ["wp_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dfs_calls: {
         Row: {
           api: Database["public"]["Enums"]["dfs_api"]
@@ -3925,6 +4456,8 @@ export type Database = {
         Row: {
           actor_id: string | null
           client_id: string | null
+          content_article_id: string | null
+          content_post_id: string | null
           created_at: string
           id: string
           kind: Database["public"]["Enums"]["notification_kind"]
@@ -3937,6 +4470,8 @@ export type Database = {
         Insert: {
           actor_id?: string | null
           client_id?: string | null
+          content_article_id?: string | null
+          content_post_id?: string | null
           created_at?: string
           id?: string
           kind: Database["public"]["Enums"]["notification_kind"]
@@ -3949,6 +4484,8 @@ export type Database = {
         Update: {
           actor_id?: string | null
           client_id?: string | null
+          content_article_id?: string | null
+          content_post_id?: string | null
           created_at?: string
           id?: string
           kind?: Database["public"]["Enums"]["notification_kind"]
@@ -3971,6 +4508,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_content_article_id_fkey"
+            columns: ["content_article_id"]
+            isOneToOne: false
+            referencedRelation: "content_articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_content_post_id_fkey"
+            columns: ["content_post_id"]
+            isOneToOne: false
+            referencedRelation: "content_posts"
             referencedColumns: ["id"]
           },
           {
@@ -5453,10 +6004,17 @@ export type Database = {
         Args: { p_base_url: string }
         Returns: undefined
       }
+      content_claim_send: {
+        Args: { p_id: string; p_kind: string }
+        Returns: Json
+      }
       create_client: {
         Args: { p: Json; p_link_token?: string; p_slug: string }
         Returns: Json
       }
+      delete_content_article: { Args: { p_id: string }; Returns: undefined }
+      delete_content_media: { Args: { p_id: string }; Returns: string[] }
+      delete_content_post: { Args: { p_id: string }; Returns: undefined }
       dfs_ai_budget_problem: { Args: never; Returns: string }
       dfs_ai_search_budget_problem: { Args: never; Returns: string }
       dfs_apply_ai_shortlist: {
@@ -5896,6 +6454,22 @@ export type Database = {
         Args: { p_client_id: string; p_items: Json }
         Returns: number
       }
+      save_content_article: {
+        Args: { p: Json; p_client_id: string }
+        Returns: Json
+      }
+      save_content_media: {
+        Args: { p: Json; p_client_id: string }
+        Returns: string
+      }
+      save_content_post: {
+        Args: { p: Json; p_client_id: string }
+        Returns: Json
+      }
+      save_content_settings: {
+        Args: { p: Json; p_client_id: string }
+        Returns: undefined
+      }
       seed_aiv_from_setup: { Args: { p_client_id: string }; Returns: boolean }
       send_aiv_source_to_backlinks: {
         Args: { p: Json; p_client_id: string }
@@ -5909,6 +6483,10 @@ export type Database = {
           p_keyword_norm: string
           p_reason?: string
         }
+        Returns: undefined
+      }
+      set_content_article_seo: {
+        Args: { p_done: boolean; p_id: string }
         Returns: undefined
       }
       set_directory: {
@@ -5964,6 +6542,14 @@ export type Database = {
       }
       verify_zernio_cron_token: { Args: { p_token: string }; Returns: boolean }
       zernio_cron_status: { Args: never; Returns: Json }
+      zernio_store_article_result: {
+        Args: { p: Json; p_article_id: string }
+        Returns: Json
+      }
+      zernio_store_post_result: {
+        Args: { p: Json; p_post_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       ai_tool: "chatgpt" | "perplexity" | "gemini" | "ai_overviews" | "claude"
@@ -6032,6 +6618,22 @@ export type Database = {
         | "cancelled"
       connect_method: "oauth" | "invite"
       connect_source: "team" | "onboarding"
+      content_media_kind: "image" | "video" | "document"
+      content_status:
+        | "draft"
+        | "scheduled"
+        | "publishing"
+        | "published"
+        | "partial"
+        | "failed"
+        | "cancelled"
+      content_target_status:
+        | "pending"
+        | "publishing"
+        | "published"
+        | "failed"
+        | "cancelled"
+        | "deleted"
       deliverable_kind:
         | "backlinks"
         | "articles"
@@ -6093,6 +6695,8 @@ export type Database = {
         | "backlink_follow_up"
         | "ai_visibility_ready"
         | "ai_visibility_failed"
+        | "content_failed"
+        | "content_published"
       onboarding_link_status: "active" | "revoked" | "expired"
       onboarding_status:
         | "not_started"
@@ -6127,6 +6731,7 @@ export type Database = {
         | "tiktok"
         | "pinterest"
         | "threads"
+        | "wordpress"
       strength_check_status: "running" | "done" | "failed"
       submission_block:
         | "verification"
@@ -6374,6 +6979,24 @@ export const Constants = {
       ],
       connect_method: ["oauth", "invite"],
       connect_source: ["team", "onboarding"],
+      content_media_kind: ["image", "video", "document"],
+      content_status: [
+        "draft",
+        "scheduled",
+        "publishing",
+        "published",
+        "partial",
+        "failed",
+        "cancelled",
+      ],
+      content_target_status: [
+        "pending",
+        "publishing",
+        "published",
+        "failed",
+        "cancelled",
+        "deleted",
+      ],
       deliverable_kind: [
         "backlinks",
         "articles",
@@ -6433,6 +7056,8 @@ export const Constants = {
         "backlink_follow_up",
         "ai_visibility_ready",
         "ai_visibility_failed",
+        "content_failed",
+        "content_published",
       ],
       onboarding_link_status: ["active", "revoked", "expired"],
       onboarding_status: [
@@ -6470,6 +7095,7 @@ export const Constants = {
         "tiktok",
         "pinterest",
         "threads",
+        "wordpress",
       ],
       strength_check_status: ["running", "done", "failed"],
       submission_block: [

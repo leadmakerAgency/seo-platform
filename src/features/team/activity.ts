@@ -282,6 +282,26 @@ export function describeActivity(entry: ActivityLike): string {
       return `${m.accepted ? "accepted" : "declined"} ${str(m.site) || "a site"} for the backlink catalog`
     case "article.published":
       return `published the article “${str(m.title)}”`
+    case "content.post_scheduled":
+      return `scheduled the post “${str(m.title)}”`
+    case "content.post_published":
+      return `published the post “${str(m.title)}”`
+    case "content.post_partial":
+      return `published the post “${str(m.title)}” to some accounts; others failed`
+    case "content.post_failed":
+      return `couldn't publish the post “${str(m.title)}”${str(m.error) ? `: ${str(m.error)}` : ""}`
+    case "content.post_cancelled":
+      return `cancelled the post “${str(m.title)}”`
+    case "content.post_deleted":
+      return `deleted the post “${str(m.title)}”`
+    case "content.article_scheduled":
+      return `scheduled the article “${str(m.title)}” on WordPress`
+    case "content.article_published":
+      return `published the article “${str(m.title)}” on WordPress`
+    case "content.article_failed":
+      return `couldn't publish the article “${str(m.title)}”${str(m.error) ? `: ${str(m.error)}` : ""}`
+    case "content.article_deleted":
+      return `deleted the article draft “${str(m.title)}”`
     case "review.received":
       return `received a ${num(m.rating)}-star review${str(m.author) ? ` from ${str(m.author)}` : ""}`
     case "report.sent":

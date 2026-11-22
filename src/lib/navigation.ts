@@ -155,9 +155,8 @@ export const CLIENT_SECTIONS: ClientSection[] = [
     title: "Content",
     icon: NotebookPen,
     roles: ["admin", "manager", "writer", "viewer"],
-    comingSoon: true,
-    summary:
-      "AI-drafted articles for the client's keywords, reviewed by the team and published to the site and socials.",
+    comingSoon: false,
+    summary: "Plan, schedule and publish the client's social posts and blog articles.",
   },
   {
     id: "reviews",

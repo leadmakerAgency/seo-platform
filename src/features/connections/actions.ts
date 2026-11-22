@@ -19,7 +19,7 @@ import {
   testWebhook,
   ZernioError,
 } from "@/lib/zernio/client"
-import { isSocialPlatform, PLATFORM_META, type SocialPlatform } from "./constants"
+import { isSocialPlatform, isZernioPlatform, PLATFORM_META, type SocialPlatform } from "./constants"
 import { ensureZernioProfile } from "./profile"
 import { isLocalOrigin } from "./queries"
 import { syncClient, type Db } from "./sync"
@@ -81,7 +81,7 @@ export async function startConnect(
 ): Promise<ActionResult<{ url: string }>> {
   const g = await guard("connections.manage")
   if ("error" in g) return { ok: false, error: g.error }
-  if (!isUuid(clientId) || !isSocialPlatform(platform))
+  if (!isUuid(clientId) || !isZernioPlatform(platform))
     return { ok: false, error: "Unknown client or platform." }
   if (!hasZernioApiKey()) return { ok: false, error: NOT_SET_UP }
 

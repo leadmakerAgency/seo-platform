@@ -364,6 +364,25 @@ Plan: `docs/plans/ai-visibility/` (00 research to 08 checks). Migrations `0052`�
   Backlinks" (`send_aiv_source_to_backlinks`) creates a `pending_review` opportunity with source
   `ai_visibility`, shown in Standard Search Review with a "Cited by AI" badge.
 
+## Content (Zernio posts and WordPress articles)
+
+Plan: `docs/plans/content/` (00 research to 09 checks). Migrations `0058`–`0060`.
+
+- **Posts** (`content_posts`, `content_post_targets`): one post, one target per connected account
+  with its own text, files and platform options. Schedule, publish now, update, cancel, retry, edit
+  published text and take down go through `features/content/actions.ts` → Zernio `/v1/posts`. Files
+  live in the `content-media` bucket and are pushed to Zernio's presigned storage at send time
+  (reused for 6 days).
+- **Articles** (`content_articles`): Tiptap editor (`/content/articles/[id]`), cleaned HTML, sent to
+  the client's WordPress through Zernio's Blogs API (publish now or schedule with `publishDate`).
+  SEO plugin fields and categories can't be set: a "paste the SEO fields" step follows publishing.
+- **WordPress connect:** Connections → Website card (WordPress.com OAuth or an application password
+  passed straight to `/v1/connect/wordpress/token`); `setupWordPress` fills `content_settings`.
+- **Status:** `post.*` webhooks (read back with `getPost`) and `reconcileContent` in the hourly
+  `zernio-sync` cron and on page visits; articles have no webhooks, so scheduled ones are read back.
+- **Work ledger:** published articles → `articles`, published Google Business Profile targets →
+  `gbp_posts` (triggers), counted on the Overview.
+
 ## Next widgets for the Dashboard (when their modules exist)
 
 - Columns in the client list: change in 30 days (Google top 10 is built).

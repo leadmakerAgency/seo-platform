@@ -368,6 +368,9 @@ export type NotificationItem = {
     name: string | null
     client: { slug: string; name: string } | null
   } | null
+  /** Content page: the post or article the notification is about. */
+  contentPostId: string | null
+  contentArticleId: string | null
 }
 
 export async function getNotifications(limit = 20): Promise<NotificationItem[]> {
@@ -375,7 +378,7 @@ export async function getNotifications(limit = 20): Promise<NotificationItem[]> 
   const { data, error } = await supabase
     .from("notifications")
     .select(
-      "id, kind, read_at, created_at, actor:team_members!notifications_actor_id_fkey(full_name, email), task:tasks(number, title, task_clients(count)), request:client_requests(number, title, client:clients(slug, name)), social_account:social_accounts(platform, display_name, location_name, client:clients(slug, name)), client:clients(slug, name)",
+      "id, kind, read_at, created_at, actor:team_members!notifications_actor_id_fkey(full_name, email), task:tasks(number, title, task_clients(count)), request:client_requests(number, title, client:clients(slug, name)), social_account:social_accounts(platform, display_name, location_name, client:clients(slug, name)), client:clients(slug, name), content_post_id, content_article_id",
     )
     .order("created_at", { ascending: false })
     .limit(limit)
@@ -404,5 +407,7 @@ export async function getNotifications(limit = 20): Promise<NotificationItem[]> 
           client: n.social_account.client,
         }
       : null,
+    contentPostId: n.content_post_id,
+    contentArticleId: n.content_article_id,
   }))
 }

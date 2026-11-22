@@ -5,7 +5,11 @@ export type SocialPlatform = Database["public"]["Enums"]["social_platform"]
 export type SocialAccountStatus = Database["public"]["Enums"]["social_account_status"]
 export type ConnectAttemptStatus = Database["public"]["Enums"]["connect_attempt_status"]
 
-/** Display order: Google Business Profile first, it matters most for local SEO. */
+/**
+ * Social platforms, in display order: Google Business Profile first, it matters most for
+ * local SEO. WordPress is a Zernio account too, but a website (Blogs API only), so it is
+ * kept out of this list and shown in its own card.
+ */
 export const PLATFORMS: SocialPlatform[] = [
   "googlebusiness",
   "facebook",
@@ -17,6 +21,9 @@ export const PLATFORMS: SocialPlatform[] = [
   "pinterest",
   "threads",
 ]
+
+/** Websites connected through Zernio's Blogs API. */
+export const WEBSITE_PLATFORMS: SocialPlatform[] = ["wordpress"]
 
 export const PLATFORM_META: Record<
   SocialPlatform,
@@ -76,6 +83,12 @@ export const PLATFORM_META: Record<
     help: "Uses the business's Instagram login.",
     what: "Posts.",
   },
+  wordpress: {
+    label: "WordPress",
+    color: "#21759B",
+    help: "A WordPress.com or Jetpack site signs in with WordPress. A self-hosted site uses an application password from Users → Profile.",
+    what: "Blog articles from the Content page.",
+  },
 }
 
 export const STATUS_META: Record<SocialAccountStatus, { label: string; tone: Tone }> = {
@@ -86,6 +99,11 @@ export const STATUS_META: Record<SocialAccountStatus, { label: string; tone: Ton
 
 export function isSocialPlatform(value: string): value is SocialPlatform {
   return (PLATFORMS as string[]).includes(value)
+}
+
+/** Anything Zernio connects for a client: the socials and the WordPress site. */
+export function isZernioPlatform(value: string): value is SocialPlatform {
+  return isSocialPlatform(value) || (WEBSITE_PLATFORMS as string[]).includes(value)
 }
 
 /** Friendly text for the error codes Zernio appends to our callback URL. */

@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Database, TablesInsert } from "@/lib/supabase/database.types"
 import { accountsHealth, listAccounts } from "@/lib/zernio/client"
 import type { ZernioAccount, ZernioAccountHealth } from "@/lib/zernio/schemas"
-import { isSocialPlatform } from "./constants"
+import { isZernioPlatform } from "./constants"
 
 /**
  * Zernio is the source of truth; these functions mirror it into
@@ -42,7 +42,7 @@ function toRow(
   profileId: string,
   now: string,
 ): Omit<Row, "connected_by"> | null {
-  if (!isSocialPlatform(a.platform) || a.enabled === false) return null
+  if (!isZernioPlatform(a.platform) || a.enabled === false) return null
 
   const broken =
     a.needsReconnection === true ||

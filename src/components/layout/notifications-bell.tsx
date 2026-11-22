@@ -47,6 +47,16 @@ function describe(n: NotificationItem) {
   if (n.kind === "ai_visibility_failed") {
     return `The AI visibility check for ${n.client?.name ?? "a client"} didn't finish`
   }
+  if (n.kind === "content_failed") {
+    return n.contentArticleId
+      ? `An article for ${n.client?.name ?? "a client"} didn't publish to WordPress`
+      : `A post for ${n.client?.name ?? "a client"} didn't publish everywhere`
+  }
+  if (n.kind === "content_published") {
+    return n.contentArticleId
+      ? `Your article for ${n.client?.name ?? "a client"} is live on WordPress`
+      : `Your scheduled post for ${n.client?.name ?? "a client"} is live`
+  }
   if (n.kind === "backlink_follow_up") {
     return `Backlink listings for ${n.client?.name ?? "a client"} need a follow-up today`
   }
@@ -76,6 +86,11 @@ function hrefFor(n: NotificationItem) {
   }
   if ((n.kind === "ai_visibility_ready" || n.kind === "ai_visibility_failed") && n.client) {
     return clientHref(n.client.slug, "ai-visibility")
+  }
+  if ((n.kind === "content_failed" || n.kind === "content_published") && n.client) {
+    const base = clientHref(n.client.slug, "content")
+    if (n.contentArticleId) return `${base}/articles/${n.contentArticleId}`
+    return n.contentPostId ? `${base}?tab=posts&post=${n.contentPostId}` : `${base}?tab=posts`
   }
   if (n.kind === "backlink_follow_up" && n.client) {
     return `${clientHref(n.client.slug, "backlinks")}?mode=manual&stage=open&who=me`

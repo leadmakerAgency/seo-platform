@@ -47,11 +47,21 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 type Query = Record<string, string | number | boolean | null | undefined>
 
-async function request<T>(
-  method: "GET" | "POST" | "PUT" | "DELETE",
+export type RequestOptions = {
+  query?: Query
+  body?: unknown
+  /** Sent as Idempotency-Key: Zernio replays the first answer for 24 hours. */
+  idempotencyKey?: string
+  /** Publishing calls wait for the platforms, so they get longer than the 10 s default. */
+  timeoutMs?: number
+}
+
+/** Shared by posts.ts, blogs.ts and media.ts. */
+export async function request<T>(
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
   path: string,
   schema: z.ZodType<T>,
-  { query, body }: { query?: Query; body?: unknown } = {},
+  { query, body, idempotencyKey, timeoutMs }: RequestOptions = {},
 ): Promise<T> {
   const url = new URL(`${getZernioApiBase()}${path}`)
   for (const [key, value] of Object.entries(query ?? {})) {
@@ -68,9 +78,10 @@ async function request<T>(
           Authorization: `Bearer ${getZernioApiKey()}`,
           Accept: "application/json",
           ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+          ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {}),
         },
         body: body !== undefined ? JSON.stringify(body) : undefined,
-        signal: AbortSignal.timeout(TIMEOUT_MS),
+        signal: AbortSignal.timeout(timeoutMs ?? TIMEOUT_MS),
         cache: "no-store",
       })
     } catch (error) {
@@ -260,6 +271,15 @@ export const WEBHOOK_EVENTS = [
   "account.connected",
   "account.disconnected",
   "account.permissions_changed",
+  // Content: post status for the Content page (docs/plans/content/07-sync.md).
+  "post.scheduled",
+  "post.published",
+  "post.partial",
+  "post.failed",
+  "post.cancelled",
+  "post.platform.published",
+  "post.platform.failed",
+  "post.platform.deleted",
 ] as const
 
 export async function listWebhooks(): Promise<ZernioWebhook[]> {

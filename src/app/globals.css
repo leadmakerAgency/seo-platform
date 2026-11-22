@@ -276,3 +276,59 @@
     cursor: pointer;
   }
 }
+
+/* Content page: the article editor's body (Tiptap). Tokens only, so dark mode follows. */
+@layer components {
+  .article-body {
+    @apply text-[15px] leading-7 text-foreground;
+  }
+  .article-body:focus {
+    outline: none;
+  }
+  .article-body > * + * {
+    margin-top: 0.85em;
+  }
+  .article-body h2 {
+    @apply mt-8 text-xl font-semibold tracking-tight;
+  }
+  .article-body h3 {
+    @apply mt-6 text-lg font-semibold tracking-tight;
+  }
+  .article-body h4 {
+    @apply mt-5 text-base font-semibold;
+  }
+  .article-body ul {
+    @apply list-disc pl-6;
+  }
+  .article-body ol {
+    @apply list-decimal pl-6;
+  }
+  .article-body li + li {
+    margin-top: 0.25em;
+  }
+  .article-body a {
+    @apply text-brand underline underline-offset-2;
+  }
+  .article-body blockquote {
+    @apply border-l-2 pl-4 text-muted-foreground italic;
+  }
+  .article-body hr {
+    @apply my-6 border-t;
+  }
+  .article-body img {
+    @apply max-w-full rounded-md border;
+  }
+  .article-body img.ProseMirror-selectednode {
+    @apply ring-2 ring-ring;
+  }
+  .article-body code {
+    @apply rounded-sm bg-muted px-1 py-0.5 text-[13px];
+  }
+  .article-body pre {
+    @apply overflow-x-auto rounded-md bg-muted p-3 text-[13px];
+  }
+  .article-body p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    @apply pointer-events-none float-left h-0 text-muted-foreground;
+  }
+}
