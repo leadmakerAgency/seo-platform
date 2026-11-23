@@ -1,3 +1,4 @@
+import { CalendarClock, CircleCheckBig, UserRound } from "lucide-react"
 import Link from "next/link"
 
 import { StatusTag } from "@/components/common/status"
@@ -6,6 +7,7 @@ import type { ClientTaskRow } from "@/features/tasks/queries"
 import { dueLabel, dueState } from "@/lib/dates"
 import { clientHref } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
+import { IconTile } from "./icon-tile"
 
 /** Up to 5 open tasks for this client, overdue first (the query already sorts by due date). */
 export function OpenTasks({
@@ -39,11 +41,14 @@ export function OpenTasks({
       </div>
 
       {shown.length === 0 ? (
-        <div className="rounded-lg border bg-card px-4 py-6 text-sm">
-          <p className="font-medium">No open tasks</p>
-          <p className="text-muted-foreground">
-            Everything for this client is ticked off. New tasks show up here.
-          </p>
+        <div className="flex items-start gap-3 rounded-lg border bg-card px-4 py-5 text-sm">
+          <IconTile icon={CircleCheckBig} tone="success" />
+          <div className="flex flex-col gap-0.5">
+            <p className="font-medium">No open tasks</p>
+            <p className="text-muted-foreground">
+              Everything for this client is ticked off. New tasks show up here.
+            </p>
+          </div>
         </div>
       ) : (
         <ul className="flex flex-col divide-y rounded-lg border bg-card">
@@ -56,23 +61,33 @@ export function OpenTasks({
                   href={`${base}?task=${t.number}`}
                   className="flex items-start gap-3 px-4 py-3 transition-colors outline-none hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                 >
-                  <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <span className="truncate text-sm font-medium">{t.title}</span>
-                    <span className="text-xs text-muted-foreground">
-                      <span className="font-mono">{taskNumber(t.number)}</span>
-                      {" · "}
-                      {t.assignee?.name ?? "Unassigned"}
-                      {" · "}
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span className="shrink-0 rounded-sm bg-muted px-1 font-mono text-xs text-muted-foreground">
+                        {taskNumber(t.number)}
+                      </span>
+                      <span className="truncate text-sm font-medium">{t.title}</span>
+                    </span>
+                    <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <UserRound aria-hidden className="size-3" />
+                        {t.assignee?.name ?? "Unassigned"}
+                      </span>
                       <span
                         className={cn(
+                          "inline-flex items-center gap-1",
                           state === "overdue" && "font-medium text-danger",
                           state === "today" && "font-medium text-foreground",
                         )}
                       >
+                        <CalendarClock aria-hidden className="size-3" />
                         {t.dueOn ? dueLabel(t.dueOn, state) : "No due date"}
                       </span>
-                      {others > 0 &&
-                        ` · Shared with ${others} other ${others === 1 ? "client" : "clients"}`}
+                      {others > 0 && (
+                        <span>
+                          Shared with {others} other {others === 1 ? "client" : "clients"}
+                        </span>
+                      )}
                     </span>
                   </div>
                   <StatusTag tone={STATUS_META[t.status].tone} className="mt-0.5 shrink-0">

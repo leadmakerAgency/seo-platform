@@ -1,6 +1,13 @@
 "use client"
 
-import { ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Trash2 } from "lucide-react"
+import {
+  CalendarOff,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ExternalLink,
+  Trash2,
+} from "lucide-react"
 import Link from "next/link"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -15,6 +22,7 @@ import { cn } from "@/lib/utils"
 import { removeWork } from "../actions"
 import { DELIVERABLE_META, PROGRESS_META, SOURCE_LABELS } from "../constants"
 import type { DeliverableProgress, WorkItem } from "../queries"
+import { DELIVERABLE_LOOK, hueFill, IconTile } from "./icon-tile"
 import { LogWorkDialog } from "./log-work-dialog"
 
 type Props = {
@@ -51,7 +59,9 @@ export function MonthWork(props: Props) {
 
   const description = isCurrent
     ? `What we promised this client this month and how far along it is. ${
-        daysLeft === 0 ? "Last day of the month." : `${daysLeft} ${daysLeft === 1 ? "day" : "days"} left.`
+        daysLeft === 0
+          ? "Last day of the month."
+          : `${daysLeft} ${daysLeft === 1 ? "day" : "days"} left.`
       }`
     : `What we promised in ${formatMonth(month, true)} and what was delivered.`
 
@@ -98,13 +108,16 @@ export function MonthWork(props: Props) {
       )}
 
       {visible.length === 0 ? (
-        <div className="rounded-lg border bg-card px-4 py-6 text-sm">
-          <p className="font-medium">No work planned for {formatMonth(month, true)}</p>
-          <p className="text-muted-foreground">
-            {month < startMonth
-              ? `The client started on ${formatDate(startedOn)}.`
-              : "Set the monthly targets in Edit details to track the work here."}
-          </p>
+        <div className="flex items-start gap-3 rounded-lg border bg-card px-4 py-5 text-sm">
+          <IconTile icon={CalendarOff} />
+          <div className="flex flex-col gap-0.5">
+            <p className="font-medium">No work planned for {formatMonth(month, true)}</p>
+            <p className="text-muted-foreground">
+              {month < startMonth
+                ? `The client started on ${formatDate(startedOn)}.`
+                : "Set the monthly targets in Edit details to track the work here."}
+            </p>
+          </div>
         </div>
       ) : (
         <ul className="flex flex-col divide-y rounded-lg border bg-card">
@@ -152,6 +165,7 @@ function WorkRow({
 }: Props & { row: DeliverableProgress; isCurrent: boolean }) {
   const [open, setOpen] = useState(false)
   const meta = DELIVERABLE_META[row.kind]
+  const look = DELIVERABLE_LOOK[row.kind]
   const status = PROGRESS_META[row.status]
   const pct = row.target > 0 ? Math.min(100, Math.max(0, (row.done / row.target) * 100)) : 0
   const expectedPct =
@@ -168,9 +182,9 @@ function WorkRow({
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-controls={panelId}
-        className="grid w-full grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 px-4 py-3 text-left transition-colors outline-none hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset md:grid-cols-[180px_1fr_auto_auto]"
+        className="grid w-full grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2.5 px-4 py-3 text-left transition-colors outline-none hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset md:grid-cols-[230px_1fr_auto_auto]"
       >
-        <span className="col-start-1 row-start-1 flex items-center gap-1.5 text-sm font-medium">
+        <span className="col-start-1 row-start-1 flex min-w-0 items-center gap-2 text-sm font-medium">
           <ChevronDown
             aria-hidden
             className={cn(
@@ -178,7 +192,8 @@ function WorkRow({
               !open && "-rotate-90",
             )}
           />
-          {meta.label}
+          <IconTile icon={look.icon} hue={look.hue} size="sm" />
+          <span className="truncate">{meta.label}</span>
         </span>
 
         <span
@@ -190,7 +205,10 @@ function WorkRow({
           aria-valuenow={row.done}
         >
           <span
-            className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width]"
+            className={cn(
+              "absolute inset-y-0 left-0 rounded-full transition-[width]",
+              hueFill(look.hue),
+            )}
             style={{ width: `${pct}%` }}
           />
           {expectedPct !== null && (
@@ -204,7 +222,8 @@ function WorkRow({
         </span>
 
         <span className="col-start-2 row-start-2 text-right text-sm tabular-nums md:col-start-3 md:row-start-1">
-          {row.done} <span className="text-muted-foreground">/ {row.target}</span>
+          <span className="font-semibold">{row.done}</span>{" "}
+          <span className="text-muted-foreground">/ {row.target}</span>
         </span>
         <span className="col-start-2 row-start-1 justify-self-end md:col-start-4 md:row-start-1">
           <StatusTag tone={status.tone}>
@@ -214,7 +233,7 @@ function WorkRow({
       </button>
 
       {open && (
-        <div id={panelId} className="border-t bg-muted/30 px-4 py-3 md:pl-[38px]">
+        <div id={panelId} className="border-t bg-muted/30 px-4 py-3 md:pl-[70px]">
           {expectedPct !== null && (
             <p className="mb-2 text-[13px] text-muted-foreground">
               About {Math.round(row.expected)} expected by today; the tick on the bar marks where
@@ -223,8 +242,8 @@ function WorkRow({
           )}
           {row.items.length === 0 ? (
             <p className="text-[13px] text-muted-foreground">
-              Nothing delivered yet. Ticking this client off a task that counts toward{" "}
-              {meta.many}, or logging work, adds it here.
+              Nothing delivered yet. Ticking this client off a task that counts toward {meta.many},
+              or logging work, adds it here.
             </p>
           ) : (
             <ul className="flex flex-col gap-2">

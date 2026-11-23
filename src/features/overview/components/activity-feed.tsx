@@ -1,14 +1,41 @@
 "use client"
 
+import { History } from "lucide-react"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
-import { StatusDot } from "@/components/common/status"
 import { Button } from "@/components/ui/button"
 import { actorLabel, describeActivity } from "@/features/team/activity"
 import type { ActivityEntry } from "@/features/team/queries"
 import { addDays, agencyToday, formatDay } from "@/lib/dates"
+import { cn } from "@/lib/utils"
 import { loadMoreActivity } from "../actions"
+import { hueFill, IconTile, type Hue } from "./icon-tile"
+
+/** A dot colour per kind of event, so the timeline scans by area (identity, not status). */
+function eventHue(action: string): Hue {
+  const area = action.split(".")[0]
+  switch (area) {
+    case "task":
+      return "indigo"
+    case "work":
+      return "clay"
+    case "connection":
+      return "teal"
+    case "request":
+      return "gold"
+    case "onboarding":
+    case "vault":
+      return "plum"
+    case "keyword":
+    case "rank":
+    case "rankings":
+    case "ai":
+      return "brand"
+    default:
+      return "neutral"
+  }
+}
 
 const timeFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: "America/Phoenix",
@@ -72,22 +99,36 @@ export function ActivityFeed({
       </div>
 
       {entries.length === 0 ? (
-        <div className="rounded-lg border bg-card px-4 py-6 text-sm">
-          <p className="font-medium">Nothing yet</p>
-          <p className="text-muted-foreground">Work, connections and changes show up here.</p>
+        <div className="flex items-start gap-3 rounded-lg border bg-card px-4 py-5 text-sm">
+          <IconTile icon={History} />
+          <div className="flex flex-col gap-0.5">
+            <p className="font-medium">Nothing yet</p>
+            <p className="text-muted-foreground">Work, connections and changes show up here.</p>
+          </div>
         </div>
       ) : (
         <div className="flex flex-col gap-4 rounded-lg border bg-card px-4 py-4">
           {groups.map((g) => (
             <div key={g.label} className="flex flex-col gap-2">
-              <h3 className="text-xs font-medium text-muted-foreground">{g.label}</h3>
-              <ol className="flex flex-col gap-2">
+              <h3 className="w-fit rounded-sm bg-muted px-1.5 py-0.5 text-xs font-medium text-muted-foreground">
+                {g.label}
+              </h3>
+              <ol className="relative flex flex-col gap-2.5 before:absolute before:top-2.5 before:bottom-2.5 before:left-[3.5px] before:w-px before:bg-border">
                 {g.items.map((e) => (
-                  <li key={e.id} className="flex items-start gap-2.5 text-sm">
-                    <StatusDot tone="brand" className="mt-[7px]" />
+                  <li key={e.id} className="relative flex items-start gap-3 text-sm">
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "mt-1.5 size-2 shrink-0 rounded-full ring-2 ring-card",
+                        hueFill(eventHue(e.action)),
+                      )}
+                    />
                     <p className="min-w-0 flex-1">
                       <span className="font-medium">
-                        {actorLabel(e, e.action.startsWith("onboarding.") ? "The client" : "System")}
+                        {actorLabel(
+                          e,
+                          e.action.startsWith("onboarding.") ? "The client" : "System",
+                        )}
                       </span>{" "}
                       <span className="text-muted-foreground">{describeActivity(e)}</span>
                     </p>

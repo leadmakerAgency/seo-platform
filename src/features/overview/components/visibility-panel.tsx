@@ -1,4 +1,14 @@
-import { ArrowRight, Minus, TrendingDown, TrendingUp } from "lucide-react"
+import {
+  ArrowRight,
+  Globe,
+  MapPinned,
+  Minus,
+  Radar,
+  SearchX,
+  TrendingDown,
+  TrendingUp,
+  type LucideIcon,
+} from "lucide-react"
 import Link from "next/link"
 
 import { formatNumber, formatRelative } from "@/lib/format"
@@ -6,6 +16,14 @@ import { clientHref } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 import { PLACES, type PlaceKey } from "../constants"
 import type { PlaceStats, Visibility } from "../queries"
+import { hueFill, IconTile, type Hue } from "./icon-tile"
+
+/** One icon and hue per place, so the three read apart at a glance. */
+const PLACE_LOOK: Record<PlaceKey, { icon: LucideIcon; hue: Hue }> = {
+  website: { icon: Globe, hue: "teal" },
+  map: { icon: MapPinned, hue: "clay" },
+  ai: { icon: Radar, hue: "plum" },
+}
 
 /**
  * "Where they show up": website (Google top 10), map pack (top 3) and AI answers,
@@ -56,17 +74,35 @@ function PlaceCell({
   now: Date
 }) {
   const meta = PLACES[place]
+  const look = PLACE_LOOK[place]
+  const share = stats && stats.outOf > 0 ? Math.min(100, (stats.current / stats.outOf) * 100) : 0
   return (
-    <section className="flex flex-col gap-3 bg-card px-4 py-4">
-      <h3 className="text-sm font-semibold">{meta.title}</h3>
+    <section className="flex flex-col gap-4 bg-card px-4 pt-4 pb-4">
+      <div className="flex items-center gap-3">
+        <IconTile icon={look.icon} hue={look.hue} size="lg" />
+        <h3 className="text-sm leading-5 font-semibold">{meta.title}</h3>
+      </div>
 
       {stats ? (
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1.5">
           <p className="font-heading text-[26px] leading-[30px] font-semibold tracking-tight tabular-nums">
             {formatNumber(stats.current)}
             <span className="text-muted-foreground"> / {formatNumber(stats.outOf)}</span>
           </p>
           <p className="text-[13px] font-medium">{meta.unit}</p>
+          <span
+            role="progressbar"
+            aria-label={`${meta.title}: ${stats.current} of ${stats.outOf}`}
+            aria-valuemin={0}
+            aria-valuemax={stats.outOf}
+            aria-valuenow={stats.current}
+            className="relative my-1 h-1.5 overflow-hidden rounded-full bg-muted"
+          >
+            <span
+              className={cn("absolute inset-y-0 left-0 rounded-full", hueFill(look.hue))}
+              style={{ width: `${share}%` }}
+            />
+          </span>
           <Change stats={stats} />
           {extra && <p className="text-[13px] text-muted-foreground">{extra}</p>}
           <p className="text-xs text-muted-foreground">
@@ -74,9 +110,12 @@ function PlaceCell({
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-medium text-muted-foreground">No checks yet</p>
-          <p className="text-[13px] text-muted-foreground">{meta.empty}</p>
+        <div className="flex items-start gap-2.5 rounded-md border border-dashed bg-background px-3 py-2.5">
+          <SearchX aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          <div className="flex flex-col gap-0.5">
+            <p className="text-sm font-medium">No checks yet</p>
+            <p className="text-[13px] text-muted-foreground">{meta.empty}</p>
+          </div>
         </div>
       )}
 
@@ -95,12 +134,16 @@ function PlaceCell({
 /** Compared with the first check since the client started. */
 function Change({ stats }: { stats: PlaceStats }) {
   if (stats.checks < 2 || stats.baseline === null) {
-    return <p className="text-[13px] text-muted-foreground">First check, so nothing to compare yet</p>
+    return (
+      <p className="text-[13px] text-muted-foreground">First check, so nothing to compare yet</p>
+    )
   }
   // Like for like: the baseline counts only keywords that were in both checks. When the
   // keyword list changed since then, say how many were compared.
   const sameSet = stats.compared !== null && stats.compared !== stats.outOf && stats.compared > 0
-  const diff = (sameSet && stats.currentCompared !== null ? stats.currentCompared : stats.current) - stats.baseline
+  const diff =
+    (sameSet && stats.currentCompared !== null ? stats.currentCompared : stats.current) -
+    stats.baseline
   const Icon = diff > 0 ? TrendingUp : diff < 0 ? TrendingDown : Minus
   return (
     <p
