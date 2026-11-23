@@ -31,6 +31,10 @@ Every phase passes `npm run lint`, `npm run typecheck` and `npm run build`.
 - slugs and words;
 - HTML cleaning (scripts, styles, `on*`, `javascript:`, iframes and `http` images removed; `h1` becomes `h2`; links get `noopener`).
 
+## Fixed (2026-11-23): "Publish now did nothing"
+
+The composer asked "Publish now?" from inside `startTransition`. In React 19 a state update made inside a running async transition isn't shown until the transition ends, and this one was waiting for the answer, so the dialog never appeared, the buttons stayed pending and nothing was saved (no `content_posts` row). Reproduced on a test page and fixed twice over: `ConfirmProvider` opens its dialog outside any transition (`setTimeout`), and every call site asks before starting the work (post page, article editor). Verified: the dialog shows, "Keep it" and "Publish now" both answer.
+
 ## Phase 0: needs your yes and a test client
 
 - [ ] One account connected on a test client, and a test WordPress site (application password).

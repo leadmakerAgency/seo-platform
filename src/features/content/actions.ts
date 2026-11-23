@@ -235,6 +235,18 @@ async function sendPost(g: Ctx, postId: string, mode: "schedule" | "now" | "upda
 
   try {
     const body = await bodyFor(post, mode === "now" ? null : post.scheduled_for)
+    // Zernio's own check first (free): a refusal stops here with its words, nothing half-sent.
+    const check = await validatePost(body).catch((e) => {
+      console.warn("[content] Zernio validation unavailable, sending anyway", e instanceof Error ? e.message : e)
+      return null
+    })
+    const refused = (check?.errors ?? []).map(issueText).filter(Boolean)
+    if (refused.length) {
+      const message = `Zernio found ${refused.length === 1 ? "a problem" : "problems"}: ${refused.slice(0, 4).join(" · ")}`
+      await storePost(db, postId, null, { release: true, error: message.slice(0, 1000), actor })
+      refresh()
+      return { ok: false, error: message }
+    }
     let result
     if (mode === "update" && post.zernio_post_id) {
       result = await updatePost(post.zernio_post_id, body, sendKey("post", postId, version, "update"))

@@ -1,7 +1,7 @@
 import { CircleAlert, FileText, Plus } from "lucide-react"
 import type { Metadata } from "next"
 import Link from "next/link"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { after } from "next/server"
 import { Suspense } from "react"
 
@@ -13,7 +13,6 @@ import { getClientBySlug } from "@/features/clients/queries"
 import type { Db } from "@/features/connections/sync"
 import { ConfirmProvider } from "@/features/content/components/confirm"
 import { MediaLibrary } from "@/features/content/components/media-library"
-import { PostComposer } from "@/features/content/components/post-composer"
 import { SettingsForm } from "@/features/content/components/settings-form"
 import {
   ArticlesList,
@@ -36,9 +35,7 @@ import {
 import {
   getArticles,
   getContentBase,
-  getEvents,
   getMedia,
-  getPost,
   getPosts,
   needsReconcile,
 } from "@/features/content/queries"
@@ -86,8 +83,12 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
     post: one(search.post),
     date: /^\d{4}-\d{2}-\d{2}$/.test(one(search.date) ?? "") ? one(search.date) : null,
   }
-  // Links keep the tab and filters; the open post (and a new post's date) only when asked.
+  // Old links (?post=…) open the post's own page now.
+  if (q.post) redirect(`${base}/posts/${encodeURIComponent(q.post)}${q.date ? `?date=${q.date}` : ""}`)
+
+  // Links keep the tab and filters. A post (or a new post on a day) has its own page.
   const href: Href = (patch) => {
+    if (patch.post) return `${base}/posts/${patch.post}${patch.date ? `?date=${patch.date}` : ""}`
     const merged: Record<string, string | null> = { tab: q.tab, status: q.status, view: q.view, d: q.d, post: null, date: null, ...patch }
     if (merged.tab === "calendar") merged.tab = null
     if (merged.status === "all") merged.status = null
@@ -118,7 +119,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
   }
 
   const range = calendarRange(q.view, anchor)
-  const [posts, articles, media, openPost] = await Promise.all([
+  const [posts, articles, media] = await Promise.all([
     q.tab === "calendar"
       ? getPosts(client.id, { from: addDayIso(range.from, -1), to: addDayIso(range.to, 1), limit: 500 })
       : q.tab === "posts"
@@ -129,11 +130,9 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
       : q.tab === "articles"
         ? getArticles(client.id)
         : Promise.resolve([]),
-    q.tab === "media" || q.post ? getMedia(client.id) : Promise.resolve([]),
-    q.post && q.post !== "new" ? getPost(client.id, q.post) : Promise.resolve(null),
+    q.tab === "media" ? getMedia(client.id) : Promise.resolve([]),
   ])
-  const events = openPost ? await getEvents("post", openPost.id) : []
-  const sending = posts.some((p) => p.status === "publishing") || openPost?.status === "publishing"
+  const sending = posts.some((p) => p.status === "publishing")
   const editorHref = (id: string) => `${base}/articles/${id}`
 
   const calendarItems: CalendarItem[] =
@@ -242,18 +241,6 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
         />
       )}
 
-      <PostComposer
-        clientId={client.id}
-        clientSlug={client.slug}
-        post={openPost}
-        isNew={q.post === "new" && canWrite}
-        initialDate={q.date}
-        accounts={data.accounts}
-        media={media}
-        settings={data.settings}
-        canWrite={canWrite}
-        events={events}
-      />
 
       {sending && <OverviewRefresher every={10_000} />}
     </ConfirmProvider>

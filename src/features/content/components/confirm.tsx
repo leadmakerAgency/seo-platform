@@ -25,8 +25,12 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
   const confirm = useCallback(
     (a: Ask) =>
       new Promise<boolean>((resolve) => {
+        resolver.current?.(false)
         resolver.current = resolve
-        setAsk(a)
+        // Opened outside any transition: called from inside startTransition, the update would
+        // wait for the transition to finish, which waits for this answer, and the dialog would
+        // never show (the "Publish now does nothing" bug).
+        setTimeout(() => setAsk(a), 0)
       }),
     [],
   )

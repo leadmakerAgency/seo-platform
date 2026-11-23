@@ -90,7 +90,7 @@ function hrefFor(n: NotificationItem) {
   if ((n.kind === "content_failed" || n.kind === "content_published") && n.client) {
     const base = clientHref(n.client.slug, "content")
     if (n.contentArticleId) return `${base}/articles/${n.contentArticleId}`
-    return n.contentPostId ? `${base}?tab=posts&post=${n.contentPostId}` : `${base}?tab=posts`
+    return n.contentPostId ? `${base}/posts/${n.contentPostId}` : `${base}?tab=posts`
   }
   if (n.kind === "backlink_follow_up" && n.client) {
     return `${clientHref(n.client.slug, "backlinks")}?mode=manual&stage=open&who=me`

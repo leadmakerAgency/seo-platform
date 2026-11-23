@@ -57,7 +57,7 @@ import type { ArticleFull, ContentEvent, ContentSettings, MediaRow } from "../qu
 import { formatInZone, utcToZoned, zonedToUtc, zoneLabel } from "../time"
 import { useConfirm } from "./confirm"
 import { MediaThumb, UploadButton } from "./media-library"
-import { History } from "./post-composer"
+import { History } from "./post-editor"
 import { useMediaUpload } from "./use-media-upload"
 
 type Keyword = { id: string; phrase: string }
@@ -226,33 +226,41 @@ export function ArticleEditor({
   const changedSinceSent = Boolean(article && article.sentVersion !== null && article.version > article.sentVersion) || saved === "dirty" || saved === "error"
   const wpEdit = article?.wpArticleId && settings.wpSiteUrl ? `${settings.wpSiteUrl.replace(/\/+$/, "")}/wp-admin/post.php?post=${encodeURIComponent(article.wpArticleId)}&action=edit` : null
 
-  const act = (fn: () => Promise<void>) => start(fn)
+  // Questions come first, outside the transition (a dialog opened inside one never shows).
+  type Ask = Parameters<typeof confirm>[0]
+  const act = async (fn: () => Promise<void>, ask?: Ask) => {
+    if (ask && !(await confirm(ask))) return
+    start(fn)
+  }
 
-  const publish = (mode: "now" | "schedule") =>
-    act(async () => {
-      if (mode === "schedule" && !publishAt) {
-        toast.error("Pick a publish date and time.")
-        return
-      }
-      const yes = await confirm({
+  const publish = (mode: "now" | "schedule") => {
+    if (mode === "schedule" && !publishAt) {
+      toast.error("Pick a publish date and time.")
+      return
+    }
+    void act(
+      async () => {
+        const saved = await save()
+        if (!saved) return
+        const r = await publishArticle(saved, mode)
+        if (!r.ok) {
+          toast.error(r.error, { duration: 10_000 })
+          router.refresh()
+          return
+        }
+        toast.success(r.data.status === "scheduled" ? "Scheduled on WordPress" : "Published on WordPress")
+        router.refresh()
+      },
+      {
         title: mode === "now" ? "Publish on WordPress now?" : `Schedule for ${formatInZone(publishAt!, tz)}?`,
         description:
           mode === "now"
             ? "The article goes live on the client's site right away."
             : "WordPress publishes it at that time by itself. You can still edit or unschedule it here.",
         action: mode === "now" ? "Publish now" : "Schedule",
-      })
-      if (!yes) return
-      const saved = await save()
-      if (!saved) return
-      const r = await publishArticle(saved, mode)
-      if (!r.ok) {
-        toast.error(r.error, { duration: 10_000 })
-        return
-      }
-      toast.success(r.data.status === "scheduled" ? "Scheduled on WordPress" : "Published on WordPress")
-      router.refresh()
-    })
+      },
+    )
+  }
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -302,7 +310,12 @@ export function ArticleEditor({
           </div>
         </div>
 
-        {events.length > 0 && <History events={events} />}
+        {events.length > 0 && (
+          <section className="flex flex-col gap-2">
+            <h2 className="text-sm font-semibold">History</h2>
+            <History events={events} />
+          </section>
+        )}
       </div>
 
       {/* Side panel */}
@@ -365,13 +378,11 @@ export function ArticleEditor({
                     Update on WordPress
                   </Button>
                   <Button size="sm" variant="ghost" disabled={pending} onClick={() => act(async () => {
-                    const yes = await confirm({ title: "Unpublish this article?", description: "It goes back to a draft on WordPress and comes off the site. You can publish it again.", action: "Unpublish", danger: true })
-                    if (!yes) return
                     const r = await unpublishArticle(article!.id)
                     if (r.ok) toast.success("Moved back to a WordPress draft")
                     else toast.error(r.error)
                     router.refresh()
-                  })}>
+                  }, { title: "Unpublish this article?", description: "It goes back to a draft on WordPress and comes off the site. You can publish it again.", action: "Unpublish", danger: true })}>
                     <Undo2 />
                     Unpublish
                   </Button>
@@ -407,20 +418,17 @@ export function ArticleEditor({
             <div className="flex flex-wrap gap-2 border-t pt-3">
               {onWordPress ? (
                 <Button size="sm" variant="ghost" className="text-danger hover:text-danger" disabled={pending} onClick={() => act(async () => {
-                  const yes = await confirm({ title: "Delete it from WordPress?", description: "WordPress deletes it for good (not to the trash). It stays here as a draft.", action: "Delete from WordPress", danger: true })
-                  if (!yes) return
                   const r = await deleteArticleFromWordPress(article!.id)
                   if (r.ok) toast.success("Deleted from WordPress")
                   else toast.error(r.error)
                   router.refresh()
-                })}>
+                }, { title: "Delete it from WordPress?", description: "WordPress deletes it for good (not to the trash). It stays here as a draft.", action: "Delete from WordPress", danger: true })}>
                   <Trash2 />
                   Delete from WordPress
                 </Button>
               ) : (
                 <Button size="sm" variant="ghost" className="text-danger hover:text-danger" disabled={pending} onClick={() => act(async () => {
-                  const yes = await confirm({ title: "Delete this draft?", description: "It's removed for good. Nothing was published.", action: "Delete", danger: true })
-                  if (!yes || !id) return
+                  if (!id) return
                   const r = await deleteArticleDraft(id)
                   if (!r.ok) {
                     toast.error(r.error)
@@ -428,7 +436,7 @@ export function ArticleEditor({
                   }
                   dirty.current = false
                   router.push(listHref + "?tab=articles")
-                })}>
+                }, { title: "Delete this draft?", description: "It's removed for good. Nothing was published.", action: "Delete", danger: true })}>
                   <Trash2 />
                   Delete draft
                 </Button>

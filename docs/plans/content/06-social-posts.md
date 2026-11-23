@@ -1,8 +1,8 @@
 # Content · 06 · Social posts
 
-## Composer (`components/post-composer.tsx`)
+## Post page (`components/post-editor.tsx`, route `/content/posts/[postId]`)
 
-A sheet opened by `?post=new` (plus `&date=` from a calendar day) or `?post=<id>`.
+Its own page: `/content/posts/new` (plus `?date=` from a calendar day) or `/content/posts/<id>`. Old `?post=` links redirect there. Writing on the left (accounts, text and per-account tabs, files); on the right, sticky on wide screens: Publish (date, time, buttons), Checks, Preview. A new post gets its address on the first save without reloading. After sending, the page shows what went out per account.
 
 - **Post to:** the client's connected accounts (WordPress excluded). Accounts that need reconnecting are greyed out and can't be picked.
 - **Text:**
@@ -21,6 +21,7 @@ A sheet opened by `?post=new` (plus `&date=` from a calendar day) or `?post=<id>
 - **When:** a date and time in the client's time zone (`content_settings.timezone`), and an optional internal name.
 - **Checks:** `checkTarget()` per account, live (see below). "Check with Zernio" saves, pushes the files and calls `validatePost`.
 - **Preview:** a neutral card per account, with the text cut where the platform shows "see more", and the first file.
+- **Questions before work:** every confirm ("Publish now?", "Schedule for …?") is asked before the work starts, never inside a React transition (see 09, "Publish now did nothing").
 - **Buttons:**
   - Drafts: Schedule, Publish now (with a confirm) and Save draft.
   - Scheduled posts: Save changes (sent to Zernio at once), Publish now and Cancel post.
@@ -46,7 +47,7 @@ A sheet opened by `?post=new` (plus `&date=` from a calendar day) or `?post=<id>
 
 1. Load the post through RLS and run the local rules; every account must be connected.
 2. `content_claim_send` (one send at a time).
-3. `pushMediaToZernio`, then `buildPostBody`.
+3. `pushMediaToZernio`, then `buildPostBody`, then Zernio's `validatePost`: any error stops the send with Zernio's words (a validation outage doesn't block).
 4. Then, by mode:
    - **schedule:** `createPost`;
    - **now:** a scheduled post is deleted at Zernio first, then `createPost` with `publishNow`;
