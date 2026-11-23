@@ -137,10 +137,10 @@
   --info-dot: oklch(0.64 0.13 250);
   --neutral-dot: oklch(0.72 0.02 280);
 
-  /* Icon pair (.icon-duo): deep teal for the main part, apricot for the body. Teal 7.0 on
-     card; the two parts stay apart for every colour-vision type (dataviz validator). */
-  --icon-ink: oklch(0.45 0.085 195);
-  --icon-tint: oklch(0.82 0.09 58);
+  /* Icon pair (.icon-duo): cobalt blue for the main part, rose for the body. Cobalt 6.2 on
+     card; the two are far apart in lightness, so they stay distinct for every colour-vision type. */
+  --icon-ink: oklch(0.5 0.17 262);
+  --icon-tint: oklch(0.85 0.07 8);
 
   --chart-1: oklch(0.5 0.235 300);
   --chart-2: oklch(0.62 0.1 195);
@@ -223,9 +223,9 @@
   --info-dot: oklch(0.7 0.12 250);
   --neutral-dot: oklch(0.56 0.008 70);
 
-  /* Teal 11.2 on card. */
-  --icon-ink: oklch(0.84 0.1 190);
-  --icon-tint: oklch(0.68 0.11 55);
+  /* Cobalt 9.4 on card. */
+  --icon-ink: oklch(0.8 0.1 250);
+  --icon-tint: oklch(0.62 0.1 8);
 
   --chart-1: oklch(0.64 0.19 300);
   --chart-2: oklch(0.65 0.11 195);
@@ -291,7 +291,7 @@
 
 /*
  * Two-colour icons. The icons (src/components/icons) mark their body with .i2, drawn at 40% of the
- * text colour by default. .icon-duo paints the main part teal and the body apricot instead.
+ * text colour by default. .icon-duo paints the main part cobalt and the body rose instead.
  */
 @layer components {
   .icon-duo {

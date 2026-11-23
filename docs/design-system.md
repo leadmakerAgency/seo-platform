@@ -208,8 +208,8 @@ used for the onboarding step progress and the platform list.
 the body at 40%), from `@/components/icons`. Small functional glyphs (arrows, check, close,
 chevrons, spinner, text formatting) are plain 2 px rounded strokes with the secondary stroke at
 40%. An icon is either plain (the text colour, body at 40%), a status tone (only when it signals
-that status), or **the icon pair**: class `icon-duo` paints the main part deep teal
-(`--icon-ink`) and the body apricot (`--icon-tint`). Every other coloured icon uses the pair, never
+that status), or **the icon pair**: class `icon-duo` paints the main part cobalt blue
+(`--icon-ink`) and the body rose (`--icon-tint`). Every other coloured icon uses the pair, never
 violet or a one-off hue. Icons stand on their own: no tile, box or circle behind them. Names follow the old lucide names; add one in `scripts/build-icons.mjs` and
 run `npm run icons`.
 
