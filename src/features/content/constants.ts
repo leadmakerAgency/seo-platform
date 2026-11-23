@@ -36,6 +36,12 @@ export const TARGET_META: Record<TargetStatus, { label: string; tone: Tone }> = 
   deleted: { label: "Removed", tone: "neutral" },
 }
 
+/**
+ * Posts that can still be edited (the writer); others show what went out. Kept here, not in a
+ * "use client" file: a server page importing a value from one gets a reference, not the Set.
+ */
+export const EDITABLE_STATUSES: ReadonlySet<ContentStatus> = new Set<ContentStatus>(["draft", "cancelled", "scheduled"])
+
 /** Post list status filters. */
 export const POST_FILTERS = ["all", "draft", "scheduled", "published", "failed"] as const
 export type PostFilter = (typeof POST_FILTERS)[number]

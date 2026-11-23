@@ -2,7 +2,7 @@
 
 ## Post page (`components/post-editor.tsx`, route `/content/posts/[postId]`)
 
-Its own page: `/content/posts/new` (plus `?date=` from a calendar day) or `/content/posts/<id>`. Old `?post=` links redirect there. Writing on the left (accounts, text and per-account tabs, files); on the right, sticky on wide screens: Publish (date, time, buttons), Checks, Preview. A new post gets its address on the first save without reloading. After sending, the page shows what went out per account.
+Its own page: `/content/posts/new` (plus `?date=` from a calendar day) or `/content/posts/<id>`. Old `?post=` links redirect there. Writing on the left (accounts, text and per-account tabs, files); on the right, sticky on wide screens: Publish (date, time, buttons), Checks, Preview. A new post gets its address on the first save without reloading. After Schedule or Publish now the browser returns to Content → Posts (the toast's "View" opens the post); a sent post's page shows what went out per account.
 
 - **Post to:** the client's connected accounts (WordPress excluded). Accounts that need reconnecting are greyed out and can't be picked.
 - **Text:**

@@ -10,9 +10,9 @@ import { PageHeader } from "@/components/layout/page-header"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getClientBySlug } from "@/features/clients/queries"
 import { ConfirmProvider } from "@/features/content/components/confirm"
-import { EDITABLE, PostWorkspace } from "@/features/content/components/post-editor"
+import { PostWorkspace } from "@/features/content/components/post-editor"
 import { postTitle } from "@/features/content/components/views"
-import { STATUS_META } from "@/features/content/constants"
+import { EDITABLE_STATUSES, STATUS_META } from "@/features/content/constants"
 import { getContentBase, getEvents, getMedia, getPost } from "@/features/content/queries"
 import { zoneLabel } from "@/features/content/time"
 import { OverviewRefresher } from "@/features/overview/components/overview-refresher"
@@ -56,7 +56,7 @@ async function Body({ params, searchParams }: Pick<Props, "params" | "searchPara
   const contentHref = clientHref(client.slug, "content")
   const rawDate = Array.isArray(search.date) ? search.date[0] : search.date
   const initialDate = rawDate && /^\d{4}-\d{2}-\d{2}$/.test(rawDate) ? rawDate : null
-  const editable = !post || EDITABLE.has(post.status)
+  const editable = !post || EDITABLE_STATUSES.has(post.status)
   const title = isNew ? "New post" : editable ? (post!.status === "scheduled" ? "Scheduled post" : "Edit post") : postTitle(post!)
   const description = editable
     ? `Write once, then send it to any of ${client.name}'s connected accounts. Times are in ${zoneLabel(base.settings.timezone)}.`

@@ -35,6 +35,12 @@ Every phase passes `npm run lint`, `npm run typecheck` and `npm run build`.
 
 The composer asked "Publish now?" from inside `startTransition`. In React 19 a state update made inside a running async transition isn't shown until the transition ends, and this one was waiting for the answer, so the dialog never appeared, the buttons stayed pending and nothing was saved (no `content_posts` row). Reproduced on a test page and fixed twice over: `ConfirmProvider` opens its dialog outside any transition (`setTimeout`), and every call site asks before starting the work (post page, article editor). Verified: the dialog shows, "Keep it" and "Publish now" both answer.
 
+## Fixed (2026-11-23): a sent post's page "couldn't load"
+
+The post page (a server component) imported `EDITABLE` from `post-editor.tsx`, a `"use client"` file. A server file importing a value (not a component) from a client file gets a client reference, so `EDITABLE.has()` threw "is not a function" for every saved post (new posts skipped the check). Reproduced locally with the same digest-style error; the set moved to `constants.ts` as `EDITABLE_STATUSES`. An audit of every server file found no other value imported from a client file.
+
+After publishing or scheduling, a post now returns to Content → Posts and an article to Content → Articles; the toast's "View" opens the item.
+
 ## Phase 0: needs your yes and a test client
 
 - [ ] One account connected on a test client, and a test WordPress site (application password).

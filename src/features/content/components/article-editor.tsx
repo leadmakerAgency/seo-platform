@@ -248,8 +248,12 @@ export function ArticleEditor({
           router.refresh()
           return
         }
-        toast.success(r.data.status === "scheduled" ? "Scheduled on WordPress" : "Published on WordPress")
-        router.refresh()
+        toast.success(r.data.status === "scheduled" ? "Scheduled on WordPress" : "Published on WordPress", {
+          action: { label: "View", onClick: () => router.push(`${listHref}/articles/${saved}`) },
+        })
+        // Back to the Articles list, where the article now shows with its status and link.
+        dirty.current = false
+        router.push(`${listHref}?tab=articles`)
       },
       {
         title: mode === "now" ? "Publish on WordPress now?" : `Schedule for ${formatInZone(publishAt!, tz)}?`,

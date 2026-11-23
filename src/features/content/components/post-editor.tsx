@@ -50,6 +50,7 @@ import {
 import {
   checkTarget,
   CTA_TYPES,
+  EDITABLE_STATUSES,
   PLATFORM_RULES,
   TARGET_META,
   textLength,
@@ -65,7 +66,7 @@ import { MediaThumb, UploadButton } from "./media-library"
 
 type TargetDraft = { customContent: string | null; customMediaIds: string[] | null; settings: TargetSettings }
 
-export const EDITABLE = new Set(["draft", "cancelled", "scheduled"])
+
 
 const FIX: Record<string, string> = {
   auth_expired: "Reconnect this account in Connections, then try again.",
@@ -91,7 +92,7 @@ type Common = {
 /** The post page: the writer for drafts and scheduled posts, the results for sent ones. */
 export function PostWorkspace(props: Common & { post: PostRow | null; initialDate: string | null; accounts: ContentAccount[] }) {
   const { post } = props
-  if (post && !EDITABLE.has(post.status)) return <SentPost {...props} post={post} />
+  if (post && !EDITABLE_STATUSES.has(post.status)) return <SentPost {...props} post={post} />
   return <Writer key={post?.id ?? "new"} {...props} />
 }
 
@@ -246,10 +247,10 @@ function Writer({
             ? "Published"
             : "Sent to Zernio. Publishing now…"
           : `Scheduled for ${formatInZone(scheduledFor!, tz)}`,
+        { action: { label: "View", onClick: () => router.push(`${contentHref}/posts/${id}`) } },
       )
-      // Show what went out (statuses, links) on this post's page.
-      router.replace(`${contentHref}/posts/${id}`)
-      startTransition(() => router.refresh())
+      // Back to the Posts list, where the post now shows with its status.
+      router.push(`${contentHref}?tab=posts`)
     })
   }
 
