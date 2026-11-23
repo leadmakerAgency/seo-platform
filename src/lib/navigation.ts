@@ -8,13 +8,13 @@ import {
   Library,
   Link2,
   ListChecks,
-  type LucideIcon,
+  type IconComponent,
   NotebookPen,
   Plug,
   Radar,
   Star,
   Users,
-} from "lucide-react"
+} from "@/components/icons"
 
 import type { AppRole } from "@/lib/roles"
 
@@ -25,7 +25,7 @@ import type { AppRole } from "@/lib/roles"
 export type NavItem = {
   id: string
   title: string
-  icon: LucideIcon
+  icon: IconComponent
   roles: readonly AppRole[]
   comingSoon: boolean
   /** One line shown on the Coming soon page: what this page will do. */

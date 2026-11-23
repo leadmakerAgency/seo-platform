@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Circle, Loader2, MapPin, Plus, Trash2 } from "lucide-react"
+import { Check, Circle, Loader2, MapPin, Plus, Trash2 } from "@/components/icons"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { toast } from "sonner"
 

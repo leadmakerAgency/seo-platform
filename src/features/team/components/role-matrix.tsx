@@ -1,4 +1,4 @@
-import { Check, Minus } from "lucide-react"
+import { Check, Minus } from "@/components/icons"
 
 import {
   Table,

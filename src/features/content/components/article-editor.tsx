@@ -26,7 +26,7 @@ import {
   Undo2,
   Unlink,
   X,
-} from "lucide-react"
+} from "@/components/icons"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react"

@@ -1,6 +1,6 @@
 "use client"
 
-import { Camera, ExternalLink, FileText, Loader2, Paperclip, X } from "lucide-react"
+import { Camera, ExternalLink, FileText, Loader2, Paperclip, X } from "@/components/icons"
 import { useRef, useState, useTransition } from "react"
 import { toast } from "sonner"
 

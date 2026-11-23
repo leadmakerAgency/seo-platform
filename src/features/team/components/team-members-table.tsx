@@ -1,6 +1,6 @@
 "use client"
 
-import { Ellipsis, Link2, Power, PowerOff, Trash2 } from "lucide-react"
+import { Ellipsis, Link2, Power, PowerOff, Trash2 } from "@/components/icons"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 

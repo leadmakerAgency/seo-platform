@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowUpRight, Ban, Eye, EyeOff, KeyRound, Flag, SkipForward } from "lucide-react"
+import { ArrowUpRight, Ban, Eye, EyeOff, KeyRound, Flag, SkipForward } from "@/components/icons"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 

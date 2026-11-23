@@ -1,6 +1,6 @@
 "use client"
 
-import { CircleCheck, Loader2, Plug, TriangleAlert } from "lucide-react"
+import { CircleCheck, Loader2, Plug, TriangleAlert } from "@/components/icons"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 

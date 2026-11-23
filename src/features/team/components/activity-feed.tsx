@@ -1,4 +1,4 @@
-import { History } from "lucide-react"
+import { History } from "@/components/icons"
 
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import { formatRelative } from "@/lib/format"

@@ -1,6 +1,6 @@
 "use client"
 
-import { Gauge, RotateCw, Search } from "lucide-react"
+import { Gauge, RotateCw, Search } from "@/components/icons"
 import { useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 

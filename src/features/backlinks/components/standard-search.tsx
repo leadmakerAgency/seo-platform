@@ -1,4 +1,4 @@
-import { CircleAlert, Link2, Plug } from "lucide-react"
+import { CircleAlert, Link2, Plug } from "@/components/icons"
 import type { ReactNode } from "react"
 
 import { StatStrip, type StatItem } from "@/components/common/stat-strip"

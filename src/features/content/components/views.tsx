@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronLeft, ChevronRight, CircleAlert, ExternalLink, FileText, Plus } from "lucide-react"
+import { CalendarDays, ChevronLeft, ChevronRight, CircleAlert, ExternalLink, FileText, Plus } from "@/components/icons"
 import Link from "next/link"
 
 import { PlatformLogo } from "@/components/brand/platform-icons"

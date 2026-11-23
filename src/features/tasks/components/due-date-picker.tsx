@@ -1,6 +1,6 @@
 "use client"
 
-import { CalendarDays, X } from "lucide-react"
+import { CalendarDays, X } from "@/components/icons"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"

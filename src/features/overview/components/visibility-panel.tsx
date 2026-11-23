@@ -7,8 +7,8 @@ import {
   SearchX,
   TrendingDown,
   TrendingUp,
-  type LucideIcon,
-} from "lucide-react"
+  type IconComponent,
+} from "@/components/icons"
 import Link from "next/link"
 
 import { formatNumber, formatRelative } from "@/lib/format"
@@ -16,10 +16,10 @@ import { clientHref } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 import { PLACES, type PlaceKey } from "../constants"
 import type { PlaceStats, Visibility } from "../queries"
-import { hueFill, IconTile, type Hue } from "./icon-tile"
+import { HueIcon, hueFill, type Hue } from "./hue-icon"
 
 /** One icon and hue per place, so the three read apart at a glance. */
-const PLACE_LOOK: Record<PlaceKey, { icon: LucideIcon; hue: Hue }> = {
+const PLACE_LOOK: Record<PlaceKey, { icon: IconComponent; hue: Hue }> = {
   website: { icon: Globe, hue: "teal" },
   map: { icon: MapPinned, hue: "clay" },
   ai: { icon: Radar, hue: "plum" },
@@ -78,8 +78,8 @@ function PlaceCell({
   const share = stats && stats.outOf > 0 ? Math.min(100, (stats.current / stats.outOf) * 100) : 0
   return (
     <section className="flex flex-col gap-4 bg-card px-4 pt-4 pb-4">
-      <div className="flex items-center gap-3">
-        <IconTile icon={look.icon} hue={look.hue} size="lg" />
+      <div className="flex items-center gap-2.5">
+        <HueIcon icon={look.icon} hue={look.hue} className="size-6" />
         <h3 className="text-sm leading-5 font-semibold">{meta.title}</h3>
       </div>
 

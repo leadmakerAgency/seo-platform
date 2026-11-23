@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Copy, Link2, Loader2, MessageSquareText, Plug } from "lucide-react"
+import { Check, Copy, Link2, Loader2, MessageSquareText, Plug } from "@/components/icons"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 

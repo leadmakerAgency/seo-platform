@@ -1,4 +1,4 @@
-import { ArrowUpRight, Brain, CircleAlert, Swords, Target, Users } from "lucide-react"
+import { ArrowUpRight, Brain, CircleAlert, Swords, Target, Users } from "@/components/icons"
 
 import { formatRelative } from "@/lib/format"
 import { OpenSetupLink } from "../../components/setup-sheet"

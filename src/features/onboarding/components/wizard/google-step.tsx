@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Copy, ExternalLink } from "lucide-react"
+import { Check, Copy, ExternalLink } from "@/components/icons"
 import { useState } from "react"
 import { toast } from "sonner"
 

@@ -1,4 +1,4 @@
-import { CircleAlert, Loader2 } from "lucide-react"
+import { CircleAlert, Loader2 } from "@/components/icons"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"

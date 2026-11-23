@@ -1,4 +1,4 @@
-import { Check, CircleAlert, Circle, Lock, MapPin, Settings2, Target as TargetIcon } from "lucide-react"
+import { Check, CircleAlert, Circle, Lock, MapPin, Settings2, Target as TargetIcon } from "@/components/icons"
 
 import { cn } from "@/lib/utils"
 import { BUYER_META, BUYERS, mixLabel, OFFERING_META, OFFERINGS, REACH_META, REACHES, topicCount } from "../brief"

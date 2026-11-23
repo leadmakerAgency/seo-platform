@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, X } from "lucide-react"
+import { Search, X } from "@/components/icons"
 import { useRouter } from "next/navigation"
 import { useEffect, useState, useTransition } from "react"
 

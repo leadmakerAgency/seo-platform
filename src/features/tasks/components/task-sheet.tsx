@@ -10,7 +10,7 @@ import {
   Search,
   Trash2,
   X,
-} from "lucide-react"
+} from "@/components/icons"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMemo, useOptimistic, useState, useTransition } from "react"

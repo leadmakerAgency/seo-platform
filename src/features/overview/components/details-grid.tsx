@@ -13,8 +13,8 @@ import {
   Plug,
   Target,
   UserRound,
-  type LucideIcon,
-} from "lucide-react"
+  type IconComponent,
+} from "@/components/icons"
 import Link from "next/link"
 import type { ReactNode } from "react"
 
@@ -25,7 +25,7 @@ import { clientHref } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 import { DELIVERABLES, DELIVERABLE_META, packageLabel } from "../constants"
 import type { OverviewDetails } from "../queries"
-import { DELIVERABLE_LOOK, IconTile, KEYWORDS_LOOK, type Hue } from "./icon-tile"
+import { DELIVERABLE_LOOK, HueIcon, KEYWORDS_LOOK, type Hue } from "./hue-icon"
 
 /** "1 month", "3 months", "1 year 2 months" since the client started. */
 function since(startedOn: string, today: string) {
@@ -42,7 +42,7 @@ function since(startedOn: string, today: string) {
   return parts.join(" ")
 }
 
-type Planned = { key: string; count: number; label: string; icon: LucideIcon; hue: Hue }
+type Planned = { key: string; count: number; label: string; icon: IconComponent; hue: Hue }
 
 /** The monthly targets as chips: "20 backlinks", "8 articles", ..., "20 keywords tracked". */
 function everyMonth(d: OverviewDetails): Planned[] {
@@ -124,13 +124,10 @@ export function DetailsGrid({ details: d, today }: { details: OverviewDetails; t
         {planned.length === 0 ? (
           <Muted>Nothing planned yet. Set the targets in Edit details.</Muted>
         ) : (
-          <ul className="flex flex-wrap gap-1.5 pt-1">
+          <ul className="flex flex-wrap gap-x-4 gap-y-1.5 pt-0.5">
             {planned.map((p) => (
-              <li
-                key={p.key}
-                className="inline-flex h-7 items-center gap-1.5 rounded-md border bg-background pr-2 pl-0.5 text-[13px]"
-              >
-                <IconTile icon={p.icon} hue={p.hue} size="sm" className="size-[22px] rounded-sm" />
+              <li key={p.key} className="inline-flex items-center gap-1.5 text-[13px]">
+                <HueIcon icon={p.icon} hue={p.hue} className="size-4" />
                 <span className="font-semibold tabular-nums">{formatNumber(p.count)}</span>
                 <span className="font-normal text-muted-foreground">{p.label}</span>
               </li>
@@ -193,7 +190,7 @@ export function DetailsGrid({ details: d, today }: { details: OverviewDetails; t
 
 /**
  * One label/value cell. dt/dd sit directly in the group div (valid <dl> markup), so the
- * icon tile lives inside the dt and is placed in the left gutter.
+ * icon lives inside the dt and is placed in the left gutter.
  */
 function Item({
   label,
@@ -204,7 +201,7 @@ function Item({
   className,
 }: {
   label: string
-  icon: LucideIcon
+  icon: IconComponent
   hue?: Hue
   tone?: Tone
   children: ReactNode
@@ -213,12 +210,12 @@ function Item({
   return (
     <div
       className={cn(
-        "relative flex min-w-0 flex-col gap-0.5 bg-card py-3.5 pr-4 pl-[60px]",
+        "relative flex min-w-0 flex-col gap-0.5 bg-card py-3.5 pr-4 pl-[52px]",
         className,
       )}
     >
       <dt className="text-xs text-muted-foreground">
-        <IconTile icon={icon} hue={hue} tone={tone} className="absolute top-3.5 left-4" />
+        <HueIcon icon={icon} hue={hue} tone={tone} className="absolute top-4 left-4 size-6" />
         {label}
       </dt>
       <dd className="min-w-0 text-sm font-medium break-words">{children}</dd>

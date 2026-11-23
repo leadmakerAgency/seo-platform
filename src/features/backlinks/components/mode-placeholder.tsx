@@ -1,4 +1,4 @@
-import { ArrowRight, Hand } from "lucide-react"
+import { ArrowRight, Hand } from "@/components/icons"
 import Link from "next/link"
 
 import { ShockwaveMark } from "@/components/brand/logo"
@@ -16,9 +16,13 @@ export function ModePlaceholder({ mode, standardHref }: { mode: Exclude<Mode, "s
         className="pointer-events-none absolute inset-0 [background-image:radial-gradient(var(--color-border)_1px,transparent_1px)] [background-size:16px_16px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
       />
       <div className="relative flex flex-col items-center gap-4 px-6 py-14 text-center">
-        <span className="flex size-12 items-center justify-center rounded-xl border bg-card shadow-xs">
-          {mode === "ai" ? <ShockwaveMark className="h-7" /> : <Hand className="size-5 text-muted-foreground" aria-hidden />}
-        </span>
+        {mode === "ai" ? (
+          <span className="flex size-12 items-center justify-center rounded-xl border bg-card shadow-xs">
+            <ShockwaveMark className="h-7" />
+          </span>
+        ) : (
+          <Hand className="size-10 text-brand" aria-hidden />
+        )}
         <div className="flex max-w-md flex-col gap-1.5">
           <h2 className="text-[15px] leading-[22px] font-semibold">{meta.label} is on its way</h2>
           <p className="text-sm text-muted-foreground">

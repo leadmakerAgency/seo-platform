@@ -1,7 +1,7 @@
 "use client"
 
 import { Command as CommandPrimitive } from "cmdk"
-import { Check, Loader2, Search, X } from "lucide-react"
+import { Check, Loader2, Search, X } from "@/components/icons"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react"

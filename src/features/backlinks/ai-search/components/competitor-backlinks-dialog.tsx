@@ -1,6 +1,6 @@
 "use client"
 
-import { CircleAlert, Clock, Database, Network, Wallet } from "lucide-react"
+import { CircleAlert, Clock, Database, Network, Wallet } from "@/components/icons"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 

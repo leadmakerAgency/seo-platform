@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react"
+import { Plus } from "@/components/icons"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Suspense } from "react"

@@ -7,7 +7,7 @@ import {
   ChevronRight,
   ExternalLink,
   Trash2,
-} from "lucide-react"
+} from "@/components/icons"
 import Link from "next/link"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils"
 import { removeWork } from "../actions"
 import { DELIVERABLE_META, PROGRESS_META, SOURCE_LABELS } from "../constants"
 import type { DeliverableProgress, WorkItem } from "../queries"
-import { DELIVERABLE_LOOK, hueFill, IconTile } from "./icon-tile"
+import { DELIVERABLE_LOOK, HueIcon, hueFill } from "./hue-icon"
 import { LogWorkDialog } from "./log-work-dialog"
 
 type Props = {
@@ -109,7 +109,7 @@ export function MonthWork(props: Props) {
 
       {visible.length === 0 ? (
         <div className="flex items-start gap-3 rounded-lg border bg-card px-4 py-5 text-sm">
-          <IconTile icon={CalendarOff} />
+          <HueIcon icon={CalendarOff} />
           <div className="flex flex-col gap-0.5">
             <p className="font-medium">No work planned for {formatMonth(month, true)}</p>
             <p className="text-muted-foreground">
@@ -192,7 +192,7 @@ function WorkRow({
               !open && "-rotate-90",
             )}
           />
-          <IconTile icon={look.icon} hue={look.hue} size="sm" />
+          <HueIcon icon={look.icon} hue={look.hue} className="size-[18px]" />
           <span className="truncate">{meta.label}</span>
         </span>
 
@@ -233,7 +233,7 @@ function WorkRow({
       </button>
 
       {open && (
-        <div id={panelId} className="border-t bg-muted/30 px-4 py-3 md:pl-[70px]">
+        <div id={panelId} className="border-t bg-muted/30 px-4 py-3 md:pl-[64px]">
           {expectedPct !== null && (
             <p className="mb-2 text-[13px] text-muted-foreground">
               About {Math.round(row.expected)} expected by today; the tick on the bar marks where

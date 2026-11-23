@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, LoaderCircle } from "lucide-react"
+import { Check, LoaderCircle } from "@/components/icons"
 import { useEffect, useState } from "react"
 
 import { ShockwaveMark } from "@/components/brand/logo"

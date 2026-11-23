@@ -1,6 +1,6 @@
 "use client"
 
-import { Search } from "lucide-react"
+import { Search } from "@/components/icons"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Fragment, Suspense } from "react"

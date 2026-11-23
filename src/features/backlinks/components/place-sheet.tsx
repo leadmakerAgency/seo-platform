@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowUpRight, Ban, Check, RotateCcw, X } from "lucide-react"
+import { ArrowUpRight, Ban, Check, RotateCcw, X } from "@/components/icons"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 

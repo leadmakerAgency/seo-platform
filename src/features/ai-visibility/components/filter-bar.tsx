@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, ChevronDown, X } from "lucide-react"
+import { Check, ChevronDown, X } from "@/components/icons"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 

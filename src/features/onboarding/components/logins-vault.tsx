@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Copy, Eye, EyeOff, Loader2, Lock, Plus, Trash2 } from "lucide-react"
+import { Check, Copy, Eye, EyeOff, Loader2, Lock, Plus, Trash2 } from "@/components/icons"
 import { useEffect, useState, useTransition } from "react"
 import { toast } from "sonner"
 

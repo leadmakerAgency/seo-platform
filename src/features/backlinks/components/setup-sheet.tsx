@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, Check, CircleAlert, Settings2 } from "lucide-react"
+import { ArrowLeft, Check, CircleAlert, Settings2 } from "@/components/icons"
 import { useSearchParams } from "next/navigation"
 import { useCallback, useState, type ReactNode } from "react"
 

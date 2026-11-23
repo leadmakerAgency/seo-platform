@@ -1,6 +1,6 @@
 "use client"
 
-import { Bell } from "lucide-react"
+import { Bell } from "@/components/icons"
 import Link from "next/link"
 import { useCallback, useEffect, useState } from "react"
 

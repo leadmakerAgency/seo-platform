@@ -1,6 +1,6 @@
 "use client"
 
-import { CircleAlert, IdCard } from "lucide-react"
+import { CircleAlert, IdCard } from "@/components/icons"
 
 import { cn } from "@/lib/utils"
 import type { KitField } from "../listing-kit"

@@ -11,7 +11,7 @@ import {
   TriangleAlert,
   Unplug,
   X,
-} from "lucide-react"
+} from "@/components/icons"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"

@@ -1,7 +1,7 @@
 "use client"
 
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Plus } from "lucide-react"
+import { Plus } from "@/components/icons"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useTransition, type ReactNode } from "react"
 import { Controller, useForm } from "react-hook-form"

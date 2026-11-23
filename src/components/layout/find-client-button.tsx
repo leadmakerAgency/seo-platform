@@ -1,6 +1,6 @@
 "use client"
 
-import { Search } from "lucide-react"
+import { Search } from "@/components/icons"
 
 import { Button } from "@/components/ui/button"
 import { useOpenClientSearch } from "./client-search"

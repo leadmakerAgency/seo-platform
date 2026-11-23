@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp } from "lucide-react"
+import { ArrowDown, ArrowUp } from "@/components/icons"
 
 import { StatusTag } from "@/components/common/status"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"

@@ -1,6 +1,6 @@
 "use client"
 
-import { Pencil } from "lucide-react"
+import { Pencil } from "@/components/icons"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronDown, Plus, Search, TriangleAlert } from "lucide-react"
+import { ChevronDown, Plus, Search, TriangleAlert } from "@/components/icons"
 import { useMemo, useState, useTransition } from "react"
 import { toast } from "sonner"
 

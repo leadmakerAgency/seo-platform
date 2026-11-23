@@ -1,4 +1,4 @@
-import { Hand, Lock, Search, type LucideIcon } from "lucide-react"
+import { Hand, Lock, Search, type IconComponent } from "@/components/icons"
 import Link from "next/link"
 
 import { ShockwaveMark } from "@/components/brand/logo"
@@ -21,7 +21,7 @@ export const MODE_META: Record<Mode, { label: string; short: string; caption: st
   manual: { label: "Manual Search", short: "Manual", caption: "Pick trusted sites and track every listing to Live" },
 }
 
-const ICONS: Record<Exclude<Mode, "ai">, LucideIcon> = { standard: Search, manual: Hand }
+const ICONS: Record<Exclude<Mode, "ai">, IconComponent> = { standard: Search, manual: Hand }
 
 /** Link to a mode; Standard Search keeps the plain page URL. */
 export const modeHref = (base: string, mode: Mode) => (mode === "standard" ? base : `${base}?mode=${mode}`)

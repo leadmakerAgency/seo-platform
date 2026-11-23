@@ -1,8 +1,8 @@
-import { Lightbulb, Network, ShieldAlert, Users, Zap, type LucideIcon } from "lucide-react"
+import { Lightbulb, Network, ShieldAlert, Users, Zap, type IconComponent } from "@/components/icons"
 
 import type { AiInsight, AiSearchData } from "../queries"
 
-const KIND: Record<AiInsight["kind"], { icon: LucideIcon; label: string; tone: string }> = {
+const KIND: Record<AiInsight["kind"], { icon: IconComponent; label: string; tone: string }> = {
   pattern: { icon: Lightbulb, label: "What they do", tone: "text-info" },
   quick_win: { icon: Zap, label: "Quick win", tone: "text-success" },
   ask_clients: { icon: Users, label: "Ask your clients", tone: "text-brand" },

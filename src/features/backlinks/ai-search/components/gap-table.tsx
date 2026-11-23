@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Minus } from "lucide-react"
+import { Check, Minus } from "@/components/icons"
 
 import type { AiProspect } from "../queries"
 import { FitMeter, LINK_KIND_LABEL, REPLICABILITY_META } from "./ai-ui"

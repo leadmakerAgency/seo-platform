@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeft, ArrowRight, Check, CircleCheck, Loader2, Lock } from "lucide-react"
+import { ArrowLeft, ArrowRight, Check, CircleCheck, Loader2, Lock } from "@/components/icons"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { toast } from "sonner"

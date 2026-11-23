@@ -1,4 +1,4 @@
-import { ArrowUpRight, Compass } from "lucide-react"
+import { ArrowUpRight, Compass } from "@/components/icons"
 
 import { TOOLKIT, type HelperGroup } from "../search-helpers"
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { History } from "lucide-react"
+import { History } from "@/components/icons"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
@@ -10,7 +10,7 @@ import type { ActivityEntry } from "@/features/team/queries"
 import { addDays, agencyToday, formatDay } from "@/lib/dates"
 import { cn } from "@/lib/utils"
 import { loadMoreActivity } from "../actions"
-import { hueFill, IconTile, type Hue } from "./icon-tile"
+import { HueIcon, hueFill, type Hue } from "./hue-icon"
 
 /** A dot colour per kind of event, so the timeline scans by area (identity, not status). */
 function eventHue(action: string): Hue {
@@ -100,7 +100,7 @@ export function ActivityFeed({
 
       {entries.length === 0 ? (
         <div className="flex items-start gap-3 rounded-lg border bg-card px-4 py-5 text-sm">
-          <IconTile icon={History} />
+          <HueIcon icon={History} />
           <div className="flex flex-col gap-0.5">
             <p className="font-medium">Nothing yet</p>
             <p className="text-muted-foreground">Work, connections and changes show up here.</p>

@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowUpRight, Bot, Globe, MessageSquare, Minus, Search, Sparkles, type LucideIcon } from "lucide-react"
+import { ArrowDownRight, ArrowUpRight, Bot, Globe, MessageSquare, Minus, Search, Sparkles, type IconComponent } from "@/components/icons"
 import type { ReactNode } from "react"
 
 import { toneText } from "@/components/common/status"
@@ -7,7 +7,7 @@ import { MODEL_META, SOURCE_TYPE_LABEL, type AivModel } from "../config"
 
 /** Small shared pieces for the AI Visibility page. Generic icons only, never vendor logos. */
 
-export const MODEL_ICON: Record<AivModel, LucideIcon> = {
+export const MODEL_ICON: Record<AivModel, IconComponent> = {
   chatgpt: MessageSquare,
   gemini: Sparkles,
   ai_overview: Search,

@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   Table2,
   X,
-} from "lucide-react"
+} from "@/components/icons"
 import { useMemo, useState, useTransition } from "react"
 import { toast } from "sonner"
 

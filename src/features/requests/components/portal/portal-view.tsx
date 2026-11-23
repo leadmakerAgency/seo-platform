@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronDown, CircleCheck, Clock } from "lucide-react"
+import { ChevronDown, CircleCheck, Clock } from "@/components/icons"
 import { useState } from "react"
 
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"

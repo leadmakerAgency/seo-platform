@@ -15,8 +15,8 @@ import {
   Sparkles,
   TriangleAlert,
   Wallet,
-  type LucideIcon,
-} from "lucide-react"
+  type IconComponent,
+} from "@/components/icons"
 
 import { StatusTag } from "@/components/common/status"
 import { formatNumber, formatRelative } from "@/lib/format"
@@ -54,7 +54,7 @@ const money = (v: number) => `$${v.toFixed(2)}`
 type Part = "google" | "maps" | "strength" | "ai"
 
 /** Fixed order, colour and icon per cost part. */
-const PARTS: { key: Part; label: string; short: string; icon: LucideIcon; bg: string; text: string }[] = [
+const PARTS: { key: Part; label: string; short: string; icon: IconComponent; bg: string; text: string }[] = [
   { key: "google", label: "Google searches", short: "Google", icon: Search, bg: "bg-cost-google", text: "text-cost-google" },
   { key: "maps", label: "Google Maps", short: "Maps", icon: MapPin, bg: "bg-cost-maps", text: "text-cost-maps" },
   { key: "strength", label: "Link data", short: "Link data", icon: Gauge, bg: "bg-cost-strength", text: "text-cost-strength" },
@@ -73,7 +73,7 @@ export const AIV_PART_LABELS: PartLabels = {
   ai: { label: "Claude reading", short: "Claude" },
 }
 
-const KIND: Record<RunEntry["kind"], { label: string; icon: LucideIcon; node: string }> = {
+const KIND: Record<RunEntry["kind"], { label: string; icon: IconComponent; node: string }> = {
   search: { label: "Find places", icon: Search, node: "border-brand/30 text-brand" },
   rerank: { label: "Re-rank with the brief", icon: ListOrdered, node: "border-info/30 text-info" },
   strength: { label: "Strength check", icon: Gauge, node: "border-border text-muted-foreground" },
@@ -355,7 +355,7 @@ function AccountTile({
   lines,
   action,
 }: {
-  icon: LucideIcon
+  icon: IconComponent
   name: string
   left: number | null
   approx?: boolean
@@ -467,7 +467,7 @@ export function RunHistoryPanel({
   const byPart: Record<Part, number> = { google: totals.google, maps: totals.maps, strength: totals.strength, ai: totals.ai }
   const now = new Date(nowIso)
 
-  const figures: { icon: LucideIcon; label: string; value: number; note?: string }[] = [
+  const figures: { icon: IconComponent; label: string; value: number; note?: string }[] = [
     {
       icon: CalendarDays,
       label: "This month",

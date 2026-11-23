@@ -1,4 +1,4 @@
-import { CircleAlert, Search } from "lucide-react"
+import { CircleAlert, Search } from "@/components/icons"
 import type { ReactNode } from "react"
 
 import { ShockwaveMark } from "@/components/brand/logo"

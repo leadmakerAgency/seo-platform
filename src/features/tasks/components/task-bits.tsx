@@ -1,4 +1,4 @@
-import { Repeat } from "lucide-react"
+import { Repeat } from "@/components/icons"
 import { StatusTag } from "@/components/common/status"
 
 import { dueLabel, dueState, type DueState } from "@/lib/dates"

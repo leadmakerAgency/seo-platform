@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Search, X } from "lucide-react"
+import { Check, Search, X } from "@/components/icons"
 import { useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"

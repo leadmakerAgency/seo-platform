@@ -1,6 +1,6 @@
 "use client"
 
-import { KeyRound } from "lucide-react"
+import { KeyRound } from "@/components/icons"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 

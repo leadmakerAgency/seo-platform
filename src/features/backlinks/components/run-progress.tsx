@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, LoaderCircle, MapPin } from "lucide-react"
+import { Check, LoaderCircle, MapPin } from "@/components/icons"
 import { useEffect, useId, useRef, useState } from "react"
 
 import { Progress } from "@/components/ui/progress"
@@ -91,12 +91,10 @@ export function RunProgress({ kind, status, step, done, total, places, startedAt
       className="@container flex flex-col gap-4 rounded-lg border bg-card p-4"
     >
       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2.5">
-        <span
-          className="flex size-8 items-center justify-center rounded-md bg-brand-soft text-brand"
+        <LoaderCircle
           aria-hidden
-        >
-          <LoaderCircle className="size-4 animate-spin [animation-duration:1.6s] motion-reduce:animate-none" />
-        </span>
+          className="mt-0.5 size-6 text-brand animate-spin [animation-duration:1.6s] motion-reduce:animate-none"
+        />
         <div className="flex min-w-0 flex-col gap-1">
           <h2 id={titleId} className="text-[15px] leading-[22px] font-semibold">
             {title}

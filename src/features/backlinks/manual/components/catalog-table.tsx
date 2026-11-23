@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowUpRight, BadgeCheck, Download, Plus, Search, TriangleAlert } from "lucide-react"
+import { ArrowUpRight, BadgeCheck, Download, Plus, Search, TriangleAlert } from "@/components/icons"
 import { useMemo, useState, useTransition } from "react"
 import { toast } from "sonner"
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Copy, Download, Eye, EyeOff, FileText } from "lucide-react"
+import { Check, Copy, Download, Eye, EyeOff, FileText } from "@/components/icons"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"

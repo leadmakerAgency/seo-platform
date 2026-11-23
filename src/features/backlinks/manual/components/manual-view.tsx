@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowUpRight, Hand, ListPlus, Search } from "lucide-react"
+import { ArrowUpRight, Hand, ListPlus, Search } from "@/components/icons"
 import Link from "next/link"
 import { useMemo, useState, useTransition } from "react"
 import { toast } from "sonner"

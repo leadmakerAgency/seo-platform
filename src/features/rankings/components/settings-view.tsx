@@ -1,6 +1,6 @@
 "use client"
 
-import { MapPin, X } from "lucide-react"
+import { MapPin, X } from "@/components/icons"
 import { useEffect, useRef, useState, useTransition } from "react"
 import { toast } from "sonner"
 

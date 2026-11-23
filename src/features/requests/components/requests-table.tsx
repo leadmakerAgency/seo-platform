@@ -1,6 +1,6 @@
 "use client"
 
-import { Inbox } from "lucide-react"
+import { Inbox } from "@/components/icons"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import type { ReactNode } from "react"

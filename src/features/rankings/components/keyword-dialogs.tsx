@@ -1,6 +1,6 @@
 "use client"
 
-import { Plus, RefreshCw } from "lucide-react"
+import { Plus, RefreshCw } from "@/components/icons"
 import { useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 

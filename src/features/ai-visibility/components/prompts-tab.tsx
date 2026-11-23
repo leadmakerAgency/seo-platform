@@ -1,6 +1,6 @@
 "use client"
 
-import { Archive, ArchiveRestore, Check, Loader2, Play, Plus, Sparkles, Tag, Trash2, X } from "lucide-react"
+import { Archive, ArchiveRestore, Check, Loader2, Play, Plus, Sparkles, Tag, Trash2, X } from "@/components/icons"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useMemo, useState, useTransition } from "react"

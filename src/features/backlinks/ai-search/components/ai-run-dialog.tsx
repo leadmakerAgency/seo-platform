@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Clock, Globe2, MapPin, Network, Search, Wallet } from "lucide-react"
+import { Check, Clock, Globe2, MapPin, Network, Search, Wallet } from "@/components/icons"
 import { useMemo, useState, useTransition } from "react"
 import { toast } from "sonner"
 

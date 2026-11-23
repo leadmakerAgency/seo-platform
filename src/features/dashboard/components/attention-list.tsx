@@ -1,4 +1,4 @@
-import { BellOff, CircleAlert, TriangleAlert } from "lucide-react"
+import { BellOff, CircleAlert, TriangleAlert } from "@/components/icons"
 import Link from "next/link"
 
 import { Button } from "@/components/ui/button"

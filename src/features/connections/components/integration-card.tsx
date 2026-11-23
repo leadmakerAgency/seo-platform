@@ -1,6 +1,6 @@
 "use client"
 
-import { CircleCheck, CircleDashed, CircleX, ExternalLink } from "lucide-react"
+import { CircleCheck, CircleDashed, CircleX, ExternalLink } from "@/components/icons"
 import { useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 

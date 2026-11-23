@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowRight, Check, CircleAlert, Plus } from "lucide-react"
+import { ArrowRight, Check, CircleAlert, Plus } from "@/components/icons"
 import { useEffect, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 

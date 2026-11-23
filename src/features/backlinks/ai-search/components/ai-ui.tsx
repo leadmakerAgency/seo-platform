@@ -15,8 +15,8 @@ import {
   Sparkles,
   Star,
   Trophy,
-  type LucideIcon,
-} from "lucide-react"
+  type IconComponent,
+} from "@/components/icons"
 
 import { StatusTag, type Tone } from "@/components/common/status"
 import { cn } from "@/lib/utils"
@@ -24,7 +24,7 @@ import { CATEGORY, FINDER_LABELS, type CategoryKey } from "../config"
 
 /** Small display pieces for the Shockwave AI Search tab (plan appendix C). */
 
-export const CATEGORY_ICON: Record<string, LucideIcon> = {
+export const CATEGORY_ICON: Record<string, IconComponent> = {
   best_of_lists: Trophy,
   industry_directories: BookMarked,
   local_citations: MapPin,

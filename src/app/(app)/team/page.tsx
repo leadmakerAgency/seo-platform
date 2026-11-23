@@ -1,4 +1,4 @@
-import { KeyRound } from "lucide-react"
+import { KeyRound } from "@/components/icons"
 import type { Metadata } from "next"
 import { Suspense } from "react"
 

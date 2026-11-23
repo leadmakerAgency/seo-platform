@@ -1,4 +1,4 @@
-import { ArrowRight, CircleAlert, ClipboardCheck, Clock3, TriangleAlert } from "lucide-react"
+import { ArrowRight, CircleAlert, ClipboardCheck, Clock3, TriangleAlert } from "@/components/icons"
 import Link from "next/link"
 import type { ReactNode } from "react"
 
@@ -8,7 +8,7 @@ import { formatRelative } from "@/lib/format"
 import { clientHref } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 import type { ClientAlert, OverviewDetails } from "../queries"
-import { IconTile } from "./icon-tile"
+import { HueIcon } from "./hue-icon"
 
 /**
  * "Needs attention" for one client: its open alerts (most severe first) and,
@@ -56,7 +56,7 @@ export function AttentionList({
             <Row
               key={a.id}
               tile={
-                <IconTile
+                <HueIcon
                   icon={action ? CircleAlert : TriangleAlert}
                   tone={action ? "danger" : "warning"}
                 />
@@ -91,7 +91,7 @@ export function AttentionList({
 
         {showOnboarding && (
           <Row
-            tile={<IconTile icon={ClipboardCheck} tone={onboardingTone} />}
+            tile={<HueIcon icon={ClipboardCheck} tone={onboardingTone} />}
             title={
               status === "not_started"
                 ? "Onboarding hasn't started"
@@ -179,7 +179,7 @@ function Row({
           )}
         </div>
       </div>
-      {action && <div className="shrink-0 pl-11 sm:pl-0">{action}</div>}
+      {action && <div className="shrink-0 pl-8 sm:pl-0">{action}</div>}
     </li>
   )
 }

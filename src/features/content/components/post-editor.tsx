@@ -17,7 +17,7 @@ import {
   TriangleAlert,
   Undo2,
   X,
-} from "lucide-react"
+} from "@/components/icons"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState, useTransition, type ReactNode } from "react"

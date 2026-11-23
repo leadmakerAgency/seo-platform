@@ -1,7 +1,7 @@
 "use client"
 
 import { createColumnHelper, tableFeatures, useTable } from "@tanstack/react-table"
-import { ChevronLeft, ChevronRight, ListChecks, Search, SearchX, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, ListChecks, Search, SearchX, X } from "@/components/icons"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useTransition, type ReactNode } from "react"
 

@@ -62,17 +62,12 @@
   --color-info-soft: var(--info-soft);
   --color-info-dot: var(--info-dot);
   --color-neutral-dot: var(--neutral-dot);
-  /* Accent hues for icon tiles and identity marks (never status): ink + soft tile */
+  /* Accent hues for icons and identity marks (never status) */
   --color-hue-indigo: var(--hue-indigo);
-  --color-hue-indigo-soft: var(--hue-indigo-soft);
   --color-hue-gold: var(--hue-gold);
-  --color-hue-gold-soft: var(--hue-gold-soft);
   --color-hue-plum: var(--hue-plum);
-  --color-hue-plum-soft: var(--hue-plum-soft);
   --color-hue-teal: var(--hue-teal);
-  --color-hue-teal-soft: var(--hue-teal-soft);
   --color-hue-clay: var(--hue-clay);
-  --color-hue-clay-soft: var(--hue-clay-soft);
   /* Behind dialogs and sheets: a flat navy dim, no blur */
   --color-scrim: var(--scrim);
   --radius-sm: calc(var(--radius) * 0.6);
@@ -145,19 +140,14 @@
   --info-dot: oklch(0.64 0.13 250);
   --neutral-dot: oklch(0.72 0.02 280);
 
-  /* Accent hues (icon tiles and identity marks; never status). Ink on its -soft tile:
-     indigo 6.5, gold 4.8, plum 7.3, teal 4.6, clay 5.8 (all >= 5 on card). Checked with the
-     dataviz validator in this order: CVD and normal-vision separation pass in light and dark. */
+  /* Accent hues (icons and identity marks; never status). On card: indigo 7.5, gold 5.3,
+     plum 8.4, teal 5.1, clay 6.7. Checked with the dataviz validator in this order: CVD and
+     normal-vision separation pass in light and dark. */
   --hue-indigo: oklch(0.46 0.15 275);
-  --hue-indigo-soft: oklch(0.955 0.026 275);
   --hue-gold: oklch(0.53 0.115 88);
-  --hue-gold-soft: oklch(0.962 0.04 95);
   --hue-plum: oklch(0.44 0.14 340);
-  --hue-plum-soft: oklch(0.955 0.026 340);
   --hue-teal: oklch(0.515 0.12 186);
-  --hue-teal-soft: oklch(0.962 0.025 190);
   --hue-clay: oklch(0.49 0.13 38);
-  --hue-clay-soft: oklch(0.957 0.026 40);
 
   --chart-1: oklch(0.5 0.235 300);
   --chart-2: oklch(0.62 0.1 195);
@@ -240,17 +230,12 @@
   --info-dot: oklch(0.7 0.12 250);
   --neutral-dot: oklch(0.56 0.008 70);
 
-  /* Ink on -soft: indigo 6.7, gold 8.3, plum 5.5, teal 9.1, clay 6.2. */
+  /* On card: indigo 8.5, gold 10.7, plum 6.9, teal 11.6, clay 7.8. */
   --hue-indigo: oklch(0.78 0.12 278);
-  --hue-indigo-soft: oklch(0.3 0.065 278);
   --hue-gold: oklch(0.84 0.12 92);
-  --hue-gold-soft: oklch(0.3 0.05 95);
   --hue-plum: oklch(0.73 0.14 340);
-  --hue-plum-soft: oklch(0.3 0.06 340);
   --hue-teal: oklch(0.85 0.11 190);
-  --hue-teal-soft: oklch(0.29 0.05 190);
   --hue-clay: oklch(0.76 0.13 40);
-  --hue-clay-soft: oklch(0.3 0.055 40);
 
   --chart-1: oklch(0.64 0.19 300);
   --chart-2: oklch(0.65 0.11 195);

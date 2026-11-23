@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Circle, Loader2, Radar } from "lucide-react"
+import { Check, Circle, Loader2, Radar } from "@/components/icons"
 import { useRouter } from "next/navigation"
 import { useTransition } from "react"
 import { toast } from "sonner"

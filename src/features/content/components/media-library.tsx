@@ -1,6 +1,6 @@
 "use client"
 
-import { FileText, Film, ImageIcon, Trash2, Upload } from "lucide-react"
+import { FileText, Film, ImageIcon, Trash2, Upload } from "@/components/icons"
 import { useMemo, useRef, useState, useTransition } from "react"
 import { toast } from "sonner"
 

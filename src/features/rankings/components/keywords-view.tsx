@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowDownUp, ArrowUpRight, ChevronDown, ChevronUp, Search, TriangleAlert } from "lucide-react"
+import { ArrowDownUp, ArrowUpRight, ChevronDown, ChevronUp, Search, TriangleAlert } from "@/components/icons"
 import Link from "next/link"
 import { useMemo, useState } from "react"
 

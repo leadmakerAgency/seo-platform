@@ -1,6 +1,6 @@
 "use client"
 
-import { Download, Loader2, Play } from "lucide-react"
+import { Download, Loader2, Play } from "@/components/icons"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 

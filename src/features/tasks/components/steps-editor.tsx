@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowDown, ArrowUp, Plus, X } from "lucide-react"
+import { ArrowDown, ArrowUp, Plus, X } from "@/components/icons"
 import type { Control, UseFormRegister } from "react-hook-form"
 import { useFieldArray } from "react-hook-form"
 

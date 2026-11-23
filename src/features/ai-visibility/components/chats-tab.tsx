@@ -1,4 +1,4 @@
-import { ExternalLink } from "lucide-react"
+import { ExternalLink } from "@/components/icons"
 import Link from "next/link"
 
 import { formatNumber } from "@/lib/format"

@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, CircleAlert, Loader2, Plus, X } from "lucide-react"
+import { Check, CircleAlert, Loader2, Plus, X } from "@/components/icons"
 import { useState, type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"

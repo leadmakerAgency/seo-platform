@@ -1,6 +1,6 @@
 "use client"
 
-import { ListChecks } from "lucide-react"
+import { ListChecks } from "@/components/icons"
 import { usePathname, useRouter } from "next/navigation"
 import { useOptimistic, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"

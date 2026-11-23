@@ -1,6 +1,6 @@
 "use client"
 
-import { Bot, Database, Plus, Swords, UserRound, X } from "lucide-react"
+import { Bot, Database, Plus, Swords, UserRound, X } from "@/components/icons"
 import { useMemo, useState, useTransition } from "react"
 import { toast } from "sonner"
 

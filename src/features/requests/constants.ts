@@ -3,10 +3,10 @@ import {
   BadgeCheck,
   KeyRound,
   ListTodo,
-  type LucideIcon,
+  type IconComponent,
   MessageCircleQuestion,
   Paperclip,
-} from "lucide-react"
+} from "@/components/icons"
 
 import type { Database, Json } from "@/lib/supabase/database.types"
 
@@ -18,7 +18,7 @@ export const REQUEST_KINDS: RequestKind[] = ["question", "code", "files", "appro
 
 export const KIND_META: Record<
   RequestKind,
-  { label: string; icon: LucideIcon; hint: string; clientLabel: string }
+  { label: string; icon: IconComponent; hint: string; clientLabel: string }
 > = {
   question: {
     label: "Question",

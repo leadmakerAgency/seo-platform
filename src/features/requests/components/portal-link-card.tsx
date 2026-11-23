@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Copy, ExternalLink, Link2, MessageSquareText, RefreshCw } from "lucide-react"
+import { Check, Copy, ExternalLink, Link2, MessageSquareText, RefreshCw } from "@/components/icons"
 import { useState, useTransition } from "react"
 import { toast } from "sonner"
 
