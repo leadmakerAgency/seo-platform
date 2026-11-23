@@ -24,7 +24,7 @@ export const DELIVERABLE_ICON: Record<DeliverableKind, IconComponent> = {
 export const KEYWORDS_ICON = ChartNoAxesColumn
 
 /**
- * An icon in the two icon colours (`icon-duo`: cobalt main part, rose body), or in a status
+ * An icon in the two icon colours (`icon-duo`: emerald main part, mint body), or in a status
  * tone when it signals one. It stands on its own: no tile or box behind it. Default 20 px.
  */
 export function DuoIcon({
