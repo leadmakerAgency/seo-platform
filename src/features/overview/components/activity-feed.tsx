@@ -8,34 +8,8 @@ import { Button } from "@/components/ui/button"
 import { actorLabel, describeActivity } from "@/features/team/activity"
 import type { ActivityEntry } from "@/features/team/queries"
 import { addDays, agencyToday, formatDay } from "@/lib/dates"
-import { cn } from "@/lib/utils"
 import { loadMoreActivity } from "../actions"
-import { HueIcon, hueFill, type Hue } from "./hue-icon"
-
-/** A dot colour per kind of event, so the timeline scans by area (identity, not status). */
-function eventHue(action: string): Hue {
-  const area = action.split(".")[0]
-  switch (area) {
-    case "task":
-      return "indigo"
-    case "work":
-      return "clay"
-    case "connection":
-      return "teal"
-    case "request":
-      return "gold"
-    case "onboarding":
-    case "vault":
-      return "plum"
-    case "keyword":
-    case "rank":
-    case "rankings":
-    case "ai":
-      return "brand"
-    default:
-      return "neutral"
-  }
-}
+import { DuoIcon } from "./duo-icon"
 
 const timeFormatter = new Intl.DateTimeFormat("en-US", {
   timeZone: "America/Phoenix",
@@ -100,7 +74,7 @@ export function ActivityFeed({
 
       {entries.length === 0 ? (
         <div className="flex items-start gap-3 rounded-lg border bg-card px-4 py-5 text-sm">
-          <HueIcon icon={History} />
+          <DuoIcon icon={History} />
           <div className="flex flex-col gap-0.5">
             <p className="font-medium">Nothing yet</p>
             <p className="text-muted-foreground">Work, connections and changes show up here.</p>
@@ -118,10 +92,7 @@ export function ActivityFeed({
                   <li key={e.id} className="relative flex items-start gap-3 text-sm">
                     <span
                       aria-hidden
-                      className={cn(
-                        "mt-1.5 size-2 shrink-0 rounded-full ring-2 ring-card",
-                        hueFill(eventHue(e.action)),
-                      )}
+                      className="mt-1.5 size-2 shrink-0 rounded-full bg-icon-ink ring-2 ring-card"
                     />
                     <p className="min-w-0 flex-1">
                       <span className="font-medium">

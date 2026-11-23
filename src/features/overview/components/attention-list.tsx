@@ -8,7 +8,7 @@ import { formatRelative } from "@/lib/format"
 import { clientHref } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 import type { ClientAlert, OverviewDetails } from "../queries"
-import { HueIcon } from "./hue-icon"
+import { DuoIcon } from "./duo-icon"
 
 /**
  * "Needs attention" for one client: its open alerts (most severe first) and,
@@ -30,8 +30,8 @@ export function AttentionList({
   const count = alerts.length + (showOnboarding ? 1 : 0)
   const urgent = alerts.some((a) => a.severity === "action_needed")
   const status = onboarding?.status ?? "not_started"
-  const onboardingTone: Tone =
-    status === "reviewed" ? "success" : status === "submitted" ? "brand" : "info"
+  // Green once reviewed (a status); otherwise the icon pair, like every non-status icon.
+  const onboardingTone: Tone | undefined = status === "reviewed" ? "success" : undefined
 
   return (
     <section aria-labelledby="attention-title" className="flex flex-col gap-3">
@@ -56,7 +56,7 @@ export function AttentionList({
             <Row
               key={a.id}
               tile={
-                <HueIcon
+                <DuoIcon
                   icon={action ? CircleAlert : TriangleAlert}
                   tone={action ? "danger" : "warning"}
                 />
@@ -91,7 +91,7 @@ export function AttentionList({
 
         {showOnboarding && (
           <Row
-            tile={<HueIcon icon={ClipboardCheck} tone={onboardingTone} />}
+            tile={<DuoIcon icon={ClipboardCheck} tone={onboardingTone} />}
             title={
               status === "not_started"
                 ? "Onboarding hasn't started"

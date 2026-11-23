@@ -7,7 +7,7 @@ import type { ClientTaskRow } from "@/features/tasks/queries"
 import { dueLabel, dueState } from "@/lib/dates"
 import { clientHref } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
-import { HueIcon } from "./hue-icon"
+import { DuoIcon } from "./duo-icon"
 
 /** Up to 5 open tasks for this client, overdue first (the query already sorts by due date). */
 export function OpenTasks({
@@ -42,7 +42,7 @@ export function OpenTasks({
 
       {shown.length === 0 ? (
         <div className="flex items-start gap-3 rounded-lg border bg-card px-4 py-5 text-sm">
-          <HueIcon icon={CircleCheckBig} tone="success" />
+          <DuoIcon icon={CircleCheckBig} tone="success" />
           <div className="flex flex-col gap-0.5">
             <p className="font-medium">No open tasks</p>
             <p className="text-muted-foreground">

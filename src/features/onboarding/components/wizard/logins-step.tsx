@@ -100,7 +100,7 @@ export function LoginsStep({
         <ul className="flex flex-col divide-y rounded-lg border bg-card">
           {logins.map((l) => (
             <li key={l.id} className="flex items-center gap-3 px-4 py-3">
-              <Lock className="size-4 shrink-0 text-success" aria-hidden />
+              <Lock className="icon-duo size-4 shrink-0" aria-hidden />
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-[15px] font-medium">{l.site_name}</span>
                 <span className="truncate text-sm text-muted-foreground">

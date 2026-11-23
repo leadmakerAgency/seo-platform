@@ -25,7 +25,7 @@ import { clientHref } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 import { DELIVERABLES, DELIVERABLE_META, packageLabel } from "../constants"
 import type { OverviewDetails } from "../queries"
-import { DELIVERABLE_LOOK, HueIcon, KEYWORDS_LOOK, type Hue } from "./hue-icon"
+import { DELIVERABLE_ICON, DuoIcon, KEYWORDS_ICON } from "./duo-icon"
 
 /** "1 month", "3 months", "1 year 2 months" since the client started. */
 function since(startedOn: string, today: string) {
@@ -42,9 +42,9 @@ function since(startedOn: string, today: string) {
   return parts.join(" ")
 }
 
-type Planned = { key: string; count: number; label: string; icon: IconComponent; hue: Hue }
+type Planned = { key: string; count: number; label: string; icon: IconComponent }
 
-/** The monthly targets as chips: "20 backlinks", "8 articles", ..., "20 keywords tracked". */
+/** The monthly targets as a list: "20 backlinks", "8 articles", ..., "20 keywords tracked". */
 function everyMonth(d: OverviewDetails): Planned[] {
   const parts: Planned[] = []
   for (const k of DELIVERABLES) {
@@ -54,7 +54,7 @@ function everyMonth(d: OverviewDetails): Planned[] {
         key: k,
         count: n,
         label: n === 1 ? DELIVERABLE_META[k].one : DELIVERABLE_META[k].many,
-        ...DELIVERABLE_LOOK[k],
+        icon: DELIVERABLE_ICON[k],
       })
     }
   }
@@ -63,7 +63,7 @@ function everyMonth(d: OverviewDetails): Planned[] {
       key: "keywords",
       count: d.targets.keywords,
       label: d.targets.keywords === 1 ? "keyword tracked" : "keywords tracked",
-      ...KEYWORDS_LOOK,
+      icon: KEYWORDS_ICON,
     })
   }
   return parts
@@ -77,13 +77,13 @@ export function DetailsGrid({ details: d, today }: { details: OverviewDetails; t
 
   return (
     <dl className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-2 lg:grid-cols-4">
-      <Item label="Business" icon={Building2} hue="indigo">
+      <Item label="Business" icon={Building2}>
         {d.name}
       </Item>
-      <Item label="Location" icon={MapPin} hue="clay">
+      <Item label="Location" icon={MapPin}>
         {d.location || <Muted>Not set</Muted>}
       </Item>
-      <Item label="Website" icon={Globe} hue="teal">
+      <Item label="Website" icon={Globe}>
         {d.website ? (
           <a
             href={d.website}
@@ -97,7 +97,7 @@ export function DetailsGrid({ details: d, today }: { details: OverviewDetails; t
           <Muted>Not set</Muted>
         )}
       </Item>
-      <Item label="Industry" icon={BriefcaseBusiness} hue="gold">
+      <Item label="Industry" icon={BriefcaseBusiness}>
         {d.primaryCategory || d.industry || <Muted>Not set</Muted>}
       </Item>
 
@@ -109,25 +109,25 @@ export function DetailsGrid({ details: d, today }: { details: OverviewDetails; t
           )}
         </span>
       </Item>
-      <Item label="Stage" icon={Flag} hue="plum">
+      <Item label="Stage" icon={Flag}>
         {STAGE_LABELS[d.stage]}
       </Item>
-      <Item label="Package" icon={Package} hue="brand">
+      <Item label="Package" icon={Package}>
         {packageLabel(d.package)}
       </Item>
-      <Item label="Client since" icon={CalendarDays} hue="teal">
+      <Item label="Client since" icon={CalendarDays}>
         {formatDate(d.startedOn)}
         <span className="font-normal text-muted-foreground"> · {since(d.startedOn, today)}</span>
       </Item>
 
-      <Item label="Every month" icon={Target} hue="clay" className="sm:col-span-2">
+      <Item label="Every month" icon={Target} className="sm:col-span-2">
         {planned.length === 0 ? (
           <Muted>Nothing planned yet. Set the targets in Edit details.</Muted>
         ) : (
           <ul className="flex flex-wrap gap-x-4 gap-y-1.5 pt-0.5">
             {planned.map((p) => (
               <li key={p.key} className="inline-flex items-center gap-1.5 text-[13px]">
-                <HueIcon icon={p.icon} hue={p.hue} className="size-4" />
+                <DuoIcon icon={p.icon} className="size-4" />
                 <span className="font-semibold tabular-nums">{formatNumber(p.count)}</span>
                 <span className="font-normal text-muted-foreground">{p.label}</span>
               </li>
@@ -135,10 +135,10 @@ export function DetailsGrid({ details: d, today }: { details: OverviewDetails; t
           </ul>
         )}
       </Item>
-      <Item label="Account manager" icon={UserRound} hue="indigo">
+      <Item label="Account manager" icon={UserRound}>
         {d.owner?.name ?? <Muted>Nobody yet</Muted>}
       </Item>
-      <Item label="Main contact" icon={Contact} hue="plum">
+      <Item label="Main contact" icon={Contact}>
         {d.contact ? (
           <span className="flex min-w-0 flex-col">
             {d.contact.name && <span>{d.contact.name}</span>}
@@ -161,7 +161,7 @@ export function DetailsGrid({ details: d, today }: { details: OverviewDetails; t
         )}
       </Item>
 
-      <Item label="Connections" icon={Plug} hue="teal" className="sm:col-span-2">
+      <Item label="Connections" icon={Plug} className="sm:col-span-2">
         <CellLink href={clientHref(d.slug, "connections")}>
           <span className="tabular-nums">{conn.connected}</span> connected
           {conn.broken > 0 && (
@@ -172,7 +172,7 @@ export function DetailsGrid({ details: d, today }: { details: OverviewDetails; t
           )}
         </CellLink>
       </Item>
-      <Item label="Waiting on the client" icon={Inbox} hue="gold" className="sm:col-span-2">
+      <Item label="Waiting on the client" icon={Inbox} className="sm:col-span-2">
         <CellLink href={clientHref(d.slug, "requests")}>
           {d.openRequests === 0 ? (
             "Nothing open"
@@ -195,14 +195,12 @@ export function DetailsGrid({ details: d, today }: { details: OverviewDetails; t
 function Item({
   label,
   icon,
-  hue,
   tone,
   children,
   className,
 }: {
   label: string
   icon: IconComponent
-  hue?: Hue
   tone?: Tone
   children: ReactNode
   className?: string
@@ -215,7 +213,7 @@ function Item({
       )}
     >
       <dt className="text-xs text-muted-foreground">
-        <HueIcon icon={icon} hue={hue} tone={tone} className="absolute top-4 left-4 size-6" />
+        <DuoIcon icon={icon} tone={tone} className="absolute top-4 left-4 size-6" />
         {label}
       </dt>
       <dd className="min-w-0 text-sm font-medium break-words">{children}</dd>

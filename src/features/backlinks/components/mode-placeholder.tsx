@@ -21,7 +21,7 @@ export function ModePlaceholder({ mode, standardHref }: { mode: Exclude<Mode, "s
             <ShockwaveMark className="h-7" />
           </span>
         ) : (
-          <Hand className="size-10 text-brand" aria-hidden />
+          <Hand className="icon-duo size-10" aria-hidden />
         )}
         <div className="flex max-w-md flex-col gap-1.5">
           <h2 className="text-[15px] leading-[22px] font-semibold">{meta.label} is on its way</h2>

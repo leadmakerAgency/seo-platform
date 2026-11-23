@@ -16,13 +16,13 @@ import { clientHref } from "@/lib/navigation"
 import { cn } from "@/lib/utils"
 import { PLACES, type PlaceKey } from "../constants"
 import type { PlaceStats, Visibility } from "../queries"
-import { HueIcon, hueFill, type Hue } from "./hue-icon"
+import { DuoIcon } from "./duo-icon"
 
-/** One icon and hue per place, so the three read apart at a glance. */
-const PLACE_LOOK: Record<PlaceKey, { icon: IconComponent; hue: Hue }> = {
-  website: { icon: Globe, hue: "teal" },
-  map: { icon: MapPinned, hue: "clay" },
-  ai: { icon: Radar, hue: "plum" },
+/** One icon per place. */
+const PLACE_ICON: Record<PlaceKey, IconComponent> = {
+  website: Globe,
+  map: MapPinned,
+  ai: Radar,
 }
 
 /**
@@ -74,12 +74,12 @@ function PlaceCell({
   now: Date
 }) {
   const meta = PLACES[place]
-  const look = PLACE_LOOK[place]
+  const PlaceIcon = PLACE_ICON[place]
   const share = stats && stats.outOf > 0 ? Math.min(100, (stats.current / stats.outOf) * 100) : 0
   return (
     <section className="flex flex-col gap-4 bg-card px-4 pt-4 pb-4">
       <div className="flex items-center gap-2.5">
-        <HueIcon icon={look.icon} hue={look.hue} className="size-6" />
+        <DuoIcon icon={PlaceIcon} className="size-6" />
         <h3 className="text-sm leading-5 font-semibold">{meta.title}</h3>
       </div>
 
@@ -99,7 +99,7 @@ function PlaceCell({
             className="relative my-1 h-1.5 overflow-hidden rounded-full bg-muted"
           >
             <span
-              className={cn("absolute inset-y-0 left-0 rounded-full", hueFill(look.hue))}
+              className="absolute inset-y-0 left-0 rounded-full bg-icon-ink"
               style={{ width: `${share}%` }}
             />
           </span>

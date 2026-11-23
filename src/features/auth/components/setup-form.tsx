@@ -15,7 +15,7 @@ export function SetupForm() {
   if (state.confirmEmailSentTo) {
     return (
       <div className="flex flex-col gap-3 rounded-md bg-muted p-4">
-        <MailCheck className="size-5 text-primary" aria-hidden />
+        <MailCheck className="icon-duo size-5" aria-hidden />
         <p className="text-sm font-medium">Check your email</p>
         <p className="text-sm text-muted-foreground">
           We sent a confirmation link to {state.confirmEmailSentTo}. Open it in this browser to

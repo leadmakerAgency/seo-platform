@@ -37,7 +37,7 @@ export function SetupGate({
     <section aria-labelledby="aiv-gate" className="overflow-hidden rounded-xl border bg-card">
       <div className="flex flex-col gap-1 border-b px-5 py-4">
         <h2 id="aiv-gate" className="flex items-center gap-2 text-[15px] leading-[22px] font-semibold">
-          <Radar className="size-4 text-brand" aria-hidden /> Set up AI visibility for {clientName}
+          <Radar className="icon-duo size-4" aria-hidden /> Set up AI visibility for {clientName}
         </h2>
         <p className="max-w-[70ch] text-sm text-muted-foreground">
           Every week the client&apos;s questions are asked on ChatGPT, Gemini, Google AI, Claude and Perplexity. You see who gets named, which sites the answers rely on, and what to do next.

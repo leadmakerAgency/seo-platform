@@ -22,7 +22,7 @@ looks like every other screen built the same way.
 | Pure grey neutrals                    | Refactoring UI: greys need 8–10 steps and a slight temperature; true grey and true black look lifeless.                                | Every neutral carries a small amount of the logo's navy. Text is navy ink, not black.                                             |
 | Glass, glow, blobs, big soft shadows  | Glassmorphism was a 2021 trend that became an AI crutch; blurred blobs and glows read as filler.                                       | No blur, no glow, no blobs. Shadows only on things that float (menus, dialogs).                                                   |
 | Identical card grids and hero headers | "Big number, small label, three cards in a row" and centered hero headers are the default layout.                                      | Stats are one segmented strip, not separate cards. Page headers are a plain title row on a hairline.                              |
-| Emoji and decorative icons            | Emoji feature icons and icon-per-heading are flagged as tells; Sparkles has become the "AI" icon.                                      | One icon family (Iconsax Bulk, see 5), used where it helps scanning. No Sparkles.                                        |
+| Emoji and decorative icons            | Emoji feature icons and icon-per-heading are flagged as tells; Sparkles has become the "AI" icon.                                      | One icon family (Iconsax Bulk, see 5), used where it helps scanning. No Sparkles.                                                 |
 | Generic type                          | Inter, Roboto, Arial and system stacks read as unstyled; Space Grotesk is now overused too.                                            | IBM Plex Sans + Schibsted Grotesk + IBM Plex Mono (see 3).                                                                        |
 | Filler microcopy                      | "Streamline", "empower", "supercharge", "seamless", cheerful "Oops!" errors.                                                           | Plain, specific sentences: what happened, what to do. Already the house style; keep it.                                           |
 | Colour everywhere                     | SaaS UIs are 80–90% neutral; colour should only mean something (action, status).                                                       | Violet is for the primary action, the active nav item, focus and selection. Status colours only for status.                       |
@@ -207,9 +207,10 @@ used for the onboarding step progress and the platform list.
 **Icons.** One family: Iconsax **Bulk**, two-tone solid shapes (the main part in full ink,
 the body at 40%), from `@/components/icons`. Small functional glyphs (arrows, check, close,
 chevrons, spinner, text formatting) are plain 2 px rounded strokes with the secondary stroke at
-40%. Icons take the text colour (`text-muted-foreground`, a status tone, or an accent hue
-`text-hue-{indigo,gold,plum,teal,clay}` for identity) and stand on their own: no tile, box or
-circle behind them. Names follow the old lucide names; add one in `scripts/build-icons.mjs` and
+40%. An icon is either plain (the text colour, body at 40%), a status tone (only when it signals
+that status), or **the icon pair**: class `icon-duo` paints the main part deep teal
+(`--icon-ink`) and the body apricot (`--icon-tint`). Every other coloured icon uses the pair, never
+violet or a one-off hue. Icons stand on their own: no tile, box or circle behind them. Names follow the old lucide names; add one in `scripts/build-icons.mjs` and
 run `npm run icons`.
 
 **Tabs.** Segmented: a bordered `bg-card` track; the active segment is solid ink

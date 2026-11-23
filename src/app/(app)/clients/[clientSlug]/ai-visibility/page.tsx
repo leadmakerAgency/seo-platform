@@ -315,7 +315,7 @@ function RunProgress({ run }: { run: NonNullable<Awaited<ReturnType<typeof getAi
     <section aria-live="polite" className="flex flex-col gap-2 rounded-lg border bg-card p-4">
       <div className="flex items-center justify-between gap-2 text-sm">
         <span className="flex items-center gap-2 font-medium">
-          <Loader2 className="size-4 animate-spin text-brand" aria-hidden />
+          <Loader2 className="icon-duo size-4 animate-spin" aria-hidden />
           {STAGES[Math.min(run.stage, STAGES.length - 1)]}
         </span>
         <span className="text-muted-foreground tabular-nums">{total ? `${done} of ${total} answers` : "Starting"}</span>

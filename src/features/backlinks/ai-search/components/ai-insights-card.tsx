@@ -3,9 +3,9 @@ import { Lightbulb, Network, ShieldAlert, Users, Zap, type IconComponent } from 
 import type { AiInsight, AiSearchData } from "../queries"
 
 const KIND: Record<AiInsight["kind"], { icon: IconComponent; label: string; tone: string }> = {
-  pattern: { icon: Lightbulb, label: "What they do", tone: "text-info" },
-  quick_win: { icon: Zap, label: "Quick win", tone: "text-success" },
-  ask_clients: { icon: Users, label: "Ask your clients", tone: "text-brand" },
+  pattern: { icon: Lightbulb, label: "What they do", tone: "icon-duo" },
+  quick_win: { icon: Zap, label: "Quick win", tone: "icon-duo" },
+  ask_clients: { icon: Users, label: "Ask your clients", tone: "icon-duo" },
   watch_out: { icon: ShieldAlert, label: "Don't copy", tone: "text-warning" },
 }
 

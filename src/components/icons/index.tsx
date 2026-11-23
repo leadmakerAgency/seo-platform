@@ -42,6 +42,7 @@ export function CircleAlert(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"
         fill="currentColor"
@@ -59,6 +60,7 @@ export function TriangleAlert(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M21.76 15.92 15.36 4.4C14.5 2.85 13.31 2 12 2s-2.5.85-3.36 2.4l-6.4 11.52c-.81 1.47-.9 2.88-.25 3.99.65 1.11 1.93 1.72 3.61 1.72h12.8c1.68 0 2.96-.61 3.61-1.72.65-1.11.56-2.53-.25-3.99Z"
         fill="currentColor"
@@ -76,6 +78,7 @@ export function CircleCheck(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"
         fill="currentColor"
@@ -94,6 +97,7 @@ export function CircleX(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"
         fill="currentColor"
@@ -111,6 +115,7 @@ export function CircleDashed(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M11.969 22c5.523 0 10-4.477 10-10s-4.477-10-10-10-10 4.477-10 10 4.477 10 10 10Z"
         fill="currentColor"
@@ -124,6 +129,7 @@ export function BadgeCheck(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M10.75 2.45c.69-.59 1.82-.59 2.52 0l1.58 1.36c.3.26.86.47 1.26.47h1.7c1.06 0 1.93.87 1.93 1.93v1.7c0 .39.21.96.47 1.26l1.36 1.58c.59.69.59 1.82 0 2.52l-1.36 1.58c-.26.3-.47.86-.47 1.26v1.7c0 1.06-.87 1.93-1.93 1.93h-1.7c-.39 0-.96.21-1.26.47l-1.58 1.36c-.69.59-1.82.59-2.52 0l-1.58-1.36c-.3-.26-.86-.47-1.26-.47H6.18c-1.06 0-1.93-.87-1.93-1.93V16.1c0-.39-.21-.95-.46-1.25l-1.35-1.59c-.58-.69-.58-1.81 0-2.5l1.35-1.59c.25-.3.46-.86.46-1.25V6.2c0-1.06.87-1.93 1.93-1.93h1.73c.39 0 .96-.21 1.26-.47l1.58-1.35Z"
         fill="currentColor"
@@ -140,6 +146,7 @@ export function Ban(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M14.9 2H9.1c-.68 0-1.64.4-2.12.88l-4.1 4.1C2.4 7.46 2 8.42 2 9.1v5.8c0 .68.4 1.64.88 2.12l4.1 4.1c.48.48 1.44.88 2.12.88h5.8c.68 0 1.64-.4 2.12-.88l4.1-4.1c.48-.48.88-1.44.88-2.12V9.1c0-.68-.4-1.64-.88-2.12l-4.1-4.1C16.54 2.4 15.58 2 14.9 2Z"
         fill="currentColor"
@@ -156,6 +163,7 @@ export function ShieldCheck(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="m10.96 2.059-5.5 2.06c-1.05.4-1.91 1.64-1.91 2.77v8.1c0 .81.53 1.88 1.18 2.36l5.5 4.11c.97.73 2.56.73 3.53 0l5.5-4.11c.65-.49 1.18-1.55 1.18-2.36v-8.1c0-1.12-.86-2.37-1.91-2.76l-5.5-2.06c-.56-.22-1.5-.22-2.07-.01Z"
         fill="currentColor"
@@ -172,6 +180,7 @@ export function ShieldAlert(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="m10.96 2.059-5.5 2.06c-1.05.4-1.91 1.64-1.91 2.77v8.1c0 .81.53 1.88 1.18 2.36l5.5 4.11c.97.73 2.56.73 3.53 0l5.5-4.11c.65-.49 1.18-1.55 1.18-2.36v-8.1c0-1.12-.86-2.37-1.91-2.76l-5.5-2.06c-.56-.22-1.5-.22-2.07-.01Z"
         fill="currentColor"
@@ -188,6 +197,7 @@ export function HeartPulse(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M22 7.81V14h-4.08c-.67 0-1.46-.48-1.77-1.07l-1.04-1.97c-.28-.53-.68-.5-.9.05l-2.3 5.81c-.25.65-.67.65-.93 0l-1.14-2.88c-.27-.7-1.11-1.27-1.86-1.27L2 12.7V7.81C2 4.17 4.17 2 7.81 2h8.38C19.83 2 22 4.17 22 7.81Z"
         fill="currentColor"
@@ -208,6 +218,7 @@ export function Trash2(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".399"
         d="M19.23 8.14c-.24-.25-.57-.39-.91-.39H5.68c-.34 0-.68.14-.91.39-.23.25-.36.59-.34.94l.62 10.26c.11 1.52.25 3.42 3.74 3.42h6.42c3.49 0 3.63-1.89 3.74-3.42l.62-10.25c.02-.36-.11-.7-.34-.95Z"
         fill="currentColor"
@@ -230,6 +241,7 @@ export function Copy(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M17.1 2h-4.2C9.45 2 8.05 3.37 8.01 6.75h3.09c4.2 0 6.15 1.95 6.15 6.15v3.09c3.38-.04 4.75-1.44 4.75-4.89V6.9C22 3.4 20.6 2 17.1 2Z"
         fill="currentColor"
@@ -242,6 +254,7 @@ export function FileText(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M20.5 10.19h-2.89c-2.37 0-4.3-1.93-4.3-4.3V3c0-.55-.45-1-1-1H8.07C4.99 2 2.5 4 2.5 7.57v8.86C2.5 20 4.99 22 8.07 22h7.86c3.08 0 5.57-2 5.57-5.57v-5.24c0-.55-.45-1-1-1Z"
         fill="currentColor"
@@ -258,6 +271,7 @@ export function Newspaper(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M21 7v10c0 3-1.5 5-5 5H8c-3.5 0-5-2-5-5V7c0-3 1.5-5 5-5h8c3.5 0 5 2 5 5Z"
         fill="currentColor"
@@ -274,6 +288,7 @@ export function NotebookPen(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="m21.66 10.438-.98 4.18c-.84 3.61-2.5 5.07-5.62 4.77-.5-.04-1.04-.13-1.62-.27l-1.68-.4c-4.17-.99-5.46-3.05-4.48-7.23l.98-4.19c.2-.85.44-1.59.74-2.2 1.17-2.42 3.16-3.07 6.5-2.28l1.67.39c4.19.98 5.47 3.05 4.49 7.23Z"
         fill="currentColor"
@@ -294,6 +309,7 @@ export function ClipboardCheck(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M16.24 3.648H7.76c-2.47 0-4.47 2.01-4.47 4.47v9.41c0 2.46 2.01 4.47 4.47 4.47h8.47c2.47 0 4.47-2.01 4.47-4.47v-9.41c.01-2.47-2-4.47-4.46-4.47Z"
         fill="currentColor"
@@ -314,6 +330,7 @@ export function ReceiptText(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M2 7v14c0 .83.94 1.3 1.6.8l1.71-1.28c.4-.3.96-.26 1.32.1l1.66 1.67c.39.39 1.03.39 1.42 0l1.68-1.68c.35-.35.91-.39 1.3-.09l1.71 1.28c.66.49 1.6.02 1.6-.8V4c0-1.1.9-2 2-2H6C3 2 2 3.79 2 6v1Z"
         fill="currentColor"
@@ -330,6 +347,7 @@ export function Archive(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M16.82 2H7.18C5.05 2 3.32 3.74 3.32 5.86v14.09c0 1.8 1.29 2.56 2.87 1.69l4.88-2.71c.52-.29 1.36-.29 1.87 0l4.88 2.71c1.58.88 2.87.12 2.87-1.69V5.86C20.68 3.74 18.95 2 16.82 2Z"
         fill="currentColor"
@@ -346,6 +364,7 @@ export function ArchiveRestore(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M16.82 1.91H7.18c-2.12 0-3.86 1.74-3.86 3.86v14.09c0 1.8 1.29 2.56 2.87 1.69l4.88-2.71c.52-.29 1.36-.29 1.87 0l4.88 2.71c1.58.88 2.87.12 2.87-1.69V5.77c-.01-2.12-1.74-3.86-3.87-3.86Z"
         fill="currentColor"
@@ -362,6 +381,7 @@ export function BookMarked(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M12 5.302v16.03c.17 0 .35-.03.49-.11l.04-.02c1.92-1.05 5.27-2.15 7.44-2.44l.29-.04c.96-.12 1.74-1.02 1.74-1.98V4.662c0-1.19-.97-2.09-2.16-1.99-2.1.17-5.28 1.23-7.06 2.34l-.25.15c-.15.09-.34.14-.53.14Z"
         fill="currentColor"
@@ -378,6 +398,7 @@ export function Library(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M12 5.302v16.03c-.17 0-.35-.03-.49-.11l-.04-.02c-1.92-1.05-5.27-2.15-7.44-2.44l-.29-.04c-.96-.12-1.74-1.02-1.74-1.98V4.662c0-1.19.97-2.09 2.16-1.99 2.1.17 5.28 1.23 7.06 2.34l.25.15c.15.09.34.14.53.14Z"
         fill="currentColor"
@@ -394,6 +415,7 @@ export function Package(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M20.098 6.94c0 .54-.29 1.03-.75 1.28l-1.74.94-1.48.79-3.07 1.66c-.33.18-.69.27-1.06.27-.37 0-.73-.09-1.06-.27l-6.29-3.39c-.46-.25-.75-.74-.75-1.28s.29-1.03.75-1.28l1.97-1.06 1.57-.85 2.75-1.48c.66-.36 1.46-.36 2.12 0l6.29 3.39c.46.25.75.74.75 1.28ZM9.899 12.788l-5.85-2.93c-.45-.23-.97-.2-1.4.06-.43.26-.68.72-.68 1.22v5.53c0 .96.53 1.82 1.39 2.25l5.85 2.92c.2.1.42.15.64.15.26 0 .52-.07.75-.22.43-.26.68-.72.68-1.22v-5.53c.01-.94-.52-1.8-1.38-2.23ZM22.03 11.15v5.53c0 .95-.529 1.81-1.389 2.24l-5.85 2.93a1.433 1.433 0 0 1-1.4-.07c-.42-.26-.68-.72-.68-1.22v-5.52c0-.96.53-1.82 1.39-2.25l2.15-1.07 1.5-.75 2.2-1.1c.45-.23.97-.21 1.4.06.42.26.68.72.68 1.22Z"
         fill="currentColor"
@@ -410,6 +432,7 @@ export function Paperclip(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M16.19 2H7.81C4.17 2 2 4.17 2 7.81v8.37C2 19.83 4.17 22 7.81 22h8.37c3.64 0 5.81-2.17 5.81-5.81V7.81C22 4.17 19.83 2 16.19 2Z"
         fill="currentColor"
@@ -426,6 +449,7 @@ export function Tag(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="m4.17 15.3 4.53 4.53a4.78 4.78 0 0 0 6.75 0l4.39-4.39a4.78 4.78 0 0 0 0-6.75L15.3 4.17a4.75 4.75 0 0 0-3.6-1.39l-5 .24c-2 .09-3.59 1.68-3.69 3.67l-.24 5c-.06 1.35.45 2.66 1.4 3.61Z"
         fill="currentColor"
@@ -439,6 +463,7 @@ export function Wallet(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M22 12v5c0 3-2 5-5 5H7c-3 0-5-2-5-5v-5c0-2.72 1.64-4.62 4.19-4.94.26-.04.53-.06.81-.06h10c.26 0 .51.01.75.05C20.33 7.35 22 9.26 22 12Z"
         fill="currentColor"
@@ -455,6 +480,7 @@ export function Database(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M16.19 2H7.82C4.18 2 2.01 4.17 2.01 7.81v8.37c0 3.64 2.17 5.81 5.81 5.81h8.37c3.64 0 5.81-2.17 5.81-5.81V7.81C22 4.17 19.83 2 16.19 2Z"
         fill="currentColor"
@@ -475,6 +501,7 @@ export function Lock(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M22 15v2c0 4-1 5-5 5H7c-4 0-5-1-5-5v-2c0-3.34.7-4.59 3.25-4.9.44-.06.94-.09 1.5-.1h10.5c.56.01 1.06.04 1.5.1C21.3 10.41 22 11.66 22 15Z"
         fill="currentColor"
@@ -491,6 +518,7 @@ export function LockOpen(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M12.001 17.35a1.63 1.63 0 1 0 0-3.26 1.63 1.63 0 0 0 0 3.26Z"
         fill="currentColor"
@@ -500,6 +528,7 @@ export function LockOpen(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M7.119 9.45V8.28c0-2.93.83-4.88 4.88-4.88 4.33 0 4.88 2.11 4.88 3.95 0 .39.31.7.7.7.39 0 .7-.31.7-.7 0-3.55-2.11-5.35-6.28-5.35-5.63 0-6.28 3.58-6.28 6.28v1.25c.42-.05.89-.08 1.4-.08Z"
         fill="currentColor"
@@ -512,6 +541,7 @@ export function KeyRound(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M19.789 4.22c-2.96-2.95-7.76-2.95-10.7 0-2.07 2.05-2.69 5-1.89 7.6l-4.7 4.7c-.33.34-.56 1.01-.49 1.49l.3 2.18c.11.72.78 1.4 1.5 1.5l2.18.3c.48.07 1.15-.15 1.49-.5l.82-.82c.2-.19.2-.51 0-.71l-1.94-1.94a.754.754 0 0 1 0-1.06c.29-.29.77-.29 1.06 0l1.95 1.95c.19.19.51.19.7 0l2.12-2.11c2.59.81 5.54.18 7.6-1.87 2.95-2.95 2.95-7.76 0-10.71ZM14.499 12a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5Z"
         fill="currentColor"
@@ -525,6 +555,7 @@ export function IdCard(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M18 3H6C3.79 3 2 4.78 2 6.97v10.06C2 19.22 3.79 21 6 21h12c2.21 0 4-1.78 4-3.97V6.97C22 4.78 20.21 3 18 3Z"
         fill="currentColor"
@@ -541,6 +572,7 @@ export function Inbox(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M16.19 4H7.81C4.17 4 2 6.17 2 9.81v6.37C2 19.83 4.17 22 7.81 22h8.37c3.64 0 5.81-2.17 5.81-5.81V9.81C22 6.17 19.83 4 16.19 4Z"
         fill="currentColor"
@@ -561,6 +593,7 @@ export function MailCheck(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M17 3H7C4 3 2 4.5 2 8v3.14c0 .73.75 1.19 1.42.9a6.51 6.51 0 0 1 3.66-.45c2.62.43 4.76 2.5 5.29 5.1.15.76.17 1.5.07 2.21-.08.59.4 1.11.99 1.11H17c3 0 5-1.5 5-5v-7C22 4.5 20 3 17 3Z"
         fill="currentColor"
@@ -577,6 +610,7 @@ export function Send(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="m7.11 5.961 9.02-3.01c4.05-1.35 6.25.86 4.91 4.91l-3.01 9.02c-2.02 6.07-5.34 6.07-7.36 0l-.89-2.68-2.68-.89c-6.06-2.01-6.06-5.32.01-7.35Z"
         fill="currentColor"
@@ -593,6 +627,7 @@ export function Bell(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="m19.34 14.488-1-1.66c-.21-.37-.4-1.07-.4-1.48v-2.53c0-3.26-2.65-5.92-5.92-5.92S6.1 5.558 6.1 8.818v2.53c0 .41-.19 1.11-.4 1.47l-1.01 1.67c-.4.67-.49 1.41-.24 2.09.24.67.81 1.19 1.55 1.44 1.94.66 3.98.98 6.02.98 2.04 0 4.08-.32 6.02-.97.7-.23 1.24-.76 1.5-1.45s.19-1.45-.2-2.09Z"
         fill="currentColor"
@@ -608,8 +643,9 @@ export function Bell(props: IconProps) {
 export function BellOff(props: IconProps) {
   return (
     <Svg {...props}>
-      <g opacity=".45">
+      <g className="i2" opacity=".45">
         <path
+          className="i2"
           opacity=".4"
           d="m19.34 14.488-1-1.66c-.21-.37-.4-1.07-.4-1.48v-2.53c0-3.26-2.65-5.92-5.92-5.92S6.1 5.558 6.1 8.818v2.53c0 .41-.19 1.11-.4 1.47l-1.01 1.67c-.4.67-.49 1.41-.24 2.09.24.67.81 1.19 1.55 1.44 1.94.66 3.98.98 6.02.98 2.04 0 4.08-.32 6.02-.97.7-.23 1.24-.76 1.5-1.45s.19-1.45-.2-2.09Z"
           fill="currentColor"
@@ -634,6 +670,7 @@ export function Camera(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M6.76 22h10.48c2.76 0 3.86-1.69 3.99-3.75l.52-8.26A3.753 3.753 0 0 0 18 6c-.61 0-1.17-.35-1.45-.89l-.72-1.45C15.37 2.75 14.17 2 13.15 2h-2.29c-1.03 0-2.23.75-2.69 1.66l-.72 1.45C7.17 5.65 6.61 6 6 6 3.83 6 2.11 7.83 2.25 9.99l.52 8.26C2.89 20.31 4 22 6.76 22Z"
         fill="currentColor"
@@ -650,6 +687,7 @@ export function ImageIcon(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M22 7.81v6.09l-1.63-1.4c-.78-.67-2.04-.67-2.82 0l-4.16 3.57c-.78.67-2.04.67-2.82 0l-.34-.28c-.71-.62-1.84-.68-2.64-.14l-4.92 3.3-.11.08c-.37-.8-.56-1.75-.56-2.84V7.81C2 4.17 4.17 2 7.81 2h8.38C19.83 2 22 4.17 22 7.81Z"
         fill="currentColor"
@@ -670,6 +708,7 @@ export function ImagePlus(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M20.97 8h-2.94C16.76 8 16 7.24 16 5.97V3.03c0-.4.08-.74.22-1.03H7.81C4.17 2 2 4.17 2 7.81v8.38c0 1.09.19 2.04.56 2.84l.11-.08 4.92-3.3c.8-.54 1.93-.48 2.64.14l.34.28c.78.67 2.04.67 2.82 0l4.16-3.57c.78-.67 2.04-.67 2.82 0L22 13.9V7.78c-.29.14-.63.22-1.03.22Z"
         fill="currentColor"
@@ -686,6 +725,7 @@ export function Film(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M22 7.81v8.38c0 .06 0 .12-.01.17 0 .54-.06 1.04-.17 1.5-.47 2.16-1.91 3.56-4.1 3.99-.47.1-.97.15-1.5.15h-8.5c-.53-.01-1.03-.06-1.5-.16-2.15-.44-3.57-1.84-4.04-3.98-.11-.46-.17-.96-.17-1.5-.01-.05-.01-.11-.01-.17V7.81c0-.51.04-1 .13-1.45C2.55 4.1 4 2.62 6.22 2.16c.47-.11.97-.16 1.5-.16h8.51c.53 0 1.03.05 1.49.15 2.26.44 3.73 1.93 4.15 4.21.09.45.13.94.13 1.45Z"
         fill="currentColor"
@@ -702,6 +742,7 @@ export function Mic(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M19.12 9.12c-.39 0-.7.31-.7.7v1.58c0 3.54-2.88 6.42-6.42 6.42s-6.42-2.88-6.42-6.42V9.81c0-.39-.31-.7-.7-.7-.39 0-.7.31-.7.7v1.58c0 4.07 3.13 7.42 7.12 7.78v2.13c0 .39.31.7.7.7.39 0 .7-.31.7-.7v-2.13c3.98-.35 7.12-3.71 7.12-7.78V9.81a.707.707 0 0 0-.7-.69Z"
         fill="currentColor"
@@ -722,6 +763,7 @@ export function Quote(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M18.909 11.631h-4.69c.08-4.67 1-5.44 3.87-7.14.33-.2.44-.62.24-.96a.698.698 0 0 0-.96-.24c-3.38 2-4.56 3.22-4.56 9.04v5.39c0 1.71 1.39 3.09 3.09 3.09h3c1.76 0 3.09-1.33 3.09-3.09v-3c.01-1.76-1.32-3.09-3.08-3.09Z"
         fill="currentColor"
@@ -734,6 +776,7 @@ export function Lightbulb(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M19.21 6.361c-1.04-2.1-3.05-3.65-5.38-4.16-2.44-.54-4.94.04-6.85 1.58a7.973 7.973 0 0 0-3.01 6.27c0 2.59 1.55 5.3 3.89 6.87v.83c-.01.28-.02.71.32 1.06.35.36.87.4 1.28.4h5.13c.54 0 .95-.15 1.23-.43.38-.39.37-.89.36-1.16v-.7c3.1-2.09 5.05-6.5 3.03-10.56Z"
         fill="currentColor"
@@ -750,6 +793,7 @@ export function Brain(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M19.21 6.361c-1.04-2.1-3.05-3.65-5.38-4.16-2.44-.54-4.94.04-6.85 1.58a7.973 7.973 0 0 0-3.01 6.27c0 2.59 1.55 5.3 3.89 6.87v.83c-.01.28-.02.71.32 1.06.35.36.87.4 1.28.4h5.13c.54 0 .95-.15 1.23-.43.38-.39.37-.89.36-1.16v-.7c3.1-2.09 5.05-6.5 3.03-10.56Z"
         fill="currentColor"
@@ -766,6 +810,7 @@ export function Trophy(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M18 20.5h-1v-.25c0-1.1-.9-2-2-2h-2.25v-2.29c-.25.03-.5.04-.75.04s-.5-.01-.75-.04v2.29H9c-1.1 0-2 .9-2 2v.25H6c-.41 0-.75.34-.75.75s.34.75.75.75h12c.41 0 .75-.34.75-.75s-.34-.75-.75-.75ZM5.52 11.64c-.66-.25-1.24-.66-1.7-1.12-.93-1.03-1.54-2.26-1.54-3.7 0-1.44 1.13-2.57 2.57-2.57h.56C5.15 4.78 5 5.37 5 6v3c0 .94.18 1.83.52 2.64ZM21.72 6.82c0 1.44-.61 2.67-1.54 3.7-.46.46-1.04.87-1.7 1.12.34-.81.52-1.7.52-2.64V6c0-.63-.15-1.22-.41-1.75h.56c1.44 0 2.57 1.13 2.57 2.57Z"
         fill="currentColor"
@@ -775,6 +820,7 @@ export function Trophy(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="m14.84 8.45-.62.76c-.1.11-.17.33-.16.48l.06.98c.04.6-.39.91-.95.69l-.91-.36a.92.92 0 0 0-.52 0l-.91.36c-.56.22-.99-.09-.95-.69l.06-.98a.751.751 0 0 0-.16-.48l-.62-.76c-.39-.46-.22-.97.36-1.12l.95-.24c.15-.04.33-.18.41-.31l.53-.82c.33-.51.85-.51 1.18 0l.53.82c.08.13.26.27.41.31l.95.24c.58.15.75.66.36 1.12Z"
         fill="currentColor"
@@ -791,6 +837,7 @@ export function Swords(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M6 9.75c-.41 0-.75-.34-.75-.75V2c0-.41.34-.75.75-.75s.75.34.75.75v7c0 .41-.34.75-.75.75ZM18 9.75c-.41 0-.75-.34-.75-.75V2c0-.41.34-.75.75-.75s.75.34.75.75v7c0 .41-.34.75-.75.75ZM12 4.75c-.41 0-.75-.34-.75-.75V2c0-.41.34-.75.75-.75s.75.34.75.75v2c0 .41-.34.75-.75.75Z"
         fill="currentColor"
@@ -803,6 +850,7 @@ export function Gauge(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M19.1 20.3c-.2 0-.4-.1-.5-.2-.3-.3-.3-.8 0-1.1 1.7-1.7 2.6-4 2.6-6.5 0-5.1-4.1-9.2-9.2-9.2s-9.2 4.1-9.2 9.2c0 2.4.9 4.7 2.6 6.5.3.3.3.8 0 1.1-.3.3-.8.3-1.1 0-2-2-3.1-4.7-3.1-7.5 0-6 4.9-10.9 10.8-10.9s10.8 4.8 10.8 10.8c0 2.8-1.1 5.5-3.1 7.5-.2.2-.4.3-.6.3Z"
         fill="currentColor"
@@ -823,6 +871,7 @@ export function Zap(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M18.77 12.63 12 20.33V3.67l.8-.91c1.11-1.26 2.02-.92 2.02.76v7.2h3.09c1.4 0 1.79.86.86 1.91Z"
         fill="currentColor"
@@ -835,6 +884,7 @@ export function Bot(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M15 4H9C6.24 4 4 6.24 4 9v6c0 2.76 2.24 5 5 5h6c2.76 0 5-2.24 5-5V9c0-2.76-2.24-5-5-5Zm2.26 10.26c0 1.66-1.34 3-3 3H9.74c-1.66 0-3-1.34-3-3V9.74c0-1.66 1.34-3 3-3h4.51c1.66 0 3 1.34 3 3v4.52h.01Z"
         fill="currentColor"
@@ -855,6 +905,7 @@ export function Sparkles(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="m21.44 20.47-3.03-3.03a.754.754 0 0 0-1.06 0c-.29.29-.29.77 0 1.06l3.03 3.03c.15.15.34.22.53.22s.38-.07.53-.22c.29-.29.29-.77 0-1.06Z"
         fill="currentColor"
@@ -867,6 +918,7 @@ export function Star(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M5.74 16c.11-.49-.09-1.19-.44-1.54l-2.43-2.43c-.76-.76-1.06-1.57-.84-2.27.23-.7.94-1.18 2-1.36l3.12-.52c.45-.08 1-.48 1.21-.89l1.72-3.45C10.58 2.55 11.26 2 12 2s1.42.55 1.92 1.54l1.72 3.45c.13.26.4.51.69.68L5.56 18.44c-.14.14-.38.01-.34-.19L5.74 16Z"
         fill="currentColor"
@@ -887,6 +939,7 @@ export function Flag(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="m18.02 12.33-1.22-1.22a1.39 1.39 0 0 1-.47-1.03c-.02-.45.16-.9.49-1.23l1.2-1.2c1.04-1.04 1.43-2.04 1.1-2.83-.32-.78-1.31-1.21-2.77-1.21H5.15c-.21.01-.38.18-.38.39v12c0 .21.17.38.38.38h11.2c1.44 0 2.41-.44 2.74-1.23.33-.8-.05-1.79-1.07-2.82Z"
         fill="currentColor"
@@ -898,7 +951,12 @@ export function Flag(props: IconProps) {
 export function Target(props: IconProps) {
   return (
     <Svg {...props}>
-      <path opacity=".4" d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z" fill="currentColor" />
+      <path
+        className="i2"
+        opacity=".4"
+        d="M12 20a8 8 0 1 0 0-16 8 8 0 0 0 0 16Z"
+        fill="currentColor"
+      />
       <path
         d="M11.999 15.119a3.12 3.12 0 1 0 0-6.24 3.12 3.12 0 0 0 0 6.24ZM12.75 2v2.04h-.01C12.5 4.01 12.25 4 12 4s-.5.01-.74.04h-.01V2c0-.41.34-.75.75-.75s.75.34.75.75ZM4 12c0 .25.01.51.04.75H2c-.41 0-.75-.34-.75-.75s.34-.75.75-.75h2.04c-.03.24-.04.5-.04.75ZM12.75 19.96V22c0 .41-.34.75-.75.75s-.75-.34-.75-.75v-2.04h.01c.24.03.49.04.74.04s.5-.01.74-.04h.01ZM22.75 12c0 .41-.34.75-.75.75h-2.04c.03-.24.04-.5.04-.75s-.01-.51-.04-.75H22c.41 0 .75.34.75.75Z"
         fill="currentColor"
@@ -911,6 +969,7 @@ export function Radar(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"
         fill="currentColor"
@@ -927,6 +986,7 @@ export function Compass(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M20.98 3.02a3.43 3.43 0 0 0-3.29-.91l-9.8 2.45a4.56 4.56 0 0 0-3.33 3.33L2.11 17.7c-.3 1.19.04 2.42.91 3.29.66.65 1.53 1.01 2.43 1.01.28 0 .57-.03.85-.11l9.81-2.45a4.56 4.56 0 0 0 3.33-3.33l2.45-9.81c.3-1.19-.04-2.42-.91-3.28Z"
         fill="currentColor"
@@ -940,6 +1000,7 @@ export function Globe(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M7.649 20.91c-.03 0-.07.02-.1.02-1.94-.96-3.52-2.55-4.49-4.49 0-.03.02-.07.02-.1 1.22.36 2.48.63 3.73.84.22 1.26.48 2.51.84 3.73ZM20.94 16.45c-.99 1.99-2.64 3.6-4.65 4.57.38-1.27.7-2.55.91-3.84 1.26-.21 2.5-.48 3.72-.84-.01.04.02.08.02.11ZM21.02 7.71c-1.26-.38-2.53-.69-3.82-.91-.21-1.29-.52-2.57-.91-3.82 2.07.99 3.74 2.66 4.73 4.73ZM7.65 3.089c-.36 1.22-.62 2.46-.83 3.72-1.29.2-2.57.52-3.84.9.97-2.01 2.58-3.66 4.57-4.65.03 0 .07.03.1.03Z"
         fill="currentColor"
@@ -957,6 +1018,7 @@ export function MapPin(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M20.621 8.45c-1.05-4.62-5.08-6.7-8.62-6.7h-.01c-3.53 0-7.57 2.07-8.62 6.69-1.17 5.16 1.99 9.53 4.85 12.28a5.436 5.436 0 0 0 3.78 1.53c1.36 0 2.72-.51 3.77-1.53 2.86-2.75 6.02-7.11 4.85-12.27Z"
         fill="currentColor"
@@ -970,11 +1032,13 @@ export function MapPinned(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M19.882 20.939c-.95.7-2.2 1.06-3.69 1.06h-8.38c-.24 0-.48-.01-.71-.04l6.9-6.9 5.88 5.88ZM21.999 7.812v8.38c0 1.49-.36 2.74-1.06 3.69l-5.88-5.88 6.9-6.9c.03.23.04.47.04.71Z"
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="m15.06 14 5.88 5.88c-.29.42-.64.77-1.06 1.06L14 15.06l-6.9 6.9c-.64-.04-1.22-.17-1.75-.37C3.21 20.81 2 18.91 2 16.19V7.81C2 4.17 4.17 2 7.81 2h8.38c2.72 0 4.62 1.21 5.4 3.35.2.53.33 1.11.37 1.75l-6.9 6.9Z"
         fill="currentColor"
@@ -991,6 +1055,7 @@ export function Store(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M21.37 11.39v5.99c0 2.76-2.24 5-5 5H7.63c-2.76 0-5-2.24-5-5v-5.92c.76.82 1.84 1.29 3.01 1.29 1.26 0 2.47-.63 3.23-1.64A3.754 3.754 0 0 0 12 12.75c1.28 0 2.42-.6 3.11-1.6.77.99 1.96 1.6 3.2 1.6 1.21 0 2.31-.49 3.06-1.36Z"
         fill="currentColor"
@@ -1000,6 +1065,7 @@ export function Store(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".6"
         d="m22.36 8.27-.29-2.77c-.42-3.02-1.79-4.25-4.72-4.25h-3.84l.74 7.5c.01.1.02.21.02.4.06.52.22 1 .46 1.43.72 1.32 2.12 2.17 3.58 2.17 1.33 0 2.53-.59 3.28-1.63.6-.8.87-1.81.77-2.85ZM6.59 1.25c-2.94 0-4.3 1.23-4.73 4.28l-.27 2.75c-.1 1.07.19 2.11.82 2.92.76.99 1.93 1.55 3.23 1.55 1.46 0 2.86-.85 3.57-2.15.26-.45.43-.97.48-1.51l.78-7.83H6.59v-.01Z"
         fill="currentColor"
@@ -1024,10 +1090,10 @@ export function Landmark(props: IconProps) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path opacity=".6" d="M8 11H4v7h4v-7Z" fill="currentColor" />
-      <path opacity=".4" d="M12 11H8v7h4v-7Z" fill="currentColor" />
-      <path opacity=".6" d="M16 11h-4v7h4v-7Z" fill="currentColor" />
-      <path opacity=".4" d="M20 11h-4v7h4v-7Z" fill="currentColor" />
+      <path className="i2" opacity=".6" d="M8 11H4v7h4v-7Z" fill="currentColor" />
+      <path className="i2" opacity=".4" d="M12 11H8v7h4v-7Z" fill="currentColor" />
+      <path className="i2" opacity=".6" d="M16 11h-4v7h4v-7Z" fill="currentColor" />
+      <path className="i2" opacity=".4" d="M20 11h-4v7h4v-7Z" fill="currentColor" />
       <path
         d="M23 22.75H1c-.41 0-.75-.34-.75-.75s.34-.75.75-.75h22c.41 0 .75.34.75.75s-.34.75-.75.75ZM21.37 5.75l-9-3.6c-.2-.08-.54-.08-.74 0l-9 3.6c-.35.14-.63.55-.63.93V10c0 .55.45 1 1 1h18c.55 0 1-.45 1-1V6.68c0-.38-.28-.79-.63-.93ZM12 8.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5Z"
         fill="currentColor"
@@ -1043,7 +1109,12 @@ export function Building2(props: IconProps) {
         d="M22 21.25H2c-.41 0-.75.34-.75.75s.34.75.75.75h20c.41 0 .75-.34.75-.75s-.34-.75-.75-.75Z"
         fill="currentColor"
       />
-      <path opacity=".4" d="M17 2H7C4 2 3 3.79 3 6v16h18V6c0-2.21-1-4-4-4Z" fill="currentColor" />
+      <path
+        className="i2"
+        opacity=".4"
+        d="M17 2H7C4 2 3 3.79 3 6v16h18V6c0-2.21-1-4-4-4Z"
+        fill="currentColor"
+      />
       <path
         d="M10 17.25H7c-.41 0-.75-.34-.75-.75s.34-.75.75-.75h3c.41 0 .75.34.75.75s-.34.75-.75.75ZM17 17.25h-3c-.41 0-.75-.34-.75-.75s.34-.75.75-.75h3c.41 0 .75.34.75.75s-.34.75-.75.75ZM10 12.75H7c-.41 0-.75-.34-.75-.75s.34-.75.75-.75h3c.41 0 .75.34.75.75s-.34.75-.75.75ZM17 12.75h-3c-.41 0-.75-.34-.75-.75s.34-.75.75-.75h3c.41 0 .75.34.75.75s-.34.75-.75.75ZM10 8.25H7c-.41 0-.75-.34-.75-.75s.34-.75.75-.75h3c.41 0 .75.34.75.75s-.34.75-.75.75ZM17 8.25h-3c-.41 0-.75-.34-.75-.75s.34-.75.75-.75h3c.41 0 .75.34.75.75s-.34.75-.75.75Z"
         fill="currentColor"
@@ -1060,6 +1131,7 @@ export function BriefcaseBusiness(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="m20.5 12.298-.15.09a17.037 17.037 0 0 1-5.79 2.08c-.08.96-.5 2.06-2.69 2.06s-2.61-1.09-2.69-2.04c-1.91-.3-3.79-.93-5.5-1.88-.15-.08-.3-.16-.44-.25-.36-.2-.7-.42-1.03-.64-.02-.01-.04-.03-.05-.04l.61 6.51c.21 1.99 1.03 4.04 5.43 4.04h7.62c4.4 0 5.22-2.05 5.43-4.05l.63-6.78a.12.12 0 0 1-.05.05c-.43.31-.87.6-1.33.85Z"
         fill="currentColor"
@@ -1072,6 +1144,7 @@ export function House(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="m20.04 6.822-5.76-4.03c-1.57-1.1-3.98-1.04-5.49.13l-5.01 3.91c-1 .78-1.79 2.38-1.79 3.64v6.9c0 2.55 2.07 4.63 4.62 4.63h10.78c2.55 0 4.62-2.07 4.62-4.62v-6.78c0-1.35-.87-3.01-1.97-3.78Z"
         fill="currentColor"
@@ -1087,7 +1160,12 @@ export function House(props: IconProps) {
 export function Sun(props: IconProps) {
   return (
     <Svg {...props}>
-      <path opacity=".4" d="M12 19a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z" fill="currentColor" />
+      <path
+        className="i2"
+        opacity=".4"
+        d="M12 19a7 7 0 1 0 0-14 7 7 0 0 0 0 14Z"
+        fill="currentColor"
+      />
       <path
         d="M12 22.96c-.55 0-1-.41-1-.96v-.08c0-.55.45-1 1-1s1 .45 1 1-.45 1.04-1 1.04Zm7.14-2.82c-.26 0-.51-.1-.71-.29l-.13-.13a.996.996 0 1 1 1.41-1.41l.13.13a.996.996 0 0 1-.7 1.7Zm-14.28 0c-.26 0-.51-.1-.71-.29a.996.996 0 0 1 0-1.41l.13-.13a.996.996 0 1 1 1.41 1.41l-.13.13c-.19.19-.45.29-.7.29ZM22 13h-.08c-.55 0-1-.45-1-1s.45-1 1-1 1.04.45 1.04 1-.41 1-.96 1ZM2.08 13H2c-.55 0-1-.45-1-1s.45-1 1-1 1.04.45 1.04 1-.41 1-.96 1Zm16.93-7.01c-.26 0-.51-.1-.71-.29a.996.996 0 0 1 0-1.41l.13-.13a.996.996 0 1 1 1.41 1.41l-.13.13c-.19.19-.44.29-.7.29Zm-14.02 0c-.26 0-.51-.1-.71-.29l-.13-.14a.996.996 0 1 1 1.41-1.41l.13.13c.39.39.39 1.02 0 1.41-.19.2-.45.3-.7.3ZM12 3.04c-.55 0-1-.41-1-.96V2c0-.55.45-1 1-1s1 .45 1 1-.45 1.04-1 1.04Z"
         fill="currentColor"
@@ -1104,6 +1182,7 @@ export function Moon(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M21.21 17.72a10.501 10.501 0 0 1-8.47 4.27c-.16 0-.32-.01-.48-.02-1-.04-1.97-.23-2.89-.55C9.13 20.66 9 19.84 9 19c0-2.53 1.18-4.79 3.01-6.25a8.41 8.41 0 0 0 5.91 2.82c.63.03 1.26-.02 1.88-.13 1.12-.2 1.57.22 1.73.49.17.27.35.86-.32 1.79Z"
         fill="currentColor"
@@ -1116,6 +1195,7 @@ export function Users(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M17.53 7.77a.739.739 0 0 0-.21 0 2.874 2.874 0 0 1-2.78-2.88C14.54 3.3 15.83 2 17.43 2c1.59 0 2.89 1.29 2.89 2.89a2.89 2.89 0 0 1-2.79 2.88ZM20.792 14.7c-1.12.75-2.69 1.03-4.14.84.38-.82.58-1.73.59-2.69 0-1-.22-1.95-.64-2.78 1.48-.2 3.05.08 4.18.83 1.58 1.04 1.58 2.75.01 3.8ZM6.438 7.77c.07-.01.14-.01.21 0a2.874 2.874 0 0 0 2.78-2.88C9.428 3.3 8.138 2 6.538 2c-1.59 0-2.89 1.29-2.89 2.89a2.89 2.89 0 0 0 2.79 2.88ZM6.551 12.85c0 .97.21 1.89.59 2.72-1.41.15-2.88-.15-3.96-.86-1.58-1.05-1.58-2.76 0-3.81 1.07-.72 2.58-1.01 4-.85-.41.84-.63 1.79-.63 2.8Z"
         fill="currentColor"
@@ -1131,7 +1211,12 @@ export function Users(props: IconProps) {
 export function UserRound(props: IconProps) {
   return (
     <Svg {...props}>
-      <path opacity=".4" d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" fill="currentColor" />
+      <path
+        className="i2"
+        opacity=".4"
+        d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z"
+        fill="currentColor"
+      />
       <path
         d="M12 14.5c-5.01 0-9.09 3.36-9.09 7.5 0 .28.22.5.5.5h17.18c.28 0 .5-.22.5-.5 0-4.14-4.08-7.5-9.09-7.5Z"
         fill="currentColor"
@@ -1144,6 +1229,7 @@ export function UserPlus(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M21.09 21.5c0 .28-.22.5-.5.5H3.41c-.28 0-.5-.22-.5-.5 0-4.14 4.08-7.5 9.09-7.5 1.03 0 2.03.14 2.95.41-.59.7-.95 1.61-.95 2.59 0 .75.21 1.46.58 2.06.2.34.46.65.76.91.7.64 1.63 1.03 2.66 1.03 1.12 0 2.13-.46 2.85-1.2.16.54.24 1.11.24 1.7Z"
         fill="currentColor"
@@ -1160,6 +1246,7 @@ export function Contact(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M12 22.012c5.523 0 10-4.477 10-10s-4.477-10-10-10-10 4.477-10 10 4.477 10 10 10Z"
         fill="currentColor"
@@ -1176,6 +1263,7 @@ export function Handshake(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M9 2C6.38 2 4.25 4.13 4.25 6.75c0 2.57 2.01 4.65 4.63 4.74.08-.01.16-.01.22 0h.07a4.738 4.738 0 0 0 4.58-4.74C13.75 4.13 11.62 2 9 2Z"
         fill="currentColor"
@@ -1185,6 +1273,7 @@ export function Handshake(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M19.99 7.338c.16 1.94-1.22 3.64-3.13 3.87h-.05c-.06 0-.12 0-.17.02-.97.05-1.86-.26-2.53-.83 1.03-.92 1.62-2.3 1.5-3.8a4.64 4.64 0 0 0-.77-2.18 3.592 3.592 0 0 1 5.15 2.92Z"
         fill="currentColor"
@@ -1202,6 +1291,7 @@ export function AtSign(props: IconProps) {
     <Svg {...props}>
       <path d="M12.001 14.381a2.38 2.38 0 1 0 0-4.76 2.38 2.38 0 0 0 0 4.76Z" fill="currentColor" />
       <path
+        className="i2"
         opacity=".4"
         d="M20 18.75a.75.75 0 0 1-.6-1.2A9.17 9.17 0 0 0 21.25 12c0-2.02-.64-3.94-1.85-5.55a.75.75 0 0 1 1.2-.9c1.41 1.87 2.15 4.1 2.15 6.45 0 2.35-.74 4.58-2.15 6.45-.15.2-.37.3-.6.3ZM4 18.75c-.23 0-.45-.1-.6-.3-1.41-1.87-2.15-4.1-2.15-6.45 0-2.35.74-4.58 2.15-6.45a.75.75 0 0 1 1.2.9A9.17 9.17 0 0 0 2.75 12c0 2.02.64 3.94 1.85 5.55a.75.75 0 0 1-.6 1.2ZM16.801 16.349a.75.75 0 0 1-.6-1.2c.69-.91 1.05-2 1.05-3.15s-.36-2.24-1.05-3.15a.75.75 0 0 1 1.2-.9 6.73 6.73 0 0 1 1.35 4.05c0 1.47-.47 2.88-1.35 4.05-.15.2-.37.3-.6.3ZM7.2 16.349c-.23 0-.45-.1-.6-.3a6.73 6.73 0 0 1-1.35-4.05c0-1.47.47-2.88 1.35-4.05a.75.75 0 0 1 1.2.9c-.69.91-1.05 2-1.05 3.15s.36 2.24 1.05 3.15a.75.75 0 0 1-.6 1.2Z"
         fill="currentColor"
@@ -1214,6 +1304,7 @@ export function MessageSquare(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M2 12.97V6.99C2 4.23 4.24 2 7 2h10c2.76 0 5 2.23 5 4.99v6.98c0 2.75-2.24 4.98-5 4.98h-1.5c-.31 0-.61.15-.8.4l-1.5 1.99c-.66.88-1.74.88-2.4 0l-1.5-1.99c-.16-.22-.52-.4-.8-.4H7c-2.76 0-5-2.23-5-4.98v-1Z"
         fill="currentColor"
@@ -1230,6 +1321,7 @@ export function MessageSquareText(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M16 2H8C4 2 2 4 2 8v13c0 .55.45 1 1 1h13c4 0 6-2 6-6V8c0-4-2-6-6-6Z"
         fill="currentColor"
@@ -1246,6 +1338,7 @@ export function MessageSquarePlus(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M22 7.43v6c0 1.5-.5 2.75-1.38 3.63-.87.87-2.12 1.37-3.62 1.37v2.13c0 .8-.89 1.28-1.55.84L11 18.43H8.88c.08-.3.12-.61.12-.93 0-1.02-.39-1.96-1.03-2.67A3.944 3.944 0 0 0 5 13.5c-1.12 0-2.14.46-2.87 1.21-.09-.4-.13-.83-.13-1.28v-6c0-3 2-5 5-5h10c3 0 5 2 5 5Z"
         fill="currentColor"
@@ -1262,6 +1355,7 @@ export function MessagesSquare(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="m18.47 16.83.39 3.16c.1.83-.79 1.41-1.5.98l-4.19-2.49c-.46 0-.91-.03-1.35-.09A4.86 4.86 0 0 0 13 15.23c0-2.84-2.46-5.14-5.5-5.14-1.16 0-2.23.33-3.12.91-.03-.25-.04-.5-.04-.76C4.34 5.69 8.29 2 13.17 2S22 5.69 22 10.24c0 2.7-1.39 5.09-3.53 6.59Z"
         fill="currentColor"
@@ -1278,6 +1372,7 @@ export function MessageCircleQuestion(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M17 18.43h-4l-4.45 2.96A.997.997 0 0 1 7 20.56v-2.13c-3 0-5-2-5-5v-6c0-3 2-5 5-5h10c3 0 5 2 5 5v6c0 3-2 5-5 5Z"
         fill="currentColor"
@@ -1294,6 +1389,7 @@ export function Clock(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Z"
         fill="currentColor"
@@ -1311,6 +1407,7 @@ export function Clock3(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M12 22a8.67 8.67 0 1 0 0-17.34A8.67 8.67 0 0 0 12 22Z"
         fill="currentColor"
@@ -1331,6 +1428,7 @@ export function CalendarDays(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M20 9.84c.55 0 1 .45 1 1V17c0 3-1.5 5-5 5H8c-3.5 0-5-2-5-5v-6.16c0-.55.45-1 1-1h16Z"
         fill="currentColor"
@@ -1351,6 +1449,7 @@ export function CalendarClock(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M20 9.84c.55 0 1 .45 1 1V17c0 3-1.5 5-5 5H8c-3.5 0-5-2-5-5v-6.16c0-.55.45-1 1-1h16Z"
         fill="currentColor"
@@ -1371,6 +1470,7 @@ export function CalendarMinus(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M21 10.838v1.74c0 .61-.54 1.08-1.14.98-.28-.04-.57-.07-.86-.07a5.51 5.51 0 0 0-5.5 5.5c0 .46.18 1.1.37 1.68a.998.998 0 0 1-.95 1.32H8c-3.5 0-5-2-5-5v-6.16c0-.55.45-1 1-1h16c.55.01 1 .46 1 1.01Z"
         fill="currentColor"
@@ -1392,6 +1492,7 @@ export function LayoutDashboard(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M18.67 2h-1.9c-2.18 0-3.33 1.15-3.33 3.33v1.9c0 2.18 1.15 3.33 3.33 3.33h1.9c2.18 0 3.33-1.15 3.33-3.33v-1.9C22 3.15 20.85 2 18.67 2Z"
         fill="currentColor"
@@ -1401,6 +1502,7 @@ export function LayoutDashboard(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M7.24 13.43h-1.9C3.15 13.43 2 14.58 2 16.76v1.9C2 20.85 3.15 22 5.33 22h1.9c2.18 0 3.33-1.15 3.33-3.33v-1.9c.01-2.19-1.14-3.34-3.32-3.34Z"
         fill="currentColor"
@@ -1413,6 +1515,7 @@ export function LayoutList(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M19.9 13.5H4.1c-1.5 0-2.1.64-2.1 2.23v4.04C2 21.36 2.6 22 4.1 22h15.8c1.5 0 2.1-.64 2.1-2.23v-4.04c0-1.59-.6-2.23-2.1-2.23Z"
         fill="currentColor"
@@ -1428,12 +1531,22 @@ export function LayoutList(props: IconProps) {
 export function Table2(props: IconProps) {
   return (
     <Svg {...props}>
-      <path opacity=".6" d="M22 7.81V12H9V2h7.19C19.83 2 22 4.17 22 7.81Z" fill="currentColor" />
+      <path
+        className="i2"
+        opacity=".6"
+        d="M22 7.81V12H9V2h7.19C19.83 2 22 4.17 22 7.81Z"
+        fill="currentColor"
+      />
       <path
         d="M9 2v20H7.81C4.17 22 2 19.83 2 16.19V7.81C2 4.17 4.17 2 7.81 2H9Z"
         fill="currentColor"
       />
-      <path opacity=".4" d="M22 12v4.19c0 3.64-2.17 5.81-5.81 5.81H9V12h13Z" fill="currentColor" />
+      <path
+        className="i2"
+        opacity=".4"
+        d="M22 12v4.19c0 3.64-2.17 5.81-5.81 5.81H9V12h13Z"
+        fill="currentColor"
+      />
     </Svg>
   )
 }
@@ -1442,6 +1555,7 @@ export function ListChecks(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M14.19.969H5.81C2.17.969 0 3.139 0 6.779v8.38c0 3.64 2.17 5.81 5.81 5.81h8.38c3.64 0 5.81-2.17 5.81-5.81v-8.38c0-3.64-2.17-5.81-5.81-5.81Z"
         fill="currentColor"
@@ -1462,6 +1576,7 @@ export function ListTodo(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M4.91 8.032c-.22 0-.43-.09-.58-.24l-.91-.91a.82.82 0 0 1 1.16-1.16l.33.33 2.14-2.14a.82.82 0 0 1 1.16 1.16l-2.72 2.72c-.16.15-.36.24-.58.24ZM4.91 14.329c-.21 0-.42-.08-.58-.24l-.91-.91a.82.82 0 0 1 1.16-1.16l.33.33 2.14-2.14a.82.82 0 0 1 1.16 1.16l-2.72 2.72c-.16.16-.37.24-.58.24ZM4.91 20.329c-.21 0-.42-.08-.58-.24l-.91-.91a.82.82 0 0 1 1.16-1.16l.33.33 2.14-2.14a.821.821 0 0 1 1.16 1.16l-2.72 2.72c-.16.16-.37.24-.58.24Z"
         fill="currentColor"
@@ -1474,6 +1589,7 @@ export function ListPlus(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M7.37 22h9.25a4.87 4.87 0 0 0 4.87-4.87V8.37a4.87 4.87 0 0 0-4.87-4.87H7.37A4.87 4.87 0 0 0 2.5 8.37v8.75c0 2.7 2.18 4.88 4.87 4.88Z"
         fill="currentColor"
@@ -1494,6 +1610,7 @@ export function List(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M12 10.25H3c-.41 0-.75-.34-.75-.75s.34-.75.75-.75h9c.41 0 .75.34.75.75s-.34.75-.75.75Z"
         fill="currentColor"
@@ -1503,6 +1620,7 @@ export function List(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M21 20.25H3c-.41 0-.75-.34-.75-.75s.34-.75.75-.75h18c.41 0 .75.34.75.75s-.34.75-.75.75Z"
         fill="currentColor"
@@ -1519,6 +1637,7 @@ export function ListOrdered(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M21 10.25h-7c-.41 0-.75-.34-.75-.75s.34-.75.75-.75h7c.41 0 .75.34.75.75s-.34.75-.75.75Z"
         fill="currentColor"
@@ -1528,6 +1647,7 @@ export function ListOrdered(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M21 20.25H3c-.41 0-.75-.34-.75-.75s.34-.75.75-.75h18c.41 0 .75.34.75.75s-.34.75-.75.75ZM7.92 3.5H5.08C3.68 3.5 3 4.18 3 5.58v2.85c0 1.4.68 2.08 2.08 2.08h2.85c1.4 0 2.08-.68 2.08-2.08V5.58C10 4.18 9.32 3.5 7.92 3.5Z"
         fill="currentColor"
@@ -1545,6 +1665,7 @@ export function ChartNoAxesColumn(props: IconProps) {
       />
       <path d="M9.75 4v18h4.5V4c0-1.1-.45-2-1.8-2h-.9c-1.35 0-1.8.9-1.8 2Z" fill="currentColor" />
       <path
+        className="i2"
         opacity=".4"
         d="M3 10v12h4V10c0-1.1-.4-2-1.6-2h-.8C3.4 8 3 8.9 3 10ZM17 15v7h4v-7c0-1.1-.4-2-1.6-2h-.8c-1.2 0-1.6.9-1.6 2Z"
         fill="currentColor"
@@ -1561,6 +1682,7 @@ export function Network(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M19.17 15.978a6.929 6.929 0 0 0-6.54-4.65h-.03l-3.53.01c-1.52.02-2.88-1.01-3.29-2.49v-1.85c0-.42-.34-.76-.77-.76s-.76.34-.76.76v11.22c0 .42.34.76.76.76s.77-.34.77-.76v-6.62c.88.78 2.03 1.26 3.28 1.26h.02l3.53-.01h.02c2.29 0 4.34 1.45 5.09 3.62.11.32.41.51.72.51.08 0 .17-.01.25-.04.41-.12.62-.56.48-.96Z"
         fill="currentColor"
@@ -1575,6 +1697,7 @@ export function GitCompareArrows(props: IconProps) {
       <path
         fill="currentColor"
         d="M21.75 6.73c0-.2-.08-.39-.22-.53l-3.72-3.72a.754.754 0 00-1.06 0c-.29.29-.29.77 0 1.06l2.45 2.45H3c-.41 0-.75.34-.75.75s.34.75.75.75h16.19l-2.44 2.44c-.29.29-.29.77 0 1.06.15.15.34.22.53.22s.38-.07.53-.22l3.71-3.71c.07-.07.13-.16.17-.26 0-.01 0-.02.01-.03.03-.09.05-.17.05-.26z"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -1589,6 +1712,7 @@ export function PanelLeftIcon(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M22 7.81v8.38c0 3.64-2.17 5.81-5.81 5.81H7.81c-.2 0-.4-.01-.59-.02-1.23-.08-2.27-.43-3.09-1.03-.42-.29-.79-.66-1.08-1.08C2.36 18.92 2 17.68 2 16.19V7.81c0-3.44 1.94-5.57 5.22-5.78.19-.02.39-.03.59-.03h8.38c1.49 0 2.73.36 3.68 1.05.42.29.79.66 1.08 1.08.69.95 1.05 2.19 1.05 3.68Z"
         fill="currentColor"
@@ -1604,7 +1728,12 @@ export function PanelLeftIcon(props: IconProps) {
 export function Search(props: IconProps) {
   return (
     <Svg {...props}>
-      <path opacity=".4" d="M11.5 21a9.5 9.5 0 1 0 0-19 9.5 9.5 0 0 0 0 19Z" fill="currentColor" />
+      <path
+        className="i2"
+        opacity=".4"
+        d="M11.5 21a9.5 9.5 0 1 0 0-19 9.5 9.5 0 0 0 0 19Z"
+        fill="currentColor"
+      />
       <path
         d="M21.3 21.999c-.18 0-.36-.07-.49-.2l-1.86-1.86a.706.706 0 0 1 0-.99c.27-.27.71-.27.99 0l1.86 1.86c.27.27.27.71 0 .99-.14.13-.32.2-.5.2Z"
         fill="currentColor"
@@ -1617,7 +1746,12 @@ export { Search as SearchIcon }
 export function SearchX(props: IconProps) {
   return (
     <Svg {...props}>
-      <path opacity=".4" d="M11.5 21a9.5 9.5 0 1 0 0-19 9.5 9.5 0 0 0 0 19Z" fill="currentColor" />
+      <path
+        className="i2"
+        opacity=".4"
+        d="M11.5 21a9.5 9.5 0 1 0 0-19 9.5 9.5 0 0 0 0 19Z"
+        fill="currentColor"
+      />
       <path
         d="M21.3 21.999c-.18 0-.36-.07-.49-.2l-1.86-1.86a.706.706 0 0 1 0-.99c.27-.27.71-.27.99 0l1.86 1.86c.27.27.27.71 0 .99-.14.13-.32.2-.5.2ZM14 12.45H9c-.41 0-.75-.34-.75-.75s.34-.75.75-.75h5c.41 0 .75.34.75.75s-.34.75-.75.75Z"
         fill="currentColor"
@@ -1630,6 +1764,7 @@ export function Pencil(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M21 22H3c-.41 0-.75-.34-.75-.75s.34-.75.75-.75h18c.41 0 .75.34.75.75s-.34.75-.75.75ZM19.02 3.482c-1.94-1.94-3.84-1.99-5.83 0l-1.21 1.21c-.1.1-.14.26-.1.4a8.129 8.129 0 0 0 5.53 5.53.4.4 0 0 0 .41-.1l1.2-1.21c.99-.98 1.47-1.93 1.47-2.89.01-.99-.47-1.95-1.47-2.94Z"
         fill="currentColor"
@@ -1646,6 +1781,7 @@ export function PenLine(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M15.48 3H7.52C4.07 3 2 5.06 2 8.52v7.95C2 19.94 4.07 22 7.52 22h7.95c3.46 0 5.52-2.06 5.52-5.52V8.52C21 5.06 18.93 3 15.48 3Z"
         fill="currentColor"
@@ -1666,6 +1802,7 @@ export function Hand(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="m16 21.29-9.36 1.1c-.65.08-1.23-.02-1.72-.26a2.59 2.59 0 0 1-1.19-1.19c-.24-.49-.33-1.06-.26-1.7l1.04-8.71c.17.09.36.17.55.23.45.16.93.24 1.44.24 1.14 0 2.17-.42 2.96-1.12a4.455 4.455 0 0 0 1.37-2.18c.06-.2.1-.41.13-.63l1.66.1 6.08 6.09.26 4.42c.25 2.48-.61 3.34-2.96 3.61Z"
         fill="currentColor"
@@ -1682,6 +1819,7 @@ export function Eye(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M21.25 9.15C18.94 5.52 15.56 3.43 12 3.43c-1.78 0-3.51.52-5.09 1.49-1.58.98-3 2.41-4.16 4.23-1 1.57-1 4.12 0 5.69 2.31 3.64 5.69 5.72 9.25 5.72 1.78 0 3.51-.52 5.09-1.49 1.58-.98 3-2.41 4.16-4.23 1-1.56 1-4.12 0-5.69ZM12 16.04c-2.24 0-4.04-1.81-4.04-4.04S9.76 7.96 12 7.96s4.04 1.81 4.04 4.04-1.8 4.04-4.04 4.04Z"
         fill="currentColor"
@@ -1698,6 +1836,7 @@ export function EyeOff(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M21.252 9.15a14.57 14.57 0 0 0-1.63-2.11l-3.77 3.77c.12.37.19.77.19 1.19 0 2.24-1.81 4.04-4.04 4.04-.42 0-.82-.07-1.19-.19l-3.46 3.46c1.46.82 3.04 1.25 4.65 1.25 1.78 0 3.51-.52 5.09-1.49 1.58-.98 3-2.41 4.16-4.23 1-1.56 1-4.12 0-5.69Z"
         fill="currentColor"
@@ -1707,6 +1846,7 @@ export function EyeOff(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="m18.25 5.75-3.39 3.39A3.986 3.986 0 0 0 12 7.96c-2.24 0-4.04 1.81-4.04 4.04 0 1.12.45 2.13 1.18 2.86l-3.38 3.39h-.01c-1.11-.9-2.13-2.05-3-3.41-1-1.57-1-4.12 0-5.69C3.91 7.33 5.33 5.9 6.91 4.92c1.58-.96 3.31-1.49 5.09-1.49 2.23 0 4.39.82 6.25 2.32Z"
         fill="currentColor"
@@ -1725,6 +1865,7 @@ export function ExternalLink(props: IconProps) {
       <path
         fill="currentColor"
         d="M16.19 2H7.81C4.17 2 2 4.17 2 7.81v8.37C2 19.83 4.17 22 7.81 22h8.37c3.64 0 5.81-2.17 5.81-5.81V7.81C22 4.17 19.83 2 16.19 2z"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -1741,6 +1882,7 @@ export function Download(props: IconProps) {
       <path
         fill="currentColor"
         d="M22 10.76a.86.86 0 00-.86-.86H2.86c-.48 0-.86.38-.86.86 0 5.89 4.11 10 10 10s10-4.12 10-10z"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -1757,6 +1899,7 @@ export function Upload(props: IconProps) {
       <path
         fill="currentColor"
         d="M22 10.76a.86.86 0 00-.86-.86H2.86c-.48 0-.86.38-.86.86 0 5.89 4.11 10 10 10s10-4.12 10-10z"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -1773,6 +1916,7 @@ export function LogOut(props: IconProps) {
       <path
         fill="currentColor"
         d="M13.24 2c.47 0 .86.38.86.86v18.29c0 .47-.38.86-.86.86-5.89 0-10-4.11-10-10S7.36 2 13.24 2z"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -1787,12 +1931,14 @@ export function Settings2(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M21.23 7.62h-5.54c-.38 0-.69-.31-.69-.7 0-.38.31-.69.69-.69h5.54c.38 0 .69.31.69.69 0 .39-.31.7-.69.7ZM6.46 7.618H2.77c-.38 0-.69-.31-.69-.69 0-.38.31-.69.69-.69h3.69c.38 0 .69.31.69.69 0 .38-.31.69-.69.69Z"
         fill="currentColor"
       />
       <path d="M10.15 10.84a3.92 3.92 0 1 0 0-7.84 3.92 3.92 0 0 0 0 7.84Z" fill="currentColor" />
       <path
+        className="i2"
         opacity=".4"
         d="M21.23 17.77h-3.69c-.38 0-.69-.31-.69-.69 0-.38.31-.69.69-.69h3.69c.38 0 .69.31.69.69 0 .38-.31.69-.69.69ZM8.31 17.77H2.77c-.38 0-.69-.31-.69-.69 0-.38.31-.69.69-.69h5.54c.38 0 .69.31.69.69 0 .38-.31.69-.69.69Z"
         fill="currentColor"
@@ -1806,6 +1952,7 @@ export function Plug(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M10.5 16h3c2.5 0 4-1.8 4-4V6.91c0-1.05-.86-1.91-1.91-1.91H8.42c-1.05 0-1.91.86-1.91 1.91V12C6.5 14.2 8 16 10.5 16Z"
         fill="currentColor"
@@ -1821,8 +1968,9 @@ export function Plug(props: IconProps) {
 export function Unplug(props: IconProps) {
   return (
     <Svg {...props}>
-      <g opacity=".45">
+      <g className="i2" opacity=".45">
         <path
+          className="i2"
           opacity=".4"
           d="M10.5 16h3c2.5 0 4-1.8 4-4V6.91c0-1.05-.86-1.91-1.91-1.91H8.42c-1.05 0-1.91.86-1.91 1.91V12C6.5 14.2 8 16 10.5 16Z"
           fill="currentColor"
@@ -1851,6 +1999,7 @@ export function Link2(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="M19.07 4.931a6.585 6.585 0 0 1-3.09 11.05c.53-2.16-.05-4.53-1.74-6.22a6.564 6.564 0 0 0-6.22-1.74c.28-1.13.85-2.21 1.74-3.09a6.585 6.585 0 0 1 9.31 0Z"
         fill="currentColor"
@@ -1860,6 +2009,7 @@ export function Link2(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".5"
         d="M14.241 9.762a6.563 6.563 0 0 1 1.74 6.22 6.585 6.585 0 0 1-11.05 3.09 6.585 6.585 0 0 1 0-9.31c.88-.89 1.96-1.46 3.09-1.74 2.16-.53 4.53.05 6.22 1.74Z"
         fill="currentColor"
@@ -1871,12 +2021,13 @@ export function Link2(props: IconProps) {
 export function Unlink(props: IconProps) {
   return (
     <Svg {...props}>
-      <g opacity=".45">
+      <g className="i2" opacity=".45">
         <path
           d="M19.071 14.242c-.29.29-.75.29-1.03 0a.718.718 0 0 1 0-1.03c2-2 2-5.25 0-7.24-2-1.99-5.25-2-7.24 0-1.99 2-2 5.25 0 7.24.29.29.29.75 0 1.03-.29.29-.75.29-1.03 0-2.57-2.57-2.57-6.75 0-9.31 2.57-2.56 6.75-2.57 9.31 0a6.594 6.594 0 0 1-.01 9.31Z"
           fill="currentColor"
         />
         <path
+          className="i2"
           opacity=".4"
           d="M19.07 4.931a6.585 6.585 0 0 1-3.09 11.05c.53-2.16-.05-4.53-1.74-6.22a6.564 6.564 0 0 0-6.22-1.74c.28-1.13.85-2.21 1.74-3.09a6.585 6.585 0 0 1 9.31 0Z"
           fill="currentColor"
@@ -1886,6 +2037,7 @@ export function Unlink(props: IconProps) {
           fill="currentColor"
         />
         <path
+          className="i2"
           opacity=".5"
           d="M14.241 9.762a6.563 6.563 0 0 1 1.74 6.22 6.585 6.585 0 0 1-11.05 3.09 6.585 6.585 0 0 1 0-9.31c.88-.89 1.96-1.46 3.09-1.74 2.16-.53 4.53.05 6.22 1.74Z"
           fill="currentColor"
@@ -1908,6 +2060,7 @@ export function RefreshCw(props: IconProps) {
       <path
         fill="currentColor"
         d="M22 7.81v8.37c0 3.64-2.17 5.81-5.81 5.81H7.81C4.17 22 2 19.83 2 16.19V7.81C2 4.17 4.17 2 7.81 2h8.37C19.83 2 22 4.17 22 7.81z"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -1928,6 +2081,7 @@ export function Repeat(props: IconProps) {
       <path
         fill="currentColor"
         d="M21.17 18.84a.776.776 0 00-.22-.53l-3.16-3.16a.754.754 0 00-1.06 0c-.29.29-.29.77 0 1.06l1.88 1.88H6.58c-1.24 0-2.25-1.01-2.25-2.25v-3.32c0-.41-.34-.75-.75-.75s-.75.34-.75.75v3.32c0 2.07 1.68 3.75 3.75 3.75h12.03l-1.88 1.88c-.29.29-.29.77 0 1.06.15.15.34.22.53.22s.38-.07.53-.22l3.16-3.16a.776.776 0 00.22-.53z"
+        className="i2"
         opacity=".4"
       />
     </Svg>
@@ -1942,6 +2096,7 @@ export function Play(props: IconProps) {
         fill="currentColor"
       />
       <path
+        className="i2"
         opacity=".4"
         d="m18.089 15.46-4.05 2.34-4.04 2.33c-1.91 1.1-4.16.44-5.28-1.17l.42-.25 14.44-8.66c1 1.8.51 4.26-1.49 5.41Z"
         fill="currentColor"
@@ -1954,6 +2109,7 @@ export function SkipForward(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M3.762 7.22v9.57c0 1.96 2.13 3.19 3.83 2.21l4.15-2.39 4.15-2.4c1.7-.98 1.7-3.43 0-4.41l-4.15-2.4-4.15-2.39c-1.7-.98-3.83.24-3.83 2.21Z"
         fill="currentColor"
@@ -1970,6 +2126,7 @@ export function Power(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M7.35 3.86h9.3c4.1 0 5.35 1.25 5.35 5.35v5.58c0 4.1-1.25 5.35-5.35 5.35h-9.3c-4.1 0-5.35-1.25-5.35-5.35V9.21c0-4.1 1.25-5.35 5.35-5.35Z"
         fill="currentColor"
@@ -1986,6 +2143,7 @@ export function PowerOff(props: IconProps) {
   return (
     <Svg {...props}>
       <path
+        className="i2"
         opacity=".4"
         d="M16.65 3.86h-9.3C3.25 3.86 2 5.11 2 9.21v5.58c0 4.1 1.25 5.35 5.35 5.35h9.3c4.1 0 5.35-1.25 5.35-5.35V9.21c0-4.1-1.25-5.35-5.35-5.35Z"
         fill="currentColor"
@@ -2139,6 +2297,7 @@ export function ArrowRight(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -2161,6 +2320,7 @@ export function ArrowLeft(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -2183,6 +2343,7 @@ export function ArrowUp(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -2205,6 +2366,7 @@ export function ArrowDown(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -2227,6 +2389,7 @@ export function ArrowUpRight(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -2249,6 +2412,7 @@ export function ArrowDownRight(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -2271,6 +2435,7 @@ export function ArrowDownUp(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -2293,6 +2458,7 @@ export function TrendingUp(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -2315,6 +2481,7 @@ export function TrendingDown(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -2337,6 +2504,7 @@ export function RotateCcw(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -2359,6 +2527,7 @@ export function RotateCw(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -2381,6 +2550,7 @@ export function Undo2(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -2403,6 +2573,7 @@ export function Redo2(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -2425,6 +2596,7 @@ export function CornerUpLeft(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
       <path
@@ -2452,8 +2624,16 @@ export { Ellipsis as MoreHorizontalIcon }
 export function Circle(props: IconProps) {
   return (
     <Svg {...props}>
-      <circle cx="12" cy="12" r="8.5" fill="currentColor" opacity=".18" />
-      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.5" opacity=".55" />
+      <circle cx="12" cy="12" r="8.5" fill="currentColor" className="i2" opacity=".18" />
+      <circle
+        cx="12"
+        cy="12"
+        r="8.5"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        className="i2"
+        opacity=".55"
+      />
     </Svg>
   )
 }
@@ -2461,7 +2641,15 @@ export function Circle(props: IconProps) {
 export function Loader2(props: IconProps) {
   return (
     <Svg {...props}>
-      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="2.5" opacity=".25" />
+      <circle
+        cx="12"
+        cy="12"
+        r="8.5"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        className="i2"
+        opacity=".25"
+      />
       <path
         d="M20.5 12A8.5 8.5 0 0 0 12 3.5"
         stroke="currentColor"
@@ -2519,6 +2707,7 @@ export function Heading2(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
     </Svg>
@@ -2541,6 +2730,7 @@ export function Heading3(props: IconProps) {
         strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        className="i2"
         opacity=".4"
       />
     </Svg>

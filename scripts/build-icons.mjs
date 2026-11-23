@@ -4,6 +4,8 @@
 // solid filled shapes in two tones, the main part in full ink and the body at 40%.
 // Small functional glyphs (arrows, check, close, chevrons, spinner...) have no Bulk form
 // without a box around them, so they are drawn here as plain rounded strokes.
+// The pale part of every icon carries class `i2`: by default it is 40% of the text colour;
+// the `icon-duo` class (globals.css) paints the icon in the two icon colours instead.
 //
 // Icons keep the names the app used with lucide (`<Trash2 />`, `<ChevronDown />`), so a
 // component only imports from "@/components/icons". To add an icon: add a line to ICONS
@@ -258,7 +260,7 @@ function bulk(name) {
   return new Function("React", `return (${m[1]})`)(React)({ color: "currentColor" })
 }
 
-function body(source) {
+function shape(source) {
   if (source.startsWith("glyph:")) {
     const g = GLYPHS[source.slice(6)]
     if (!g) throw new Error(`Unknown glyph ${source}`)
@@ -269,6 +271,9 @@ function body(source) {
   }
   return bulk(source)
 }
+
+/** The pale parts (anything drawn below full opacity) get `i2`, so `.icon-duo` can recolour them. */
+const body = (source) => shape(source).replace(/ opacity="/g, ' className="i2" opacity="')
 
 // One function per distinct shape; aliases re-export it under the other names.
 const shapes = new Map()

@@ -93,7 +93,7 @@ export function RunProgress({ kind, status, step, done, total, places, startedAt
       <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2.5">
         <LoaderCircle
           aria-hidden
-          className="mt-0.5 size-6 text-brand animate-spin [animation-duration:1.6s] motion-reduce:animate-none"
+          className="icon-duo mt-0.5 size-6 animate-spin [animation-duration:1.6s] motion-reduce:animate-none"
         />
         <div className="flex min-w-0 flex-col gap-1">
           <h2 id={titleId} className="text-[15px] leading-[22px] font-semibold">

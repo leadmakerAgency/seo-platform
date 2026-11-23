@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils"
 import { removeWork } from "../actions"
 import { DELIVERABLE_META, PROGRESS_META, SOURCE_LABELS } from "../constants"
 import type { DeliverableProgress, WorkItem } from "../queries"
-import { DELIVERABLE_LOOK, HueIcon, hueFill } from "./hue-icon"
+import { DELIVERABLE_ICON, DuoIcon } from "./duo-icon"
 import { LogWorkDialog } from "./log-work-dialog"
 
 type Props = {
@@ -109,7 +109,7 @@ export function MonthWork(props: Props) {
 
       {visible.length === 0 ? (
         <div className="flex items-start gap-3 rounded-lg border bg-card px-4 py-5 text-sm">
-          <HueIcon icon={CalendarOff} />
+          <DuoIcon icon={CalendarOff} />
           <div className="flex flex-col gap-0.5">
             <p className="font-medium">No work planned for {formatMonth(month, true)}</p>
             <p className="text-muted-foreground">
@@ -165,7 +165,7 @@ function WorkRow({
 }: Props & { row: DeliverableProgress; isCurrent: boolean }) {
   const [open, setOpen] = useState(false)
   const meta = DELIVERABLE_META[row.kind]
-  const look = DELIVERABLE_LOOK[row.kind]
+  const RowIcon = DELIVERABLE_ICON[row.kind]
   const status = PROGRESS_META[row.status]
   const pct = row.target > 0 ? Math.min(100, Math.max(0, (row.done / row.target) * 100)) : 0
   const expectedPct =
@@ -192,7 +192,7 @@ function WorkRow({
               !open && "-rotate-90",
             )}
           />
-          <HueIcon icon={look.icon} hue={look.hue} className="size-[18px]" />
+          <DuoIcon icon={RowIcon} className="size-[18px]" />
           <span className="truncate">{meta.label}</span>
         </span>
 
@@ -205,10 +205,7 @@ function WorkRow({
           aria-valuenow={row.done}
         >
           <span
-            className={cn(
-              "absolute inset-y-0 left-0 rounded-full transition-[width]",
-              hueFill(look.hue),
-            )}
+            className={"absolute inset-y-0 left-0 rounded-full bg-icon-ink transition-[width]"}
             style={{ width: `${pct}%` }}
           />
           {expectedPct !== null && (

@@ -111,7 +111,7 @@ export function CompetitorBacklinksButton({
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Network className="size-4 text-brand" aria-hidden />
+              <Network className="icon-duo size-4" aria-hidden />
               Competitor backlinks
             </DialogTitle>
             <DialogDescription>

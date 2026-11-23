@@ -62,12 +62,9 @@
   --color-info-soft: var(--info-soft);
   --color-info-dot: var(--info-dot);
   --color-neutral-dot: var(--neutral-dot);
-  /* Accent hues for icons and identity marks (never status) */
-  --color-hue-indigo: var(--hue-indigo);
-  --color-hue-gold: var(--hue-gold);
-  --color-hue-plum: var(--hue-plum);
-  --color-hue-teal: var(--hue-teal);
-  --color-hue-clay: var(--hue-clay);
+  /* Icon pair: every coloured (non-status) icon uses these two, see .icon-duo */
+  --color-icon-ink: var(--icon-ink);
+  --color-icon-tint: var(--icon-tint);
   /* Behind dialogs and sheets: a flat navy dim, no blur */
   --color-scrim: var(--scrim);
   --radius-sm: calc(var(--radius) * 0.6);
@@ -140,14 +137,10 @@
   --info-dot: oklch(0.64 0.13 250);
   --neutral-dot: oklch(0.72 0.02 280);
 
-  /* Accent hues (icons and identity marks; never status). On card: indigo 7.5, gold 5.3,
-     plum 8.4, teal 5.1, clay 6.7. Checked with the dataviz validator in this order: CVD and
-     normal-vision separation pass in light and dark. */
-  --hue-indigo: oklch(0.46 0.15 275);
-  --hue-gold: oklch(0.53 0.115 88);
-  --hue-plum: oklch(0.44 0.14 340);
-  --hue-teal: oklch(0.515 0.12 186);
-  --hue-clay: oklch(0.49 0.13 38);
+  /* Icon pair (.icon-duo): deep teal for the main part, apricot for the body. Teal 7.0 on
+     card; the two parts stay apart for every colour-vision type (dataviz validator). */
+  --icon-ink: oklch(0.45 0.085 195);
+  --icon-tint: oklch(0.82 0.09 58);
 
   --chart-1: oklch(0.5 0.235 300);
   --chart-2: oklch(0.62 0.1 195);
@@ -230,12 +223,9 @@
   --info-dot: oklch(0.7 0.12 250);
   --neutral-dot: oklch(0.56 0.008 70);
 
-  /* On card: indigo 8.5, gold 10.7, plum 6.9, teal 11.6, clay 7.8. */
-  --hue-indigo: oklch(0.78 0.12 278);
-  --hue-gold: oklch(0.84 0.12 92);
-  --hue-plum: oklch(0.73 0.14 340);
-  --hue-teal: oklch(0.85 0.11 190);
-  --hue-clay: oklch(0.76 0.13 40);
+  /* Teal 11.2 on card. */
+  --icon-ink: oklch(0.84 0.1 190);
+  --icon-tint: oklch(0.68 0.11 55);
 
   --chart-1: oklch(0.64 0.19 300);
   --chart-2: oklch(0.65 0.11 195);
@@ -296,6 +286,20 @@
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
+  }
+}
+
+/*
+ * Two-colour icons. The icons (src/components/icons) mark their body with .i2, drawn at 40% of the
+ * text colour by default. .icon-duo paints the main part teal and the body apricot instead.
+ */
+@layer components {
+  .icon-duo {
+    color: var(--icon-ink);
+  }
+  .icon-duo .i2 {
+    color: var(--icon-tint);
+    opacity: 1;
   }
 }
 

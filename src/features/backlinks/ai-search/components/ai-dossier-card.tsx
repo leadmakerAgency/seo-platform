@@ -39,7 +39,7 @@ export function AiDossierCard({
     <details className="group/dossier rounded-xl border bg-card" open>
       <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-4 py-3.5 sm:px-5 [&::-webkit-details-marker]:hidden">
         <span className="flex items-center gap-2 text-[15px] font-semibold">
-          <Brain className="size-4 text-primary" aria-hidden />
+          <Brain className="icon-duo size-4" aria-hidden />
           What Shockwave AI understood
         </span>
         <span className="text-xs text-muted-foreground">
