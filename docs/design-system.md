@@ -218,6 +218,14 @@ run `npm run icons`.
 `input` ring, because a white block on graphite is too loud. Counts sit in a small `rounded-sm` chip. Ink, not violet, so
 the violet stays rare.
 
+**Mode switcher.** The large size of segmented tabs, for a choice that swaps the whole page
+(Backlinks: Standard / Shockwave AI / Manual Search, `features/backlinks/components/mode-tabs.tsx`).
+A `rounded-xl` bordered track in `muted`, equal segments with a 24 px icon standing alone, the
+name in the heading font (15 px semibold) and a one-line caption from `md` up. The active segment
+is solid ink; in dark it is a raised `card` segment with an `input` ring and a 2 px violet top
+edge. Inactive segments are muted text and lift to `card` on hover. Phones: icon over a short
+name. Use it only for page-level modes, never for filters (those are tabs or a `StatStrip`).
+
 **Sidebar.** Tinted panel (`--sidebar`), the Shockwave mark and wordmark at the top. Items are
 32 px with the icon in muted ink. The active item: `sidebar-accent` background, ink text,
 violet icon and a 2 px violet bar on its left edge. Group labels are 12 px muted sentence case.
