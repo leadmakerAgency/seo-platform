@@ -191,6 +191,8 @@ export type Visibility = {
   bing: PlaceStats | null
   map: PlaceStats | null
   ai: PlaceStats | null
+  /** The latest ranking scan (Rankings → Ranking now). */
+  scan: { total: number; pageOne: number; keep: number; quickWin: number } | null
 }
 
 type RawPlace = {
@@ -223,15 +225,24 @@ const place = (raw: RawPlace | undefined): PlaceStats | null =>
 /** "Where they show up": latest ranking / AI checks with baseline and previous. */
 export async function getVisibility(clientId: string): Promise<Visibility> {
   const supabase = await createSupabaseServerClient()
-  const { data, error } = await supabase.rpc("client_visibility", { p_client_id: clientId })
+  const [{ data, error }, { data: rs }] = await Promise.all([
+    supabase.rpc("client_visibility", { p_client_id: clientId }),
+    supabase
+      .from("rank_settings")
+      .select("last_scan:rank_scans!rank_settings_last_scan_id_fkey(counts)")
+      .eq("client_id", clientId)
+      .maybeSingle(),
+  ])
   if (error) throw new Error(`Could not load visibility: ${error.message}`)
   const v = (data ?? {}) as Record<string, unknown>
+  const c = ((rs?.last_scan as { counts?: Record<string, number | null> } | null)?.counts ?? null) as Record<string, number | null> | null
   return {
     tracked: Number(v.tracked ?? 0),
     website: place(v.website as RawPlace),
     bing: place(v.bing as RawPlace),
     map: place(v.map as RawPlace),
     ai: place(v.ai as RawPlace),
+    scan: c ? { total: c.total ?? 0, pageOne: c.page_one ?? 0, keep: c.keep ?? 0, quickWin: c.quick_win ?? 0 } : null,
   }
 }
 

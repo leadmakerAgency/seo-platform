@@ -18,6 +18,17 @@ import { PositionChart } from "./position-chart"
 
 export type KeywordFilter = "all" | "top3" | "top10" | "missing" | "maps3" | "weak"
 
+/** A warning before removing a keyword the latest ranking scan says is worth keeping. */
+function keepWarning(k: TrackedKeyword): string | null {
+  const s = k.scan
+  if (!s || (s.verdict !== "keep" && s.verdict !== "quick_win")) return null
+  const bits = [
+    s.position !== null ? `ranks around #${Math.round(s.position)}` : null,
+    s.clicks ? `brought ${s.clicks} ${s.clicks === 1 ? "click" : "clicks"} in 3 months` : null,
+  ].filter(Boolean)
+  return `The latest ranking scan says this keyword ${s.verdict === "keep" ? "is worth keeping" : "is close to the first page"}${bits.length ? `: it ${bits.join(" and ")}` : ""}. Keep it unless the client stopped offering it.`
+}
+
 type SortKey = "phrase" | Engine | "volume" | "difficulty" | "score"
 
 const KEYWORD_SOURCE: Record<string, string> = {
@@ -240,9 +251,13 @@ export function KeywordsView({
                     <span className="font-medium">{k.phrase}</span>
                     <span className="flex flex-wrap items-center gap-1.5">
                       <IntentTag intent={k.intent} />
-                      {k.weak.length > 0 && (
+                      {k.scan?.verdict === "keep" ? (
+                        <StatusTag tone="success">Ranking well</StatusTag>
+                      ) : k.weak.length > 0 ? (
                         <StatusTag tone="warning">Weak</StatusTag>
-                      )}
+                      ) : k.scan?.verdict === "quick_win" ? (
+                        <StatusTag tone="info">Quick win</StatusTag>
+                      ) : null}
                       {k.topic && <span className="text-xs text-muted-foreground">{k.topic}</span>}
                     </span>
                   </button>
@@ -360,6 +375,21 @@ function KeywordDetails({
       </SheetHeader>
 
       <div className="flex flex-col gap-6 px-4 pb-6">
+        {(k.scan?.verdict === "keep" || k.scan?.verdict === "quick_win") && (
+          <div className="flex gap-3 rounded-lg border border-success/30 bg-success-soft p-3 text-sm">
+            <div className="flex flex-col gap-1">
+              <p className="font-medium">
+                {k.scan.verdict === "keep" ? "Ranking well: keep it" : "Close to the first page: worth pushing"}
+              </p>
+              <ul className="list-disc pl-4 text-[13px]">
+                {k.scan.reasons.slice(1, 5).map((r) => (
+                  <li key={r}>{r}</li>
+                ))}
+              </ul>
+              <p className="text-[13px] text-muted-foreground">From the latest ranking scan (Rankings → Ranking now).</p>
+            </div>
+          </div>
+        )}
         {k.weak.length > 0 && (
           <div className="flex gap-3 rounded-lg border border-warning/30 bg-warning-soft p-3 text-sm">
             <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
@@ -485,11 +515,13 @@ function KeywordDetails({
               initial={suggested?.phrase ?? ""}
               onDone={onClose}
               trigger={<Button>Replace…</Button>}
+              warning={keepWarning(k)}
             />
             <StopTrackingDialog
               keywordId={k.id}
               phrase={k.phrase}
               onDone={onClose}
+              warning={keepWarning(k)}
               trigger={<Button variant="outline">Stop tracking</Button>}
             />
             {k.weak.length > 0 && (

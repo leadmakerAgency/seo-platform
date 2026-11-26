@@ -3854,6 +3854,7 @@ export type Database = {
           last_locations_sync_at: string | null
           low_balance_usd: number
           monthly_budget_usd: number
+          rank_scans_per_client_month: number
           research_runs_per_client_month: number
           updated_at: string
           updated_by: string | null
@@ -3890,6 +3891,7 @@ export type Database = {
           last_locations_sync_at?: string | null
           low_balance_usd?: number
           monthly_budget_usd?: number
+          rank_scans_per_client_month?: number
           research_runs_per_client_month?: number
           updated_at?: string
           updated_by?: string | null
@@ -3926,6 +3928,7 @@ export type Database = {
           last_locations_sync_at?: string | null
           low_balance_usd?: number
           monthly_budget_usd?: number
+          rank_scans_per_client_month?: number
           research_runs_per_client_month?: number
           updated_at?: string
           updated_by?: string | null
@@ -4991,9 +4994,205 @@ export type Database = {
           },
         ]
       }
+      rank_scan_keywords: {
+        Row: {
+          city_volume: number | null
+          client_id: string
+          cpc: number | null
+          dfs_check_url: string | null
+          dfs_etv: number | null
+          dfs_position: number | null
+          dfs_previous_position: number | null
+          dfs_type: string | null
+          dfs_updated_at: string | null
+          dfs_url: string | null
+          dfs_volume: number | null
+          difficulty: number | null
+          gbp_below_threshold: boolean
+          gbp_reach: number | null
+          gsc_clicks: number | null
+          gsc_ctr: number | null
+          gsc_impressions: number | null
+          gsc_page: string | null
+          gsc_position: number | null
+          intent: string | null
+          is_brand: boolean
+          keyword_norm: string
+          low_ctr: boolean
+          national_volume: number | null
+          other_language: boolean
+          phrase: string
+          position: number | null
+          reasons: string[]
+          scan_id: string
+          score: number | null
+          sources: Database["public"]["Enums"]["rank_scan_source"][]
+          topic: string | null
+          verdict: Database["public"]["Enums"]["rank_verdict"] | null
+        }
+        Insert: {
+          city_volume?: number | null
+          client_id: string
+          cpc?: number | null
+          dfs_check_url?: string | null
+          dfs_etv?: number | null
+          dfs_position?: number | null
+          dfs_previous_position?: number | null
+          dfs_type?: string | null
+          dfs_updated_at?: string | null
+          dfs_url?: string | null
+          dfs_volume?: number | null
+          difficulty?: number | null
+          gbp_below_threshold?: boolean
+          gbp_reach?: number | null
+          gsc_clicks?: number | null
+          gsc_ctr?: number | null
+          gsc_impressions?: number | null
+          gsc_page?: string | null
+          gsc_position?: number | null
+          intent?: string | null
+          is_brand?: boolean
+          keyword_norm: string
+          low_ctr?: boolean
+          national_volume?: number | null
+          other_language?: boolean
+          phrase: string
+          position?: number | null
+          reasons?: string[]
+          scan_id: string
+          score?: number | null
+          sources?: Database["public"]["Enums"]["rank_scan_source"][]
+          topic?: string | null
+          verdict?: Database["public"]["Enums"]["rank_verdict"] | null
+        }
+        Update: {
+          city_volume?: number | null
+          client_id?: string
+          cpc?: number | null
+          dfs_check_url?: string | null
+          dfs_etv?: number | null
+          dfs_position?: number | null
+          dfs_previous_position?: number | null
+          dfs_type?: string | null
+          dfs_updated_at?: string | null
+          dfs_url?: string | null
+          dfs_volume?: number | null
+          difficulty?: number | null
+          gbp_below_threshold?: boolean
+          gbp_reach?: number | null
+          gsc_clicks?: number | null
+          gsc_ctr?: number | null
+          gsc_impressions?: number | null
+          gsc_page?: string | null
+          gsc_position?: number | null
+          intent?: string | null
+          is_brand?: boolean
+          keyword_norm?: string
+          low_ctr?: boolean
+          national_volume?: number | null
+          other_language?: boolean
+          phrase?: string
+          position?: number | null
+          reasons?: string[]
+          scan_id?: string
+          score?: number | null
+          sources?: Database["public"]["Enums"]["rank_scan_source"][]
+          topic?: string | null
+          verdict?: Database["public"]["Enums"]["rank_verdict"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rank_scan_keywords_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rank_scan_keywords_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "rank_scans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rank_scans: {
+        Row: {
+          attempts: number
+          client_id: string
+          cost_usd: number
+          counts: Json
+          created_at: string
+          created_by: string | null
+          error: string | null
+          finished_at: string | null
+          heartbeat_at: string | null
+          id: string
+          params: Json
+          sources: Json
+          started_at: string | null
+          status: Database["public"]["Enums"]["rank_scan_status"]
+          step: number
+          trigger: Database["public"]["Enums"]["rank_scan_trigger"]
+        }
+        Insert: {
+          attempts?: number
+          client_id: string
+          cost_usd?: number
+          counts?: Json
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          finished_at?: string | null
+          heartbeat_at?: string | null
+          id?: string
+          params?: Json
+          sources?: Json
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["rank_scan_status"]
+          step?: number
+          trigger?: Database["public"]["Enums"]["rank_scan_trigger"]
+        }
+        Update: {
+          attempts?: number
+          client_id?: string
+          cost_usd?: number
+          counts?: Json
+          created_at?: string
+          created_by?: string | null
+          error?: string | null
+          finished_at?: string | null
+          heartbeat_at?: string | null
+          id?: string
+          params?: Json
+          sources?: Json
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["rank_scan_status"]
+          step?: number
+          trigger?: Database["public"]["Enums"]["rank_scan_trigger"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rank_scans_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rank_scans_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rank_settings: {
         Row: {
           bing_location_code: number | null
+          brand_terms: string[]
           check_weekday: number
           client_id: string
           country_location_code: number | null
@@ -5001,7 +5200,10 @@ export type Database = {
           depth: number
           device: string
           engines: Database["public"]["Enums"]["rank_engine"][]
+          gsc_account_id: string | null
+          gsc_country_only: boolean
           language_code: string
+          last_scan_id: string | null
           location_code: number | null
           location_name: string | null
           maps_cid: string | null
@@ -5010,12 +5212,15 @@ export type Database = {
           negative_terms: string[]
           next_run_at: string | null
           paused: boolean
+          scan_auto: boolean
+          scan_next_at: string | null
           topic_terms: string[]
           updated_at: string
           updated_by: string | null
         }
         Insert: {
           bing_location_code?: number | null
+          brand_terms?: string[]
           check_weekday?: number
           client_id: string
           country_location_code?: number | null
@@ -5023,7 +5228,10 @@ export type Database = {
           depth?: number
           device?: string
           engines?: Database["public"]["Enums"]["rank_engine"][]
+          gsc_account_id?: string | null
+          gsc_country_only?: boolean
           language_code?: string
+          last_scan_id?: string | null
           location_code?: number | null
           location_name?: string | null
           maps_cid?: string | null
@@ -5032,12 +5240,15 @@ export type Database = {
           negative_terms?: string[]
           next_run_at?: string | null
           paused?: boolean
+          scan_auto?: boolean
+          scan_next_at?: string | null
           topic_terms?: string[]
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
           bing_location_code?: number | null
+          brand_terms?: string[]
           check_weekday?: number
           client_id?: string
           country_location_code?: number | null
@@ -5045,7 +5256,10 @@ export type Database = {
           depth?: number
           device?: string
           engines?: Database["public"]["Enums"]["rank_engine"][]
+          gsc_account_id?: string | null
+          gsc_country_only?: boolean
           language_code?: string
+          last_scan_id?: string | null
           location_code?: number | null
           location_name?: string | null
           maps_cid?: string | null
@@ -5054,6 +5268,8 @@ export type Database = {
           negative_terms?: string[]
           next_run_at?: string | null
           paused?: boolean
+          scan_auto?: boolean
+          scan_next_at?: string | null
           topic_terms?: string[]
           updated_at?: string
           updated_by?: string | null
@@ -5064,6 +5280,20 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: true
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rank_settings_gsc_account_id_fkey"
+            columns: ["gsc_account_id"]
+            isOneToOne: false
+            referencedRelation: "social_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rank_settings_last_scan_id_fkey"
+            columns: ["last_scan_id"]
+            isOneToOne: false
+            referencedRelation: "rank_scans"
             referencedColumns: ["id"]
           },
           {
@@ -6142,6 +6372,33 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      dfs_claim_rank_scan: {
+        Args: never
+        Returns: {
+          attempts: number
+          client_id: string
+          cost_usd: number
+          counts: Json
+          created_at: string
+          created_by: string | null
+          error: string | null
+          finished_at: string | null
+          heartbeat_at: string | null
+          id: string
+          params: Json
+          sources: Json
+          started_at: string | null
+          status: Database["public"]["Enums"]["rank_scan_status"]
+          step: number
+          trigger: Database["public"]["Enums"]["rank_scan_trigger"]
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "rank_scans"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       dfs_claim_research_run: {
         Args: never
         Returns: {
@@ -6181,6 +6438,7 @@ export type Database = {
       dfs_postback_config: { Args: never; Returns: Json }
       dfs_queue_aiv_runs: { Args: { p_limit?: number }; Returns: string[] }
       dfs_queue_due_runs: { Args: { p_limit?: number }; Returns: number }
+      dfs_queue_monthly_scans: { Args: { p_limit?: number }; Returns: number }
       dfs_release_ai_search_run: {
         Args: { p_run_id: string }
         Returns: undefined
@@ -6230,6 +6488,10 @@ export type Database = {
           p_ranks: Json
           p_spam: Json
         }
+        Returns: undefined
+      }
+      finish_rank_scan: {
+        Args: { p: Json; p_scan_id: string }
         Returns: undefined
       }
       keyword_first_ranks: {
@@ -6332,6 +6594,27 @@ export type Database = {
         }
         Returns: Database["public"]["Enums"]["request_status"]
       }
+      rank_scan_lost: {
+        Args: { p_client_id: string; p_scan_id: string }
+        Returns: Json
+      }
+      rank_scan_page: {
+        Args: {
+          p_client_id: string
+          p_limit?: number
+          p_offset?: number
+          p_q?: string
+          p_scan_id: string
+          p_source?: string
+          p_untracked?: boolean
+          p_verdict?: Database["public"]["Enums"]["rank_verdict"]
+        }
+        Returns: Json
+      }
+      rank_scan_previous: {
+        Args: { p_client_id: string; p_scan_id: string }
+        Returns: string
+      }
       rankings_cron_status: { Args: never; Returns: Json }
       remove_backlink_target: { Args: { p_id: string }; Returns: undefined }
       remove_client_login: { Args: { p_login_id: string }; Returns: undefined }
@@ -6396,6 +6679,7 @@ export type Database = {
         Returns: string
       }
       request_rank_check: { Args: { p_client_id: string }; Returns: string }
+      request_rank_scan: { Args: { p_client_id: string }; Returns: string }
       request_strength_check: {
         Args: { p_client_id: string; p_force?: boolean; p_ids?: string[] }
         Returns: Json
@@ -6470,6 +6754,10 @@ export type Database = {
         Args: { p: Json; p_client_id: string }
         Returns: undefined
       }
+      save_rank_scan_settings: {
+        Args: { p: Json; p_client_id: string }
+        Returns: undefined
+      }
       seed_aiv_from_setup: { Args: { p_client_id: string }; Returns: boolean }
       send_aiv_source_to_backlinks: {
         Args: { p: Json; p_client_id: string }
@@ -6500,6 +6788,10 @@ export type Database = {
         Returns: undefined
       }
       setup_required: { Args: never; Returns: boolean }
+      store_rank_scan_rows: {
+        Args: { p_rows: Json; p_scan_id: string }
+        Returns: number
+      }
       task_counts: {
         Args: { p_mine?: boolean }
         Returns: {
@@ -6697,6 +6989,7 @@ export type Database = {
         | "ai_visibility_failed"
         | "content_failed"
         | "content_published"
+        | "rank_scan_finished"
       onboarding_link_status: "active" | "revoked" | "expired"
       onboarding_status:
         | "not_started"
@@ -6714,6 +7007,10 @@ export type Database = {
       rank_engine: "google" | "bing" | "google_maps"
       rank_run_status: "queued" | "running" | "done" | "partial" | "failed"
       rank_run_trigger: "schedule" | "manual" | "new_keywords"
+      rank_scan_source: "dataforseo" | "search_console" | "google_business"
+      rank_scan_status: "queued" | "running" | "done" | "partial" | "failed"
+      rank_scan_trigger: "manual" | "monthly" | "connected"
+      rank_verdict: "keep" | "quick_win" | "brand" | "watch" | "skip"
       request_decision: "approved" | "changes_requested"
       request_kind: "question" | "code" | "files" | "approval" | "action"
       request_status: "open" | "answered" | "done" | "cancelled"
@@ -6732,6 +7029,7 @@ export type Database = {
         | "pinterest"
         | "threads"
         | "wordpress"
+        | "googlesearchconsole"
       strength_check_status: "running" | "done" | "failed"
       submission_block:
         | "verification"
@@ -7058,6 +7356,7 @@ export const Constants = {
         "ai_visibility_failed",
         "content_failed",
         "content_published",
+        "rank_scan_finished",
       ],
       onboarding_link_status: ["active", "revoked", "expired"],
       onboarding_status: [
@@ -7078,6 +7377,10 @@ export const Constants = {
       rank_engine: ["google", "bing", "google_maps"],
       rank_run_status: ["queued", "running", "done", "partial", "failed"],
       rank_run_trigger: ["schedule", "manual", "new_keywords"],
+      rank_scan_source: ["dataforseo", "search_console", "google_business"],
+      rank_scan_status: ["queued", "running", "done", "partial", "failed"],
+      rank_scan_trigger: ["manual", "monthly", "connected"],
+      rank_verdict: ["keep", "quick_win", "brand", "watch", "skip"],
       request_decision: ["approved", "changes_requested"],
       request_kind: ["question", "code", "files", "approval", "action"],
       request_status: ["open", "answered", "done", "cancelled"],
@@ -7096,6 +7399,7 @@ export const Constants = {
         "pinterest",
         "threads",
         "wordpress",
+        "googlesearchconsole",
       ],
       strength_check_status: ["running", "done", "failed"],
       submission_block: [

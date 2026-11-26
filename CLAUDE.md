@@ -123,6 +123,15 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   WordPress application passwords go straight to Zernio and are never stored or logged. Published
   articles and Google posts become `work_items` in triggers; content tasks don't count by default.
   Plan: `docs/plans/content/`.
+- **Ranking scan (Rankings → Ranking now, `src/features/rankings/scan*.ts`):** what a client
+  already ranks for, from DataForSEO Labs (`ranked_keywords`, after a cheap `domain_rank_overview`),
+  Google Search Console and Google Business Profile search keywords (both through Zernio,
+  `src/lib/zernio/analytics.ts`). `googlesearchconsole` is a `social_platform` but a data
+  connection (`DATA_PLATFORMS`, `private.is_social_platform`): never a post target or an
+  onboarding social. Each source is stored as soon as it's read (`store_rank_scan_rows` merges
+  per-source columns) and marked done in `rank_scans.sources`, so a resumed scan never pays twice.
+  Verdicts (keep, quick_win, brand, watch, skip) are pure (`scan-verdicts.ts`); a tracked keyword
+  judged Keep is never weak and never swapped. Plan: `docs/plans/ranking-scan/`.
 - **Backlinks Manual Search (catalog + work list):** picks go only through `pick_catalog_sites` /
   `add_manual_site`; submissions change only through `update_submission` /
   `bulk_update_submissions` / `add_backlink_login`. Every approved opportunity (any tab) gets a

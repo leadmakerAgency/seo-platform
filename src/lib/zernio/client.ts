@@ -228,19 +228,32 @@ export async function createInvite(input: {
 // Accounts
 // ---------------------------------------------------------------------------
 
-/** Every account (of one profile, or of the whole team), following the cursor. */
-export async function listAccounts(profileId?: string): Promise<ZernioAccount[]> {
+async function listAccountsPaged(profileId: string | undefined, category?: string): Promise<ZernioAccount[]> {
   const all: ZernioAccount[] = []
   let cursor: string | null | undefined
   for (let page = 0; page < 50; page++) {
     const result = await request("GET", "/accounts", zAccountsList, {
-      query: { profileId, limit: 500, cursor },
+      query: { profileId, limit: 500, cursor, category },
     })
     all.push(...result.accounts)
     cursor = result.pagination?.nextCursor
     if (!cursor) break
   }
   return all
+}
+
+/**
+ * Every account (of one profile, or of the whole team), following the cursor. Analytics
+ * connections (Google Search Console) are also asked for by category, in case Zernio lists
+ * them apart; duplicates are dropped.
+ */
+export async function listAccounts(profileId?: string): Promise<ZernioAccount[]> {
+  const [main, analytics] = await Promise.all([
+    listAccountsPaged(profileId),
+    listAccountsPaged(profileId, "analytics").catch(() => [] as ZernioAccount[]),
+  ])
+  const seen = new Set(main.map((a) => a._id))
+  return [...main, ...analytics.filter((a) => !seen.has(a._id))]
 }
 
 export async function accountsHealth(profileId?: string): Promise<ZernioAccountHealth[]> {

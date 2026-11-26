@@ -44,6 +44,8 @@ export type TrackedKeyword = {
   engines: Record<Engine, EngineRank | null>
   score: number
   weak: string[]
+  /** The latest ranking scan's verdict for this keyword (Rankings → Ranking now). */
+  scan?: { verdict: "keep" | "quick_win" | "brand" | "watch" | "skip"; reasons: string[]; position: number | null; clicks: number | null } | null
 }
 
 export type CheckSummary = {

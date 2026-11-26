@@ -117,12 +117,61 @@ class Pool {
     c.trendYearly ??= r.trendYearly
     c.monthly ??= r.monthly
     c.otherLanguage ||= r.otherLanguage
-    if (source === "ranked" && r.position !== null) {
+    if ((source === "ranked" || source === "search_console" || source === "google_business") && r.position !== null) {
       c.rankedPosition = c.rankedPosition === null ? r.position : Math.min(c.rankedPosition, r.position)
       c.rankedUrl ??= r.url
     }
     this.map.set(key, c)
   }
+}
+
+/**
+ * Keywords of the client's latest ranking scan if it is under 14 days old and DataForSEO was read,
+ * as Labs-shaped items for the pool. Sources: "ranked" (DataForSEO), "search_console",
+ * "google_business".
+ */
+async function keywordsFromRecentScan(db: Db, clientId: string): Promise<{ item: Rec; source: string }[] | null> {
+  const since = new Date(Date.now() - 14 * 86_400_000).toISOString()
+  const { data: scan } = await db
+    .from("rank_scans")
+    .select("id, sources")
+    .eq("client_id", clientId)
+    .in("status", ["done", "partial"])
+    .gte("finished_at", since)
+    .order("finished_at", { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const dfs = (scan?.sources as Record<string, { state?: string }> | null)?.dataforseo?.state
+  if (!scan || (dfs !== "done" && dfs !== "no_data")) return null
+  const out: { item: Rec; source: string }[] = []
+  for (let from = 0; from < 10_000; from += 1000) {
+    const { data } = await db
+      .from("rank_scan_keywords")
+      .select("keyword_norm, sources, verdict, position, dfs_position, dfs_url, gsc_page, national_volume, cpc, difficulty, intent")
+      .eq("scan_id", scan.id)
+      .neq("verdict", "skip")
+      .range(from, from + 999)
+    for (const r of data ?? []) {
+      const item: Rec = {
+        keyword_data: {
+          keyword: r.keyword_norm,
+          keyword_info: { search_volume: r.national_volume, cpc: r.cpc === null ? null : Number(r.cpc) },
+          keyword_properties: { keyword_difficulty: r.difficulty },
+          search_intent_info: { main_intent: r.intent },
+        },
+        ranked_serp_element: {
+          serp_item: {
+            rank_group: r.dfs_position ?? (r.position === null ? null : Math.round(Number(r.position))),
+            url: r.dfs_url ?? r.gsc_page,
+          },
+        },
+      }
+      const src = r.sources.includes("dataforseo") ? "ranked" : r.sources.includes("search_console") ? "search_console" : "google_business"
+      out.push({ item, source: src })
+    }
+    if (!data || data.length < 1000) break
+  }
+  return out
 }
 
 async function heartbeat(db: Db, runId: string, step: number, counts: Rec) {
@@ -191,24 +240,32 @@ export async function runResearch(db: Db, run: ResearchRun): Promise<void> {
       })
       .eq("id", run.id)
 
-    // 1. What the site already ranks for (national).
+    // 1. What the site already ranks for. A ranking scan from the last 14 days is reused (no
+    // second payment); it also brings Search Console and Business Profile keywords.
     if (await overBudget(db)) throw new Error("This month's DataForSEO budget is used up.")
-    const ranked = await labsItems(
-      db,
-      "ranked_keywords",
-      {
-        target: ctx.domain,
-        location_code: country,
-        language_code: lang,
-        item_types: ["organic", "local_pack"],
-        limit: 1000,
-        filters: [["keyword_data.keyword_info.search_volume", ">", 0]],
-        order_by: ["keyword_data.keyword_info.search_volume,desc"],
-      },
-      call,
-    )
-    ranked.forEach((i) => pool.add(i, "ranked"))
-    counts.ranked = ranked.length
+    const reused = await keywordsFromRecentScan(db, run.client_id)
+    if (reused) {
+      for (const r of reused) pool.add(r.item, r.source)
+      counts.ranked = reused.length
+      counts.from_scan = true
+    } else {
+      const ranked = await labsItems(
+        db,
+        "ranked_keywords",
+        {
+          target: ctx.domain,
+          location_code: country,
+          language_code: lang,
+          item_types: ["organic", "local_pack"],
+          limit: 1000,
+          filters: [["keyword_data.keyword_info.search_volume", ">", 0]],
+          order_by: ["keyword_data.keyword_info.search_volume,desc"],
+        },
+        call,
+      )
+      ranked.forEach((i) => pool.add(i, "ranked"))
+      counts.ranked = ranked.length
+    }
     await heartbeat(db, run.id, 1, counts)
 
     // 2. Ideas from the client's services (with the city and "near me").
@@ -328,7 +385,8 @@ export async function runResearch(db: Db, run: ResearchRun): Promise<void> {
       const relevant =
         isTracked ||
         topicOf(c.norm, topics) !== null ||
-        (c.sources.has("ranked") && (c.rankedPosition ?? 999) <= 50) ||
+        ((c.sources.has("ranked") || c.sources.has("search_console")) && (c.rankedPosition ?? 999) <= 50) ||
+        c.sources.has("google_business") ||
         (topics.length === 0 && (c.intent === "transactional" || c.intent === "commercial"))
       if (!isTracked && (!relevant || c.otherLanguage || hasNegative(c.norm, s.negative_terms))) {
         filtered++

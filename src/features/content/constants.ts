@@ -5,7 +5,7 @@ import type { Database } from "@/lib/supabase/database.types"
 export type ContentStatus = Database["public"]["Enums"]["content_status"]
 export type TargetStatus = Database["public"]["Enums"]["content_target_status"]
 export type MediaKind = Database["public"]["Enums"]["content_media_kind"]
-export type PostPlatform = Exclude<SocialPlatform, "wordpress">
+export type PostPlatform = Exclude<SocialPlatform, "wordpress" | "googlesearchconsole">
 
 export const TABS = ["calendar", "posts", "articles", "media", "settings"] as const
 export type ContentTab = (typeof TABS)[number]

@@ -19,7 +19,7 @@ import {
   testWebhook,
   ZernioError,
 } from "@/lib/zernio/client"
-import { isSocialPlatform, isZernioPlatform, PLATFORM_META, type SocialPlatform } from "./constants"
+import { isZernioPlatform, PLATFORM_META, type SocialPlatform } from "./constants"
 import { ensureZernioProfile } from "./profile"
 import { isLocalOrigin } from "./queries"
 import { syncClient, type Db } from "./sync"
@@ -148,7 +148,8 @@ export async function createClientLink(
 ): Promise<ActionResult<{ url: string; expiresAt: string; message: string }>> {
   const g = await guard("connections.manage")
   if ("error" in g) return { ok: false, error: g.error }
-  if (!isUuid(clientId) || !isSocialPlatform(platform))
+  // Client links: social platforms and Search Console (WordPress connects with a password instead).
+  if (!isUuid(clientId) || !isZernioPlatform(platform) || platform === "wordpress")
     return { ok: false, error: "Unknown client or platform." }
   if (!hasZernioApiKey()) return { ok: false, error: NOT_SET_UP }
 

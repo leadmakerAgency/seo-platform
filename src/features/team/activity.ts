@@ -282,6 +282,14 @@ export function describeActivity(entry: ActivityLike): string {
       return `${m.accepted ? "accepted" : "declined"} ${str(m.site) || "a site"} for the backlink catalog`
     case "article.published":
       return `published the article “${str(m.title)}”`
+    case "rank.scan_requested":
+      return "started a ranking scan"
+    case "rank.scan_finished":
+      return `finished a ranking scan: ${num(m.total)} keywords, ${num(m.keep)} to keep, ${num(m.quick_win)} quick wins`
+    case "rank.scan_failed":
+      return `ran a ranking scan that didn't finish${str(m.error) ? `: ${str(m.error)}` : ""}`
+    case "rank.scan_settings_saved":
+      return "changed the ranking scan settings"
     case "content.post_scheduled":
       return `scheduled the post “${str(m.title)}”`
     case "content.post_published":

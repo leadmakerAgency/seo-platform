@@ -144,7 +144,8 @@ export async function labs<R = Record<string, unknown>>(
     | "related_keywords"
     | "competitors_domain"
     | "bulk_keyword_difficulty"
-    | "search_intent",
+    | "search_intent"
+    | "domain_rank_overview",
   body: Record<string, unknown>,
   ctx: Ctx,
 ): Promise<R | null> {

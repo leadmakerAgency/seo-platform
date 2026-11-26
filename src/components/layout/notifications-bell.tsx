@@ -47,6 +47,9 @@ function describe(n: NotificationItem) {
   if (n.kind === "ai_visibility_failed") {
     return `The AI visibility check for ${n.client?.name ?? "a client"} didn't finish`
   }
+  if (n.kind === "rank_scan_finished") {
+    return `The ranking scan for ${n.client?.name ?? "a client"} is ready: see what it ranks for and what to keep`
+  }
   if (n.kind === "content_failed") {
     return n.contentArticleId
       ? `An article for ${n.client?.name ?? "a client"} didn't publish to WordPress`
@@ -87,6 +90,7 @@ function hrefFor(n: NotificationItem) {
   if ((n.kind === "ai_visibility_ready" || n.kind === "ai_visibility_failed") && n.client) {
     return clientHref(n.client.slug, "ai-visibility")
   }
+  if (n.kind === "rank_scan_finished" && n.client) return `${clientHref(n.client.slug, "rankings")}?tab=now`
   if ((n.kind === "content_failed" || n.kind === "content_published") && n.client) {
     const base = clientHref(n.client.slug, "content")
     if (n.contentArticleId) return `${base}/articles/${n.contentArticleId}`

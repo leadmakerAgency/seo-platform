@@ -12,6 +12,9 @@ import { createSupabaseAdminClient, hasSupabaseSecretKey } from "@/lib/supabase/
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { ENGINES } from "./constants"
 import { processResearchRuns } from "./research"
+import { processRankScans } from "./scan"
+import { getScanHistory } from "./scan-queries"
+import { scanCsv, type ScanRow } from "./scan-sources"
 import { startQueuedRuns } from "./tracker"
 
 /**
@@ -287,4 +290,102 @@ export async function updateBudget(input: {
   if (error || !data?.length) return { ok: false, error: "Couldn't save. Only admins can change the budget." }
   refresh()
   return { ok: true }
+}
+
+// ---------------------------------------------------------------------------
+// Ranking now (docs/plans/ranking-scan)
+// ---------------------------------------------------------------------------
+
+/** Scan what the client already ranks for, now (DataForSEO + Search Console + Business Profile). */
+export async function requestRankScan(clientId: string): Promise<ActionResult> {
+  const denied = await guard()
+  if (denied) return { ok: false, error: denied }
+  if (!isUuid(clientId)) return { ok: false, error: "Unknown client." }
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.rpc("request_rank_scan", { p_client_id: clientId })
+  if (error) return { ok: false, error: dbError(error, "Couldn't start the scan. Try again.") }
+  if (hasSupabaseSecretKey()) {
+    after(async () => {
+      try {
+        await processRankScans(createSupabaseAdminClient() as Db, 1)
+      } catch (e) {
+        console.error("[rankings] scan could not start", e)
+      }
+    })
+  }
+  refresh()
+  return { ok: true }
+}
+
+/** Tracks keywords found by the scan (source "Already ranking for it"); respects the limit. */
+export async function trackScanKeywords(
+  clientId: string,
+  phrases: string[],
+): Promise<ActionResult<{ added: number; skipped: number }>> {
+  const denied = await guard()
+  if (denied) return { ok: false, error: denied }
+  if (!isUuid(clientId)) return { ok: false, error: "Unknown client." }
+  const list = [...new Set(phrases.map((p) => p.trim().toLowerCase().replace(/\s+/g, " ")).filter(Boolean))]
+    .filter((p) => p.length <= 80 && p.split(" ").length <= 10)
+  if (!list.length) return { ok: false, error: "Pick at least one keyword." }
+  if (list.length > 100) return { ok: false, error: "Track 100 keywords or fewer at a time." }
+  const supabase = await createSupabaseServerClient()
+  const { data, error } = await supabase.rpc("add_keywords", { p_client_id: clientId, p_phrases: list, p_source: "ranked" })
+  if (error) {
+    const limit = /keyword|limit|more than/i.test(error.message ?? "")
+    return {
+      ok: false,
+      error: limit && error.code === "P0001" ? error.message : dbError(error, "Couldn't track the keywords. Try again."),
+    }
+  }
+  const r = (data ?? {}) as { added?: unknown[]; skipped?: unknown[] }
+  startRunsSoon()
+  refresh()
+  return { ok: true, data: { added: r.added?.length ?? 0, skipped: r.skipped?.length ?? 0 } }
+}
+
+export async function saveScanSettings(
+  clientId: string,
+  input: { scanAuto?: boolean; gscAccountId?: string | null; gscCountryOnly?: boolean; brandTerms?: string[] },
+): Promise<ActionResult> {
+  const denied = await guard()
+  if (denied) return { ok: false, error: denied }
+  if (!isUuid(clientId)) return { ok: false, error: "Unknown client." }
+  const p: Record<string, unknown> = {}
+  if (input.scanAuto !== undefined) p.scan_auto = input.scanAuto
+  if (input.gscAccountId !== undefined) p.gsc_account_id = input.gscAccountId
+  if (input.gscCountryOnly !== undefined) p.gsc_country_only = input.gscCountryOnly
+  if (input.brandTerms !== undefined) p.brand_terms = input.brandTerms
+  const supabase = await createSupabaseServerClient()
+  const { error } = await supabase.rpc("save_rank_scan_settings", { p_client_id: clientId, p: p as Json })
+  if (error) return { ok: false, error: dbError(error, "Couldn't save the scan settings.") }
+  refresh()
+  return { ok: true }
+}
+
+/** Every keyword of a scan as CSV (Excel-friendly). */
+export async function exportScanCsv(clientId: string, scanId: string): Promise<ActionResult<{ csv: string }>> {
+  if (!isUuid(clientId) || !isUuid(scanId)) return { ok: false, error: "Unknown scan." }
+  const supabase = await createSupabaseServerClient()
+  const rows: ScanRow[] = []
+  for (let from = 0; from < 20_000; from += 1000) {
+    const { data, error } = await supabase
+      .from("rank_scan_keywords")
+      .select("*")
+      .eq("client_id", clientId)
+      .eq("scan_id", scanId)
+      .order("score", { ascending: false, nullsFirst: false })
+      .order("keyword_norm")
+      .range(from, from + 999)
+    if (error) return { ok: false, error: "Couldn't read the scan." }
+    rows.push(...((data ?? []) as unknown as ScanRow[]))
+    if (!data || data.length < 1000) break
+  }
+  return { ok: true, data: { csv: scanCsv(rows) } }
+}
+
+/** One keyword's positions across the client's recent scans. */
+export async function scanKeywordHistory(clientId: string, norm: string) {
+  if (!isUuid(clientId) || !norm || norm.length > 200) return []
+  return getScanHistory(clientId, norm)
 }

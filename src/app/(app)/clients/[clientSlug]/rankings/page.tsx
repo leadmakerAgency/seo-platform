@@ -17,6 +17,8 @@ import { formatCheckDay } from "@/features/rankings/components/bits"
 import { AddKeywordsDialog, CheckNowButton } from "@/features/rankings/components/keyword-dialogs"
 import { KeywordsView, type KeywordFilter } from "@/features/rankings/components/keywords-view"
 import { ResearchView, type Swap, type TrackedLite } from "@/features/rankings/components/research-view"
+import { ScanSettings } from "@/features/rankings/components/scan-settings"
+import { ScanView } from "@/features/rankings/components/scan-view"
 import { SettingsView } from "@/features/rankings/components/settings-view"
 import { ENGINES } from "@/features/rankings/constants"
 import {
@@ -25,21 +27,27 @@ import {
   getRankingsData,
   getResearchData,
 } from "@/features/rankings/queries"
+import { getScanLost, getScanOverview, getScanPage, getTrackedScanFacts, type ScanFilter } from "@/features/rankings/scan-queries"
+import type { ScanSource } from "@/features/rankings/scan-sources"
+import type { Verdict } from "@/features/rankings/scan-verdicts"
 import { suggestSwaps } from "@/features/rankings/scoring"
 import { ensureRankSettings, syncAndResolve } from "@/features/rankings/setup"
 import { getCurrentMember } from "@/lib/auth"
 import type { Db } from "@/lib/dataforseo/client"
 import { hasDataForSeo } from "@/lib/env.server"
-import { formatNumber } from "@/lib/format"
+import { countryName, formatNumber } from "@/lib/format"
 import { clientHref, findClientSection } from "@/lib/navigation"
 import { can } from "@/lib/roles"
 import { createSupabaseAdminClient, hasSupabaseSecretKey } from "@/lib/supabase/admin"
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { cn } from "@/lib/utils"
 
 export const metadata: Metadata = { title: "Rankings" }
 
 type Props = PageProps<"/clients/[clientSlug]/rankings">
-type Tab = "keywords" | "research" | "settings"
+type Tab = "keywords" | "now" | "research" | "settings"
+const VERDICT_PARAMS: Verdict[] = ["keep", "quick_win", "brand", "watch", "skip"]
+const SOURCE_PARAMS: (ScanSource | "several")[] = ["dataforseo", "search_console", "google_business", "several"]
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v)
 const FILTERS: KeywordFilter[] = ["all", "top3", "top10", "missing", "maps3", "weak"]
@@ -88,7 +96,8 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
   }
 
   const rawTab = one(search.tab)
-  const tab: Tab = rawTab === "research" ? "research" : rawTab === "settings" && canManage ? "settings" : "keywords"
+  const tab: Tab =
+    rawTab === "research" ? "research" : rawTab === "now" ? "now" : rawTab === "settings" && canManage ? "settings" : "keywords"
   const rawFilter = one(search.show) as KeywordFilter | undefined
   const filter: KeywordFilter = rawFilter && FILTERS.includes(rawFilter) ? rawFilter : "all"
   const showDismissed = tab === "research" && one(search.dismissed) === "1"
@@ -101,6 +110,40 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
   ])
 
   const base = clientHref(client.slug, "rankings")
+  const connectionsHref = clientHref(client.slug, "connections")
+
+  // Keep protection: what the latest ranking scan says about each tracked keyword. A keyword
+  // judged Keep is never weak (and so never offered as a swap).
+  const scanFacts = await getTrackedScanFacts(client.id, data.keywords.map((k) => k.phrase))
+  for (const k of data.keywords) {
+    k.scan = scanFacts.get(k.phrase) ?? null
+    if (k.scan?.verdict === "keep") k.weak = []
+  }
+
+  // Rankings → Ranking now (and its settings section).
+  const { data: site } =
+    tab === "now" || tab === "settings"
+      ? await (await createSupabaseServerClient()).from("clients").select("website").eq("id", client.id).maybeSingle()
+      : { data: null }
+  const scanOverview = tab === "now" || tab === "settings" ? await getScanOverview(client.id, site?.website ?? null) : null
+  const rawV = one(search.v)
+  const rawSrc = one(search.src) as ScanSource | "several" | undefined
+  const showLost = rawV === "lost"
+  const scanFilter: ScanFilter = {
+    verdict: VERDICT_PARAMS.includes(rawV as Verdict) ? (rawV as Verdict) : null,
+    source: rawSrc && SOURCE_PARAMS.includes(rawSrc) ? rawSrc : null,
+    q: one(search.q)?.slice(0, 80) || null,
+    untracked: one(search.untracked) === "1",
+  }
+  const scanId = scanOverview?.latest && scanOverview.latest.status !== "failed" ? scanOverview.latest.id : null
+  const [scanPage, scanLost] =
+    tab === "now" && scanId
+      ? await Promise.all([
+          showLost ? Promise.resolve(null) : getScanPage(client.id, scanId, scanFilter),
+          showLost ? getScanLost(client.id, scanId) : Promise.resolve([]),
+        ])
+      : [null, []]
+
   const settings = data.settings
   const engines = settings ? ENGINES.filter((e) => settings.engines.includes(e)) : ENGINES
   const weak = data.keywords.filter((k) => k.weak.length > 0)
@@ -118,7 +161,8 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
     intent: k.intent,
   }))
   const trackedSet = new Set(data.keywords.map((k) => k.phrase))
-  const swapMap = suggestSwaps(weak, research.candidates, trackedSet)
+  // Quick wins from the scan are worth pushing, not swapping.
+  const swapMap = suggestSwaps(weak.filter((k) => k.scan?.verdict !== "quick_win"), research.candidates, trackedSet)
   const swaps: Swap[] = weak
     .filter((k) => swapMap.has(k.id))
     .map((k) => ({ keyword: tracked.find((t) => t.id === k.id)!, candidate: swapMap.get(k.id)! }))
@@ -159,6 +203,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
     { id: "keywords", label: "Keywords", count: data.keywords.length },
+    { id: "now", label: "Ranking now" },
     { id: "research", label: "Find better keywords", count: swaps.length || undefined },
     ...(canManage ? [{ id: "settings" as const, label: "Settings" }] : []),
   ]
@@ -293,6 +338,23 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
           />
         ))}
 
+      {tab === "now" && scanOverview && (
+        <ScanView
+          clientId={client.id}
+          baseHref={base}
+          connectionsHref={connectionsHref}
+          overview={scanOverview}
+          page={scanPage}
+          lost={scanLost}
+          filter={scanFilter}
+          showLost={showLost}
+          canManage={canManage}
+          keywordsUsed={data.keywords.length}
+          keywordLimit={data.limit}
+          nowIso={now.toISOString()}
+        />
+      )}
+
       {tab === "research" && (
         <ResearchView
           clientId={client.id}
@@ -311,18 +373,28 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
 
       {tab === "settings" &&
         (settings ? (
-          <SettingsView
-            clientId={client.id}
-            settings={settings}
-            countryIso={client.country_code}
-            budget={budget}
-            nowIso={now.toISOString()}
-          />
+          <div className="flex flex-col gap-6">
+            <SettingsView
+              clientId={client.id}
+              settings={settings}
+              countryIso={client.country_code}
+              budget={budget}
+              nowIso={now.toISOString()}
+            />
+            {scanOverview && (
+              <ScanSettings
+                clientId={client.id}
+                overview={scanOverview}
+                countryName={countryName(client.country_code)}
+                connectionsHref={connectionsHref}
+              />
+            )}
+          </div>
         ) : (
           <Notice tone="warning">The settings couldn&apos;t be created. Reload the page to try again.</Notice>
         ))}
 
-      {(data.openRun || researchRunning) && <OverviewRefresher every={15_000} />}
+      {(data.openRun || researchRunning || scanOverview?.open) && <OverviewRefresher every={15_000} />}
     </>
   )
 }

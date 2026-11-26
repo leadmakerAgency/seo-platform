@@ -389,7 +389,7 @@ function Candidates({
           label="Found in"
           value={f.source}
           onChange={(source) => set({ source })}
-          options={[["any", "Any source"], ["ranked", "Already ranking"], ["ideas", "Ideas"], ["competitor", "Competitors"]]}
+          options={[["any", "Any source"], ["ranked", "Already ranking"], ["search_console", "Search Console"], ["google_business", "Business Profile"], ["ideas", "Ideas"], ["competitor", "Competitors"]]}
         />
       </div>
 

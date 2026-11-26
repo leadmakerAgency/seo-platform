@@ -1,6 +1,6 @@
 import "server-only"
 
-import type { SocialAccountStatus, SocialPlatform } from "@/features/connections/constants"
+import { isSocialPlatform, type SocialAccountStatus, type SocialPlatform } from "@/features/connections/constants"
 import { agencyMonth } from "@/lib/dates"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import type { ContentStatus, MediaKind, PostPlatform, TargetSettings, TargetStatus } from "./constants"
@@ -95,7 +95,7 @@ export async function getContentBase(clientId: string): Promise<ContentBase> {
       wpDefaultAuthor: s?.wp_default_author ?? null,
       wpDefaultTags: s?.wp_default_tags ?? [],
     },
-    accounts: all.filter((a) => a.platform !== "wordpress"),
+    accounts: all.filter((a) => isSocialPlatform(a.platform)),
     wordpress: all.filter((a) => a.platform === "wordpress"),
     progress: {
       month,

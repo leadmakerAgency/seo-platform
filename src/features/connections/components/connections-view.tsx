@@ -48,6 +48,7 @@ import {
   PLATFORM_META,
   PLATFORMS,
   STATUS_META,
+  DATA_PLATFORMS,
   WEBSITE_PLATFORMS,
   type SocialPlatform,
 } from "../constants"
@@ -63,6 +64,8 @@ type Props = {
   canManage: boolean
   zernioReady: boolean
   result: { result?: string; platform?: string; code?: string; message?: string }
+  /** The agency Google account clients add to Search Console. */
+  agencyEmail?: string | null
 }
 
 /** The client's connected accounts, one row per platform. */
@@ -74,6 +77,7 @@ export function ConnectionsView({
   canManage,
   zernioReady,
   result,
+  agencyEmail = null,
 }: Props) {
   const now = new Date(nowIso)
   const [checking, startCheck] = useTransition()
@@ -150,6 +154,30 @@ export function ConnectionsView({
         </div>
         <ul aria-label="Website" className="flex flex-col divide-y rounded-lg border bg-card">
           {WEBSITE_PLATFORMS.map((platform) => (
+            <PlatformRow
+              key={platform}
+              platform={platform}
+              accounts={byPlatform.get(platform) ?? []}
+              clientId={clientId}
+              now={now}
+              canManage={canManage}
+              zernioReady={zernioReady}
+            />
+          ))}
+        </ul>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <div className="flex flex-col gap-0.5">
+          <h2 className="text-[15px] font-semibold tracking-tight">Search data</h2>
+          <p className="max-w-[80ch] text-sm text-muted-foreground">
+            The searches the website shows up for, read-only, for Rankings → Ranking now. Sign in with
+            {agencyEmail ? <> <span className="font-medium text-foreground">{agencyEmail}</span> after the client adds it as a Restricted user in Search Console,</> : " the agency Google account the client added,"}{" "}
+            or send the client a link to connect it themselves.
+          </p>
+        </div>
+        <ul aria-label="Search data" className="flex flex-col divide-y rounded-lg border bg-card">
+          {DATA_PLATFORMS.map((platform) => (
             <PlatformRow
               key={platform}
               platform={platform}

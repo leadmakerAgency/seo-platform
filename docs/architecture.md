@@ -383,6 +383,22 @@ Plan: `docs/plans/content/` (00 research to 09 checks). Migrations `0058`–`006
 - **Work ledger:** published articles → `articles`, published Google Business Profile targets →
   `gbp_posts` (triggers), counted on the Overview.
 
+## Ranking scan (Rankings → Ranking now)
+
+Plan: `docs/plans/ranking-scan/` (00 research to 08 checks). Migrations `0061`–`0063`.
+
+- **Sources:**
+  - DataForSEO Labs `ranked_keywords` (national; after `domain_rank_overview` says the site ranks);
+  - Google Search Console through Zernio (`googlesearchconsole`, 3 months, query+page aggregated per query);
+  - Google Business Profile search keywords through Zernio (last 3 full months).
+  Each row lists its sources.
+- **Runs** (`rank_scans`, `rank_scan_keywords`):
+  - Triggers: Scan now (`request_rank_scan`, 4 a client a month), monthly (`dfs_queue_monthly_scans` in the rankings cron), and Search Console connected (a trigger on `social_accounts`, which also verifies onboarding).
+  - `processRankScans` in `features/rankings/scan.ts`.
+  - Paid gaps (city volume, intent) are cached in `keyword_metrics`.
+- **Verdicts:** Keep, Quick win, Brand, Watch, Not useful (`scan-verdicts.ts`). A tracked keyword judged Keep is never weak and never offered as a swap.
+- **Reuse:** keyword research reuses a scan under 14 days old instead of paying for `ranked_keywords` again. The Overview shows "Ranks for N keywords".
+
 ## Next widgets for the Dashboard (when their modules exist)
 
 - Columns in the client list: change in 30 days (Google top 10 is built).

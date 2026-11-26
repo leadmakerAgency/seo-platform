@@ -25,6 +25,9 @@ export const PLATFORMS: SocialPlatform[] = [
 /** Websites connected through Zernio's Blogs API. */
 export const WEBSITE_PLATFORMS: SocialPlatform[] = ["wordpress"]
 
+/** Read-only data connections (Rankings' "Ranking now" scan), shown in the Search data card. */
+export const DATA_PLATFORMS: SocialPlatform[] = ["googlesearchconsole"]
+
 export const PLATFORM_META: Record<
   SocialPlatform,
   { label: string; color: string; help: string; what: string }
@@ -83,6 +86,12 @@ export const PLATFORM_META: Record<
     help: "Uses the business's Instagram login.",
     what: "Posts.",
   },
+  googlesearchconsole: {
+    label: "Google Search Console",
+    color: "#4285F4",
+    help: "Sign in with the Google account that can see the client's Search Console: our agency account (the client adds it as a Restricted user) or the client's own.",
+    what: "The searches the website shows up for (read-only), for Rankings → Ranking now.",
+  },
   wordpress: {
     label: "WordPress",
     color: "#21759B",
@@ -103,7 +112,11 @@ export function isSocialPlatform(value: string): value is SocialPlatform {
 
 /** Anything Zernio connects for a client: the socials and the WordPress site. */
 export function isZernioPlatform(value: string): value is SocialPlatform {
-  return isSocialPlatform(value) || (WEBSITE_PLATFORMS as string[]).includes(value)
+  return (
+    isSocialPlatform(value) ||
+    (WEBSITE_PLATFORMS as string[]).includes(value) ||
+    (DATA_PLATFORMS as string[]).includes(value)
+  )
 }
 
 /** Friendly text for the error codes Zernio appends to our callback URL. */

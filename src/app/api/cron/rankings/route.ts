@@ -1,6 +1,7 @@
 import { after, NextResponse } from "next/server"
 
 import { processResearchRuns } from "@/features/rankings/research"
+import { processRankScans } from "@/features/rankings/scan"
 import { syncAndResolve } from "@/features/rankings/setup"
 import { recoverTasks, startQueuedRuns } from "@/features/rankings/tracker"
 import { accountBalance } from "@/lib/dataforseo/api"
@@ -23,11 +24,21 @@ export async function POST(request: Request) {
     : { data: false }
   if (!valid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
 
+  // Ranking scans (monthly + queued): Search Console and Business Profile work without DataForSEO.
+  const { data: scansQueued } = await db.rpc("dfs_queue_monthly_scans", { p_limit: 10 })
+  after(async () => {
+    try {
+      await processRankScans(db, 1)
+    } catch (e) {
+      console.error("[rankings] scan tick failed", e)
+    }
+  })
+
   if (!hasDataForSeo()) {
-    return NextResponse.json({ ok: true, skipped: "DATAFORSEO_LOGIN / DATAFORSEO_PASSWORD are missing" })
+    return NextResponse.json({ ok: true, scansQueued, skipped: "DATAFORSEO_LOGIN / DATAFORSEO_PASSWORD are missing" })
   }
 
-  const report: Record<string, unknown> = {}
+  const report: Record<string, unknown> = { scansQueued }
   try {
     const { data: queued } = await db.rpc("dfs_queue_due_runs", { p_limit: 25 })
     report.queued = queued

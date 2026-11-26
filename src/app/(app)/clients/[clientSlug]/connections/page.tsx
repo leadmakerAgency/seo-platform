@@ -15,7 +15,7 @@ import { IntegrationCard } from "@/features/connections/components/integration-c
 import { getConnectionsData, getIntegrationStatus } from "@/features/connections/queries"
 import { syncClient, type Db } from "@/features/connections/sync"
 import { getCurrentMember } from "@/lib/auth"
-import { hasZernioApiKey } from "@/lib/env.server"
+import { getGoogleReportingEmail, hasZernioApiKey } from "@/lib/env.server"
 import { findClientSection } from "@/lib/navigation"
 import { can } from "@/lib/roles"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
@@ -84,6 +84,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
           nowIso={new Date().toISOString()}
           canManage={canManage}
           zernioReady={zernioReady}
+          agencyEmail={getGoogleReportingEmail()}
           result={{
             result: one(search.result),
             platform: one(search.platform),

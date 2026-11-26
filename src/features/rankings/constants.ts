@@ -60,6 +60,8 @@ export const RUN_STATUS_META: Record<RunStatus, { label: string; tone: Tone }> =
 
 export const SOURCE_LABELS: Record<string, string> = {
   ranked: "Already ranking",
+  search_console: "Search Console",
+  google_business: "Business Profile",
   ideas: "Ideas",
   suggestions: "Suggestions",
   related: "Related searches",

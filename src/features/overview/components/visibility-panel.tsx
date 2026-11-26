@@ -43,9 +43,15 @@ export function VisibilityPanel({
     {
       key: "website",
       stats: visibility.website,
-      extra: visibility.bing
-        ? `Bing: ${visibility.bing.current} of ${visibility.bing.outOf} in the top 10`
-        : undefined,
+      extra:
+        [
+          visibility.bing ? `Bing: ${visibility.bing.current} of ${visibility.bing.outOf} in the top 10` : null,
+          visibility.scan && visibility.scan.total > 0
+            ? `Ranks for ${visibility.scan.total} keywords, ${visibility.scan.pageOne} on page 1, ${visibility.scan.quickWin} quick wins`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(" · ") || undefined,
     },
     { key: "map", stats: visibility.map },
     { key: "ai", stats: visibility.ai },

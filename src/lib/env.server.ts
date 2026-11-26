@@ -77,9 +77,17 @@ export function onboardingDoneUrl(appOrigin: string) {
   return `${onboardingBase(appOrigin)}/done`
 }
 
-/** The Google service account email clients add to Search Console and GA4. */
-export function getGoogleReportingEmail(): string | null {
-  return process.env.GOOGLE_REPORTING_EMAIL?.trim() || null
+/**
+ * The agency Google account clients add to Search Console (Restricted) and GA4 (Viewer). The
+ * team signs in with it to connect Search Console through Zernio. GOOGLE_AGENCY_EMAIL, else the
+ * older GOOGLE_REPORTING_EMAIL, else the agency access email (seo@leadmaker.agency).
+ */
+export function getGoogleReportingEmail(): string {
+  return (
+    process.env.GOOGLE_AGENCY_EMAIL?.trim() ||
+    process.env.GOOGLE_REPORTING_EMAIL?.trim() ||
+    getAgencyAccessEmail()
+  )
 }
 
 /** The email clients invite to their website (WordPress admin, Webflow, Shopify...). */

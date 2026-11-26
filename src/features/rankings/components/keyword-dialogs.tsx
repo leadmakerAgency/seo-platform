@@ -1,6 +1,6 @@
 "use client"
 
-import { Plus, RefreshCw } from "@/components/icons"
+import { Plus, RefreshCw, TriangleAlert } from "@/components/icons"
 import { useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
@@ -184,6 +184,7 @@ export function ReplaceKeywordDialog({
   initial = "",
   trigger,
   onDone,
+  warning = null,
 }: {
   keywordId: string
   phrase: string
@@ -192,6 +193,8 @@ export function ReplaceKeywordDialog({
   initial?: string
   trigger: ReactNode
   onDone?: () => void
+  /** Shown first when the latest ranking scan says this keyword ranks well. */
+  warning?: string | null
 }) {
   const [open, setOpen] = useState(false)
   const [value, setValue] = useState(initial)
@@ -227,6 +230,7 @@ export function ReplaceKeywordDialog({
             place.
           </DialogDescription>
         </DialogHeader>
+        {warning && <KeepWarning text={warning} />}
         <form id={`replace-${keywordId}`} onSubmit={submit} className="flex flex-col gap-4">
           <Field data-invalid={Boolean(error)}>
             <FieldLabel htmlFor={`rk-${keywordId}`}>New keyword</FieldLabel>
@@ -275,16 +279,28 @@ export function ReplaceKeywordDialog({
   )
 }
 
+function KeepWarning({ text }: { text: string }) {
+  return (
+    <div className="flex gap-2.5 rounded-lg border border-warning/30 bg-warning-soft p-3 text-sm">
+      <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
+      <p>{text}</p>
+    </div>
+  )
+}
+
 export function StopTrackingDialog({
   keywordId,
   phrase,
   trigger,
   onDone,
+  warning = null,
 }: {
   keywordId: string
   phrase: string
   trigger: ReactNode
   onDone?: () => void
+  /** Shown first when the latest ranking scan says this keyword ranks well. */
+  warning?: string | null
 }) {
   const [reason, setReason] = useState("")
   const [pending, startTransition] = useTransition()
@@ -299,6 +315,7 @@ export function StopTrackingDialog({
             picks up where it left off.
           </AlertDialogDescription>
         </AlertDialogHeader>
+        {warning && <KeepWarning text={warning} />}
         <Field>
           <FieldLabel htmlFor={`st-${keywordId}`}>Why (optional)</FieldLabel>
           <Input
