@@ -42,6 +42,8 @@ export type OnboardingOverview = {
   >
   google: Tables<"onboarding_google_access"> | null
   website: Tables<"onboarding_website"> | null
+  /** Git sites (Sveltia / Decap on GitHub) connected for this client. */
+  gitSites: { id: string; repo: string; status: string; ready: boolean; lastError: string | null }[]
   accounts: { platform: SocialPlatform; name: string; status: SocialAccountStatus }[]
   notUsing: SocialPlatform[]
   logins: StoredLogin[]
@@ -69,6 +71,7 @@ export async function getOnboardingOverview(clientId: string): Promise<Onboardin
     notUsing,
     logins,
     history,
+    git,
   ] = await Promise.all([
     supabase
       .from("onboarding_links")
@@ -115,6 +118,11 @@ export async function getOnboardingOverview(clientId: string): Promise<Onboardin
       .or("action.like.onboarding.%,action.like.vault.%")
       .order("created_at", { ascending: false })
       .limit(40),
+    supabase
+      .from("git_connections")
+      .select("id, owner, repo, status, folder, url_pattern, site_url, last_error")
+      .eq("client_id", clientId)
+      .neq("status", "removed"),
   ])
   if (client.error) throw new Error(`Could not load the client: ${client.error.message}`)
 
@@ -137,6 +145,13 @@ export async function getOnboardingOverview(clientId: string): Promise<Onboardin
     client: client.data,
     google: google.data,
     website: website.data,
+    gitSites: (git.data ?? []).map((g) => ({
+      id: g.id,
+      repo: `${g.owner}/${g.repo}`,
+      status: g.status,
+      ready: g.status === "connected" && Boolean(g.folder && g.url_pattern && g.site_url),
+      lastError: g.last_error,
+    })),
     accounts: (accounts.data ?? []).map((a) => ({
       platform: a.platform,
       name: a.location_name || a.display_name || a.username || "Connected",

@@ -37,12 +37,15 @@ export function OnboardingWizard({
   agencyEmail,
   connectReady,
   search,
+  gitReady = false,
 }: {
   data: OnboardingData
   reportingEmail: string | null
   agencyEmail: string
   connectReady: boolean
-  search: { step?: string; result?: string; platform?: string; code?: string }
+  search: { step?: string; result?: string; platform?: string; code?: string; git?: string; message?: string }
+  /** The GitHub App is set up (the website step's "Connect GitHub"). */
+  gitReady?: boolean
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -67,8 +70,15 @@ export function OnboardingWizard({
   // The result of a Zernio sign-in, then a clean address (the token stays, the rest goes).
   const shown = useRef(false)
   useEffect(() => {
-    if (shown.current || !search.result) return
+    if (shown.current || (!search.result && !search.git)) return
     shown.current = true
+    // Back from GitHub (the website step).
+    if (search.git === "connected" || search.result === "git_error") {
+      if (search.git === "connected") toast.success("Your website's repository is connected. Thank you!")
+      else toast.error("The repository wasn't connected", { description: search.message, duration: 12_000 })
+      router.replace(`${pathname}?step=website`, { scroll: false })
+      return
+    }
     const label =
       search.platform && search.platform in PLATFORM_META
         ? PLATFORM_META[search.platform as SocialPlatform].label
@@ -211,6 +221,8 @@ export function OnboardingWizard({
             <WebsiteStep
               token={data.token}
               website={data.website}
+              git={data.git}
+              gitReady={gitReady}
               agencyEmail={agencyEmail}
               readOnly={readOnly}
               onSteps={setSteps}

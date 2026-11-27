@@ -2,11 +2,17 @@
 
 import { createHash, randomBytes } from "node:crypto"
 
+import { z } from "zod"
+
 import { isSocialPlatform } from "@/features/connections/constants"
 import { ensureZernioProfile } from "@/features/connections/profile"
 import type { Db } from "@/features/connections/sync"
 import type { ActionResult } from "@/features/tasks/schemas"
-import { hasZernioApiKey, onboardingDoneUrl } from "@/lib/env.server"
+import { clientSiteUrl, discoverSite } from "@/features/git-sites/server"
+import type { Db as GitDb } from "@/lib/dataforseo/client"
+import { hasGitHubApp, hasZernioApiKey, onboardingDoneUrl } from "@/lib/env.server"
+import { forToken, gitHubProblem, installUrl } from "@/lib/github/app"
+import type { Json } from "@/lib/supabase/database.types"
 import { requestOrigin } from "@/lib/origin"
 import { createSupabaseAdminClient, hasSupabaseSecretKey } from "@/lib/supabase/admin"
 import type { Database } from "@/lib/supabase/database.types"
@@ -223,5 +229,93 @@ export async function startOnboardingConnect(
       }
     }
     return { ok: false, error: "We couldn't open the sign-in. Try again in a minute." }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Git-based CMS sites (Sveltia / Decap on GitHub): docs/plans/git-cms/08-onboarding.md
+// ---------------------------------------------------------------------------
+
+/**
+ * "Connect GitHub": a one-time state for the LeadMaker Publisher install page. Only the attempt
+ * id and a random key go to GitHub, never the onboarding token.
+ */
+export async function startOnboardingGitConnect(token: string): Promise<ActionResult<{ url: string }>> {
+  if (!TOKEN.test(token)) return BAD_LINK
+  if (!hasGitHubApp() || !hasSupabaseSecretKey()) {
+    return { ok: false, error: "Connecting GitHub isn't available right now. Send a token instead, or choose Later." }
+  }
+  const { data, error } = await createSupabasePublicClient().rpc("onboarding_start_git_connect", { p_token: token })
+  const r = (data ?? {}) as { attempt_id?: string; key?: string }
+  if (error || !r.attempt_id || !r.key) return { ok: false, error: dbError(error) }
+  return { ok: true, data: { url: installUrl(`${r.attempt_id}.${r.key}`) } }
+}
+
+const gitTokenSchema = z.object({
+  repo: z
+    .string()
+    .trim()
+    .transform((s) => s.replace(/^https?:\/\/github\.com\//i, "").replace(/\.git$/i, "").replace(/\/+$/, ""))
+    .pipe(z.string().regex(/^[A-Za-z0-9_.-]{1,100}\/[A-Za-z0-9_.-]{1,100}$/, "Enter the repository as owner/name, for example acme/website.")),
+  token: z.string().trim().min(20, "That doesn't look like a GitHub token.").max(400),
+})
+
+/**
+ * "Send a token instead": checked against GitHub first (so a wrong token never reaches the
+ * vault), then stored with onboarding_save_git_token and marked connected.
+ */
+export async function saveOnboardingGitToken(
+  token: string,
+  input: { repo: string; token: string },
+): Promise<ActionResult<{ steps: StepStatuses; repo: string; connected: boolean; message: string | null }>> {
+  if (!TOKEN.test(token)) return BAD_LINK
+  if (!hasSupabaseSecretKey()) return { ok: false, error: "Saving a token isn't available right now. Choose Later and we'll help." }
+  const parsed = gitTokenSchema.safeParse(input)
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Check the repository and token." }
+  const [owner, repo] = parsed.data.repo.split("/")
+
+  let discovery: Awaited<ReturnType<typeof discoverSite>>
+  const gh = forToken(parsed.data.token)
+  try {
+    discovery = await discoverSite(gh, owner, repo)
+  } catch (e) {
+    return { ok: false, error: gitHubProblem(e) }
+  }
+
+  const { data, error } = await createSupabasePublicClient().rpc("onboarding_save_git_token", {
+    p_token: token,
+    p_owner: owner,
+    p_repo: repo,
+    p_value: parsed.data.token,
+  })
+  const res = (data ?? {}) as StepStatuses & { connection_id?: string }
+  if (error || !res.connection_id) return { ok: false, error: dbError(error) }
+
+  const admin = createSupabaseAdminClient() as unknown as Db
+  const { data: link } = await admin.from("onboarding_links").select("client_id").eq("token", token).maybeSingle()
+  const p: Record<string, unknown> = {
+    repo_id: discovery.repoId,
+    config_path: discovery.configPath,
+    detected: discovery.detected,
+    token_expires_at: gh.tokenExpiresAt ?? "",
+    site_url: link ? await clientSiteUrl(admin as unknown as GitDb, link.client_id) : null,
+    ...discovery.defaults,
+  }
+  await admin.rpc("git_set_connection_status", {
+    p_id: res.connection_id,
+    p_status: discovery.problem ? "needs_attention" : "connected",
+    p_error: discovery.problem ?? "",
+    p: p as Json,
+  })
+  // Recompute the steps now that the connection status is known (it decides the website step).
+  const fresh = await rpcSteps("onboarding_save_website", { p_token: token, p_data: { platform: "git_cms" } })
+  return {
+    ok: true,
+    data: {
+      steps: fresh.ok ? fresh.data.steps : (res as StepStatuses),
+      repo: `${owner}/${repo}`,
+      connected: !discovery.problem,
+      message: discovery.problem,
+    },
   }
 }

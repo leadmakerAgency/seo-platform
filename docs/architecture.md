@@ -364,7 +364,7 @@ Plan: `docs/plans/ai-visibility/` (00 research to 08 checks). Migrations `0052`�
   Backlinks" (`send_aiv_source_to_backlinks`) creates a `pending_review` opportunity with source
   `ai_visibility`, shown in Standard Search Review with a "Cited by AI" badge.
 
-## Content (Zernio posts and WordPress articles)
+## Content (Zernio posts, WordPress and Git-site articles)
 
 Plan: `docs/plans/content/` (00 research to 09 checks). Migrations `0058`–`0060`.
 
@@ -382,6 +382,24 @@ Plan: `docs/plans/content/` (00 research to 09 checks). Migrations `0058`–`006
   `zernio-sync` cron and on page visits; articles have no webhooks, so scheduled ones are read back.
 - **Work ledger:** published articles → `articles`, published Google Business Profile targets →
   `gbp_posts` (triggers), counted on the Overview.
+
+## Git-based sites (Sveltia / Decap CMS on GitHub)
+
+Plan: `docs/plans/git-cms/` (00 research to 09 checks). Migrations `0064`–`0068` (`0068`, the
+`content-publish` pg_cron job, is applied together with the deploy that ships its route).
+
+- **Connecting** (Connections → Website → Git-based site; or the client's onboarding link):
+  - the GitHub App install → `/integrations/github/callback`, which checks the one-time state and the person's GitHub access to the installation, with a repo picker at `/integrations/github/pick`;
+  - or a fine-grained token, checked first and then stored in Vault.
+  - `discoverSite` reads the CMS config (`admin/config.yml`…), picks the blog collection, maps the fields and guesses the post URL pattern. Set up site lets the team fix any of it.
+- **Publishing** (`features/git-sites/publish.ts` via `content/actions.ts`):
+  - the article HTML → Markdown (turndown), YAML front matter from the field map, and the featured and inline images → the media folder, all in **one commit** (Git Data API, retried from a fresh head if `main` moved; no commit when nothing changed);
+  - edits made on the site since our last commit are a conflict, with Overwrite;
+  - unpublish = `draft: true`; delete removes the post file.
+- **Going live** (`deploy.ts`): Vercel GitHub deployments / Netlify commit statuses, then the page itself (200 + the title). Failed builds, or not live after 30 minutes, mark the article failed.
+- **Cron** (`/api/cron/content-publish`, every 5 minutes): due scheduled articles, builds in progress, daily connection health.
+- **Webhook:** `/api/webhooks/github` (app uninstalled or repo removed → needs attention).
+- **Work ledger:** the same triggers as WordPress; the URL is `coalesce(wp_url, live_url)`.
 
 ## Ranking scan (Rankings → Ranking now)
 

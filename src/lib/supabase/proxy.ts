@@ -7,7 +7,12 @@ import type { Database } from "./database.types"
 /** Routes that work without a session. Everything else requires sign-in. */
 /** "/c/<token>" is the client portal: no sign-in, the token is the key. */
 /** "/onboard/<slug>-<token>" is the client onboarding wizard, same idea. */
-const PUBLIC_PATHS = ["/login", "/setup", "/auth", "/c", "/onboard"]
+/**
+ * "/integrations/github" is where GitHub sends people after installing the app: clients from
+ * the onboarding link have no session. The route checks a one-time state and the person's own
+ * GitHub access (and, for the team, the signed-in person).
+ */
+const PUBLIC_PATHS = ["/login", "/setup", "/auth", "/c", "/onboard", "/integrations/github"]
 /** Server-to-server endpoints that verify their own signature or token. */
 const MACHINE_PATHS = ["/api/webhooks", "/api/cron"]
 /** Routes a signed-in user has no reason to see. */

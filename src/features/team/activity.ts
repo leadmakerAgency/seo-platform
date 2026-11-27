@@ -303,9 +303,15 @@ export function describeActivity(entry: ActivityLike): string {
     case "content.post_deleted":
       return `deleted the post “${str(m.title)}”`
     case "content.article_scheduled":
-      return `scheduled the article “${str(m.title)}” on WordPress`
+      return `scheduled the article “${str(m.title)}” on ${str(m.site) || "WordPress"}`
     case "content.article_published":
-      return `published the article “${str(m.title)}” on WordPress`
+      return `published the article “${str(m.title)}” on ${str(m.site) || "WordPress"}`
+    case "connection.site_connected":
+      return `connected the Git site ${str(m.repo)}${str(m.via) === "onboarding" ? " from the onboarding link" : ""}`
+    case "connection.site_removed":
+      return `disconnected the Git site ${str(m.repo)}`
+    case "connection.site_problem":
+      return `found a problem with the Git site ${str(m.repo)}${str(m.error) ? `: ${str(m.error)}` : ""}`
     case "content.article_failed":
       return `couldn't publish the article “${str(m.title)}”${str(m.error) ? `: ${str(m.error)}` : ""}`
     case "content.article_deleted":

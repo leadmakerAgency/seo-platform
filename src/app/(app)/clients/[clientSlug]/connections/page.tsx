@@ -12,10 +12,12 @@ import {
   ZernioSetupNotice,
 } from "@/features/connections/components/connections-view"
 import { IntegrationCard } from "@/features/connections/components/integration-card"
+import { GitSitesSection } from "@/features/git-sites/components/git-sites-section"
+import { getGitSites } from "@/features/git-sites/queries"
 import { getConnectionsData, getIntegrationStatus } from "@/features/connections/queries"
 import { syncClient, type Db } from "@/features/connections/sync"
 import { getCurrentMember } from "@/lib/auth"
-import { getGoogleReportingEmail, hasZernioApiKey } from "@/lib/env.server"
+import { getGoogleReportingEmail, hasGitHubApp, hasZernioApiKey } from "@/lib/env.server"
 import { findClientSection } from "@/lib/navigation"
 import { can } from "@/lib/roles"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
@@ -51,7 +53,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
   const canManage = can(member.role, "connections.manage")
   const isAdmin = can(member.role, "integrations.manage")
   const zernioReady = hasZernioApiKey()
-  const data = await getConnectionsData(client.id)
+  const [data, gitSites] = await Promise.all([getConnectionsData(client.id), getGitSites(client.id)])
 
   // Quietly refresh from Zernio after the page is sent when the mirror is old.
   const stale = data.stale
@@ -66,6 +68,17 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
     })
   }
 
+  const gitSection = (
+    <GitSitesSection
+      clientId={client.id}
+      sites={gitSites}
+      canManage={canManage}
+      appReady={hasGitHubApp()}
+      nowIso={new Date().toISOString()}
+      result={{ result: one(search.result), site: one(search.site), message: one(search.message)?.slice(0, 300) }}
+    />
+  )
+
   return (
     <>
       <PageHeader
@@ -75,7 +88,18 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
       />
 
       {!zernioReady ? (
-        <ZernioSetupNotice isAdmin={isAdmin} />
+        <>
+          <ZernioSetupNotice isAdmin={isAdmin} />
+          <section className="flex flex-col gap-3">
+            <div className="flex flex-col gap-0.5">
+              <h2 className="text-[15px] font-semibold tracking-tight">Website</h2>
+              <p className="text-sm text-muted-foreground">A Git-based site, for publishing blog articles from the Content page.</p>
+            </div>
+            <ul aria-label="Website" className="flex flex-col divide-y rounded-lg border bg-card">
+              {gitSection}
+            </ul>
+          </section>
+        </>
       ) : (
         <ConnectionsView
           clientId={client.id}
@@ -85,6 +109,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
           canManage={canManage}
           zernioReady={zernioReady}
           agencyEmail={getGoogleReportingEmail()}
+          websiteExtra={gitSection}
           result={{
             result: one(search.result),
             platform: one(search.platform),

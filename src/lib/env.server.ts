@@ -99,3 +99,46 @@ export function getAgencyAccessEmail(): string {
 export function hasAnthropicKey() {
   return Boolean(process.env.ANTHROPIC_API_KEY)
 }
+
+// ---------------------------------------------------------------------------
+// GitHub App "LeadMaker Publisher" (Git-based CMS sites, docs/plans/git-cms/05)
+// ---------------------------------------------------------------------------
+
+export type GitHubAppConfig = {
+  appId: string
+  slug: string
+  clientId: string
+  clientSecret: string
+  privateKey: string
+}
+
+/** True when the app can sign in and swap install codes (the token option works without it). */
+export function hasGitHubApp(): boolean {
+  return Boolean(
+    process.env.GITHUB_APP_ID &&
+      process.env.GITHUB_APP_SLUG &&
+      process.env.GITHUB_APP_CLIENT_ID &&
+      process.env.GITHUB_APP_CLIENT_SECRET &&
+      process.env.GITHUB_APP_PRIVATE_KEY,
+  )
+}
+
+export function getGitHubApp(): GitHubAppConfig {
+  const appId = process.env.GITHUB_APP_ID?.trim()
+  const slug = process.env.GITHUB_APP_SLUG?.trim()
+  const clientId = process.env.GITHUB_APP_CLIENT_ID?.trim()
+  const clientSecret = process.env.GITHUB_APP_CLIENT_SECRET?.trim()
+  const key = process.env.GITHUB_APP_PRIVATE_KEY
+  if (!appId || !slug || !clientId || !clientSecret || !key) {
+    throw new Error(
+      "Missing GITHUB_APP_ID, GITHUB_APP_SLUG, GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET or GITHUB_APP_PRIVATE_KEY. Add them to .env.local (and to the host as encrypted Run Time variables).",
+    )
+  }
+  // Hosts often store the PEM on one line with literal \n.
+  const privateKey = key.includes("\n") ? key.replace(/\n/g, "\n") : key
+  return { appId, slug, clientId, clientSecret, privateKey: privateKey.trim() + "\n" }
+}
+
+export function getGitHubWebhookSecret(): string | null {
+  return process.env.GITHUB_APP_WEBHOOK_SECRET || null
+}

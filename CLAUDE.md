@@ -114,7 +114,8 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   `ai_visibility.*`. Brand colours are `--series-1…8` by `aiv_brands.color_slot` (never by rank).
   Plan: `docs/plans/ai-visibility/`.
 - **Content (`src/features/content/`):** social posts and WordPress articles go out only through
-  Zernio (`src/lib/zernio/content.ts`), with an `Idempotency-Key` per post/article version
+  Zernio (`src/lib/zernio/content.ts`); articles for Git-based sites go out only through
+  `src/features/git-sites/` (below). Zernio sends use an `Idempotency-Key` per post/article version
   (`sendKey`) and one send at a time (`content_claim_send`). Team writes go only through the 0060
   RPCs; what Zernio says is stored only by the service-role `zernio_store_post_result` /
   `zernio_store_article_result` (webhooks read the post back with `getPost`; the payload is a hint).
@@ -123,6 +124,19 @@ Supabase project: `seo-platform` (ref `wervcffooayfcqikrplj`). Use the Supabase 
   WordPress application passwords go straight to Zernio and are never stored or logged. Published
   articles and Google posts become `work_items` in triggers; content tasks don't count by default.
   Plan: `docs/plans/content/`.
+- **Git-based sites (Sveltia / Decap CMS on GitHub, `src/features/git-sites/`, `src/lib/github/`):**
+  an article on a Git site is published by one commit (post Markdown + its images) through the
+  GitHub App "LeadMaker Publisher" (1-hour installation tokens limited to the repo) or a
+  fine-grained token kept only in Vault (`git_connection_secrets`, read only by the service-role
+  `git_connection_secret`; never selected, returned or logged). Connections live in
+  `git_connections`, never in `social_accounts` (the Zernio sync would mark them removed). The
+  install callback trusts only the one-time state (`git_connect_attempts`, key hash) plus the
+  person's own GitHub access to the installation (`GET /user/installations`). Repo content (CMS
+  config, posts) is untrusted: it only fills Set up site, and paths go through `safeRepoPath`.
+  Results are stored only by `git_store_article_result`; sends hold `content_claim_send`.
+  Scheduled Git articles are committed by the `content-publish` cron when due (static sites hide
+  future-dated posts until the next build), and a post counts as live only after the page check
+  (`deploy.ts`, public https sites only: `isPublicSiteUrl`). Plan: `docs/plans/git-cms/`.
 - **Ranking scan (Rankings → Ranking now, `src/features/rankings/scan*.ts`):** what a client
   already ranks for, from DataForSEO Labs (`ranked_keywords`, after a cheap `domain_rank_overview`),
   Google Search Console and Google Business Profile search keywords (both through Zernio,

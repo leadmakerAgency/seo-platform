@@ -75,6 +75,8 @@ export type OnboardingData = {
     notes: string | null
   } | null
   accounts: { platform: SocialPlatform; name: string | null; status: SocialAccountStatus }[]
+  /** The Git site connected from this link or by the team (no secrets). */
+  git: { repo: string; status: "connected" | "needs_attention"; authMethod: "github_app" | "token"; error: string | null } | null
   notUsing: SocialPlatform[]
   logins: {
     id: string
@@ -85,7 +87,7 @@ export type OnboardingData = {
   }[]
 }
 
-type Raw = Omit<OnboardingData, "token" | "expiresAt" | "notUsing" | "businessFromProfile"> & {
+type Raw = Omit<OnboardingData, "token" | "expiresAt" | "notUsing" | "businessFromProfile" | "git"> & {
   expires_at: string
   not_using: SocialPlatform[]
   business_from_profile?: boolean
@@ -99,11 +101,14 @@ type Raw = Omit<OnboardingData, "token" | "expiresAt" | "notUsing" | "businessFr
 export async function getOnboarding(link: string): Promise<OnboardingData | null> {
   const token = tokenFromLink(link)
   if (!token) return null
-  const { data, error } = await createSupabasePublicClient().rpc("onboarding_get", {
-    p_token: token,
-  })
+  const db = createSupabasePublicClient()
+  const [{ data, error }, git] = await Promise.all([
+    db.rpc("onboarding_get", { p_token: token }),
+    db.rpc("onboarding_git_status", { p_token: token }),
+  ])
   if (error || !data) return null
   const raw = data as unknown as Raw
+  const g = (git.data ?? {}) as { repo?: string; status?: string; auth_method?: string; error?: string | null }
   return {
     token,
     client: raw.client,
@@ -115,6 +120,14 @@ export async function getOnboarding(link: string): Promise<OnboardingData | null
     google: raw.google,
     website: raw.website,
     accounts: raw.accounts ?? [],
+    git: g.repo
+      ? {
+          repo: g.repo,
+          status: g.status === "connected" ? "connected" : "needs_attention",
+          authMethod: g.auth_method === "token" ? "token" : "github_app",
+          error: g.error ?? null,
+        }
+      : null,
     notUsing: raw.not_using ?? [],
     logins: raw.logins ?? [],
   }

@@ -1,0 +1,24 @@
+backend:
+  name: github
+  repo: leadmakerAgency/South-Africa-SDR
+  branch: main
+
+media_folder: content/media
+public_folder: /media
+
+collections:
+  - name: posts
+    label: Blog Posts
+    folder: content/posts
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - { label: Title,          name: title,          widget: string }
+      - { label: Slug,           name: slug,           widget: string, required: false, hint: "Leave blank to auto-generate from title" }
+      - { label: Publish Date,   name: date,           widget: datetime, format: "YYYY-MM-DD", date_format: "YYYY-MM-DD", time_format: false }
+      - { label: Draft,          name: draft,          widget: boolean, default: false, required: false }
+      - { label: Excerpt,        name: excerpt,        widget: text,    required: false }
+      - { label: Featured Image, name: featured_image, widget: image,   required: false }
+      - { label: Hero Emoji,     name: hero_emoji,     widget: string,  required: false, default: "📈" }
+      - { label: Tags,           name: tags,           widget: list,    required: false }
+      - { label: Body,           name: body,           widget: markdown }

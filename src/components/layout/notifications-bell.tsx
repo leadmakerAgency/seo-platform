@@ -52,13 +52,16 @@ function describe(n: NotificationItem) {
   }
   if (n.kind === "content_failed") {
     return n.contentArticleId
-      ? `An article for ${n.client?.name ?? "a client"} didn't publish to WordPress`
+      ? `An article for ${n.client?.name ?? "a client"} didn't publish to the website`
       : `A post for ${n.client?.name ?? "a client"} didn't publish everywhere`
   }
   if (n.kind === "content_published") {
     return n.contentArticleId
-      ? `Your article for ${n.client?.name ?? "a client"} is live on WordPress`
+      ? `Your article for ${n.client?.name ?? "a client"} is live on the website`
       : `Your scheduled post for ${n.client?.name ?? "a client"} is live`
+  }
+  if (n.kind === "site_connection_problem") {
+    return `${n.client?.name ?? "A client"}'s website connection (Git site) needs attention`
   }
   if (n.kind === "backlink_follow_up") {
     return `Backlink listings for ${n.client?.name ?? "a client"} need a follow-up today`
@@ -90,6 +93,7 @@ function hrefFor(n: NotificationItem) {
   if ((n.kind === "ai_visibility_ready" || n.kind === "ai_visibility_failed") && n.client) {
     return clientHref(n.client.slug, "ai-visibility")
   }
+  if (n.kind === "site_connection_problem" && n.client) return clientHref(n.client.slug, "connections")
   if (n.kind === "rank_scan_finished" && n.client) return `${clientHref(n.client.slug, "rankings")}?tab=now`
   if ((n.kind === "content_failed" || n.kind === "content_published") && n.client) {
     const base = clientHref(n.client.slug, "content")

@@ -53,9 +53,10 @@ import {
   type ArticleInput,
 } from "../actions"
 import { articleChecks, META_MAX, SEO_TITLE_MAX, slugify, STATUS_META, wordsOf } from "../constants"
-import type { ArticleFull, ContentEvent, ContentSettings, MediaRow } from "../queries"
+import type { ArticleFull, ContentEvent, ContentSettings, GitSiteLite, MediaRow } from "../queries"
 import { formatInZone, utcToZoned, zonedToUtc, zoneLabel } from "../time"
 import { useConfirm } from "./confirm"
+import { DeployStatus } from "./deploy-status"
 import { MediaThumb, UploadButton } from "./media-library"
 import { History } from "./post-editor"
 import { useMediaUpload } from "./use-media-upload"
@@ -74,6 +75,7 @@ export function ArticleEditor({
   keywords,
   settings,
   hasWordPress,
+  gitSites = [],
   canWrite,
   events,
 }: {
@@ -86,19 +88,38 @@ export function ArticleEditor({
   keywords: Keyword[]
   settings: ContentSettings
   hasWordPress: boolean
+  /** Connected Git sites (Sveltia / Decap): the other place articles can go. */
+  gitSites?: GitSiteLite[]
   canWrite: boolean
   events: ContentEvent[]
 }) {
   const router = useRouter()
   const confirm = useConfirm()
   const tz = settings.timezone
+  // Destination: "wordpress" or "git:<connection id>". Fixed once the article was sent anywhere.
+  const sentAnywhere = Boolean(article && (article.sentVersion !== null || article.wpArticleId || article.gitPath))
+  const initialDest = article
+    ? article.siteKind === "git" && article.gitConnectionId
+      ? `git:${article.gitConnectionId}`
+      : "wordpress"
+    : settings.siteKind === "git" && settings.gitConnectionId
+      ? `git:${settings.gitConnectionId}`
+      : !hasWordPress && gitSites[0]
+        ? `git:${gitSites[0].id}`
+        : "wordpress"
+  const [dest, setDest] = useState(initialDest)
+  const isGit = dest.startsWith("git:")
+  const gitSite = isGit ? (gitSites.find((g) => `git:${g.id}` === dest) ?? null) : null
+  const siteLabel = isGit ? (gitSite?.label ?? "the site") : "WordPress"
+  const [authorName, setAuthorName] = useState(article?.authorName ?? "")
+  const [conflict, setConflict] = useState<null | { kind: "changed" | "missing"; op: "publish" | "update" | "unpublish" }>(null)
   const [id, setId] = useState<string | null>(article?.id ?? null)
   const [title, setTitle] = useState(article?.title ?? "")
   const [slug, setSlug] = useState(article?.slug ?? "")
   const [slugTouched, setSlugTouched] = useState(Boolean(article?.slug))
   const [html, setHtml] = useState(article?.bodyHtml ?? "")
   const [excerpt, setExcerpt] = useState(article?.excerpt ?? "")
-  const [tags, setTags] = useState<string[]>(article?.tags ?? settings.wpDefaultTags)
+  const [tags, setTags] = useState<string[]>(article?.tags ?? (initialDest.startsWith("git:") ? settings.gitDefaultTags : settings.wpDefaultTags))
   const [featured, setFeatured] = useState<string | null>(article?.featuredMediaId ?? null)
   const [seoTitle, setSeoTitle] = useState(article?.seoTitle ?? "")
   const [meta, setMeta] = useState(article?.metaDescription ?? "")
@@ -115,7 +136,9 @@ export function ArticleEditor({
   const saving = useRef<Promise<string | null> | null>(null)
 
   const status = article?.status ?? "draft"
-  const onWordPress = Boolean(article?.wpArticleId)
+  const onSite = isGit ? Boolean(article?.gitPath) : Boolean(article?.wpArticleId)
+  const destReady = isGit ? Boolean(gitSite?.ready) : hasWordPress && Boolean(settings.wpBlogId)
+  const liveLink = isGit ? (article?.liveUrl ?? null) : (article?.wpUrl ?? null)
   const readOnly = !canWrite || status === "publishing"
   const images = useMemo(() => media.filter((m) => m.kind === "image"), [media])
   const featuredRow = images.find((m) => m.id === featured) ?? null
@@ -160,8 +183,11 @@ export function ArticleEditor({
       topic: topic || null,
       author: author || null,
       publishAt: date && time ? zonedToUtc(date, time, tz) : null,
+      siteKind: isGit ? "git" : "wordpress",
+      gitConnectionId: gitSite?.id ?? null,
+      authorName: authorName || null,
     }),
-    [id, title, slug, editor, html, excerpt, tags, featured, seoTitle, meta, focus, keywordId, topic, author, date, time, tz],
+    [id, title, slug, editor, html, excerpt, tags, featured, seoTitle, meta, focus, keywordId, topic, author, date, time, tz, isGit, gitSite, authorName],
   )
 
   const save = useCallback(async (): Promise<string | null> => {
@@ -244,26 +270,56 @@ export function ArticleEditor({
         if (!saved) return
         const r = await publishArticle(saved, mode)
         if (!r.ok) {
+          const c = r.fieldErrors?.conflict
+          if (c === "changed" || c === "missing") setConflict({ kind: c, op: "publish" })
           toast.error(r.error, { duration: 10_000 })
           router.refresh()
           return
         }
-        toast.success(r.data.status === "scheduled" ? "Scheduled on WordPress" : "Published on WordPress", {
-          action: { label: "View", onClick: () => router.push(`${listHref}/articles/${saved}`) },
-        })
+        toast.success(
+          r.data.status === "scheduled"
+            ? `Scheduled on ${siteLabel}`
+            : isGit
+              ? `Committed to ${gitSite?.repo ?? "the repo"}. It's usually live in a minute or two.`
+              : "Published on WordPress",
+          { action: { label: "View", onClick: () => router.push(`${listHref}/articles/${saved}`) } },
+        )
         // Back to the Articles list, where the article now shows with its status and link.
         dirty.current = false
         router.push(`${listHref}?tab=articles`)
       },
       {
-        title: mode === "now" ? "Publish on WordPress now?" : `Schedule for ${formatInZone(publishAt!, tz)}?`,
-        description:
-          mode === "now"
+        title: mode === "now" ? `Publish on ${siteLabel} now?` : `Schedule for ${formatInZone(publishAt!, tz)}?`,
+        description: isGit
+          ? mode === "now"
+            ? `It's committed to ${gitSite?.repo ?? "the repo"} with its images, and the site rebuilds. It's usually live within a couple of minutes.`
+            : "It's committed at that time (within 5 minutes), then the site rebuilds. You can still edit or unschedule it here."
+          : mode === "now"
             ? "The article goes live on the client's site right away."
             : "WordPress publishes it at that time by itself. You can still edit or unschedule it here.",
         action: mode === "now" ? "Publish now" : "Schedule",
       },
     )
+  }
+
+  /** After a conflict: send again, replacing what's on the site. */
+  const overwrite = () => {
+    const c = conflict
+    if (!c || !article) return
+    void act(async () => {
+      if (!(await save())) return
+      const r =
+        c.op === "update"
+          ? await updateArticleOnWordPress(article.id, { force: true })
+          : c.op === "unpublish"
+            ? await unpublishArticle(article.id, { force: true })
+            : await publishArticle(article.id, "now", { force: true })
+      if (r.ok) {
+        setConflict(null)
+        toast.success(c.op === "unpublish" ? "Unpublished on the site" : "Sent to the site")
+      } else toast.error(r.error)
+      router.refresh()
+    })
   }
 
   return (
@@ -325,7 +381,44 @@ export function ArticleEditor({
       {/* Side panel */}
       <aside className="flex flex-col gap-4 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto lg:pr-1">
         <Panel title="Publish">
-          {!hasWordPress ? (
+          {(hasWordPress ? 1 : 0) + gitSites.length > 1 && (
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs">Publish to</Label>
+              <Select value={dest} onValueChange={(v) => field(setDest)(v)} disabled={readOnly || sentAnywhere}>
+                <SelectTrigger className="h-8 w-full" aria-label="Publish to">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {hasWordPress && <SelectItem value="wordpress">WordPress{settings.wpBlogName ? ` · ${settings.wpBlogName}` : ""}</SelectItem>}
+                  {gitSites.map((g) => (
+                    <SelectItem key={g.id} value={`git:${g.id}`}>
+                      {g.label} (Git)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {sentAnywhere && <p className="text-xs text-muted-foreground">Fixed after the first send.</p>}
+            </div>
+          )}
+          {isGit ? (
+            !gitSite ? (
+              <p className="text-sm text-muted-foreground">
+                This article&apos;s Git site was disconnected.{" "}
+                <Link className="underline" href={connectionsHref}>
+                  Check Connections
+                </Link>
+                .
+              </p>
+            ) : !gitSite.ready ? (
+              <p className="text-sm text-muted-foreground">
+                {gitSite.status === "needs_attention" ? `${gitSite.repo} needs attention` : `Finish Set up site for ${gitSite.repo}`} in{" "}
+                <Link className="underline" href={connectionsHref}>
+                  Connections
+                </Link>{" "}
+                to publish.
+              </p>
+            ) : null
+          ) : !hasWordPress ? (
             <p className="text-sm text-muted-foreground">
               No WordPress site is connected.{" "}
               <Link className="underline" href={connectionsHref}>
@@ -342,11 +435,30 @@ export function ArticleEditor({
               first.
             </p>
           ) : null}
-          {article?.wpUrl && (
-            <a href={article.wpUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-brand underline-offset-2 hover:underline">
+          {isGit && article && <DeployStatus article={article} />}
+          {liveLink && (!isGit || article?.gitDeployState === "live" || status === "published") && (
+            <a href={liveLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-sm text-brand underline-offset-2 hover:underline">
               <ExternalLink className="size-3.5" />
               View on the site
             </a>
+          )}
+          {conflict && (
+            <div className="flex flex-col gap-2 rounded-md border border-warning/40 bg-warning-soft p-3 text-sm">
+              <p className="flex items-start gap-2">
+                <CircleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
+                {conflict.kind === "changed"
+                  ? "The post was changed on the site (for example in the CMS) since it was published. Overwrite it with this version?"
+                  : "The post was deleted on the site. Publish it again?"}
+              </p>
+              <div className="flex gap-2">
+                <Button size="sm" disabled={pending} onClick={overwrite}>
+                  {conflict.kind === "changed" ? "Overwrite" : "Publish again"}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setConflict(null)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
           )}
           {status !== "published" && (
             <div className="flex flex-col gap-2">
@@ -367,26 +479,41 @@ export function ArticleEditor({
               <p className="text-xs text-muted-foreground">{zoneLabel(tz)}</p>
             </div>
           )}
-          {canWrite && hasWordPress && settings.wpBlogId && (
+          {canWrite && destReady && (
             <div className="flex flex-wrap gap-2">
               {status === "published" ? (
                 <>
                   <Button size="sm" disabled={pending || !changedSinceSent} onClick={() => act(async () => {
                     if (!(await save())) return
                     const r = await updateArticleOnWordPress(article!.id)
-                    if (r.ok) toast.success("Updated on WordPress")
-                    else toast.error(r.error)
+                    if (r.ok) toast.success(isGit ? `Update committed. ${siteLabel} rebuilds in a minute or two.` : "Updated on WordPress")
+                    else {
+                      const c = r.fieldErrors?.conflict
+                      if (c === "changed" || c === "missing") setConflict({ kind: c, op: "update" })
+                      toast.error(r.error)
+                    }
                     router.refresh()
                   })}>
                     <Send />
-                    Update on WordPress
+                    Update on {siteLabel}
                   </Button>
                   <Button size="sm" variant="ghost" disabled={pending} onClick={() => act(async () => {
                     const r = await unpublishArticle(article!.id)
-                    if (r.ok) toast.success("Moved back to a WordPress draft")
-                    else toast.error(r.error)
+                    if (r.ok) toast.success(isGit ? "Marked as a draft on the site. It comes off after the next build." : "Moved back to a WordPress draft")
+                    else {
+                      const c = r.fieldErrors?.conflict
+                      if (c === "changed" || c === "missing") setConflict({ kind: c, op: "unpublish" })
+                      toast.error(r.error)
+                    }
                     router.refresh()
-                  }, { title: "Unpublish this article?", description: "It goes back to a draft on WordPress and comes off the site. You can publish it again.", action: "Unpublish", danger: true })}>
+                  }, {
+                    title: "Unpublish this article?",
+                    description: isGit
+                      ? "The post file stays in the repo with draft: true, so the site hides it at its next build. You can publish it again."
+                      : "It goes back to a draft on WordPress and comes off the site. You can publish it again.",
+                    action: "Unpublish",
+                    danger: true,
+                  })}>
                     <Undo2 />
                     Unpublish
                   </Button>
@@ -404,7 +531,7 @@ export function ArticleEditor({
                   {status === "scheduled" && (
                     <Button size="sm" variant="ghost" disabled={pending} onClick={() => act(async () => {
                       const r = await unpublishArticle(article!.id)
-                      if (r.ok) toast.success("Unscheduled. It's a WordPress draft now.")
+                      if (r.ok) toast.success(isGit ? "Unscheduled. It's a draft again." : "Unscheduled. It's a WordPress draft now.")
                       else toast.error(r.error)
                       router.refresh()
                     })}>
@@ -416,19 +543,30 @@ export function ArticleEditor({
             </div>
           )}
           {status === "scheduled" && article?.publishAt && (
-            <p className="text-xs text-muted-foreground">WordPress publishes it on {formatInZone(article.publishAt, tz, { year: "numeric" })}.</p>
+            <p className="text-xs text-muted-foreground">
+              {isGit
+                ? `Committed on ${formatInZone(article.publishAt, tz, { year: "numeric" })} (within 5 minutes); the site goes live about a minute later.`
+                : `WordPress publishes it on ${formatInZone(article.publishAt, tz, { year: "numeric" })}.`}
+            </p>
           )}
-          {canWrite && (onWordPress || id) && (
+          {canWrite && (onSite || id) && (
             <div className="flex flex-wrap gap-2 border-t pt-3">
-              {onWordPress ? (
+              {onSite ? (
                 <Button size="sm" variant="ghost" className="text-danger hover:text-danger" disabled={pending} onClick={() => act(async () => {
                   const r = await deleteArticleFromWordPress(article!.id)
-                  if (r.ok) toast.success("Deleted from WordPress")
+                  if (r.ok) toast.success(`Deleted from ${siteLabel}`)
                   else toast.error(r.error)
                   router.refresh()
-                }, { title: "Delete it from WordPress?", description: "WordPress deletes it for good (not to the trash). It stays here as a draft.", action: "Delete from WordPress", danger: true })}>
+                }, {
+                  title: `Delete it from ${siteLabel}?`,
+                  description: isGit
+                    ? "The post file is removed from the repo (its images stay), and the site drops it at the next build. Git keeps the history. It stays here as a draft."
+                    : "WordPress deletes it for good (not to the trash). It stays here as a draft.",
+                  action: `Delete from ${siteLabel}`,
+                  danger: true,
+                })}>
                   <Trash2 />
-                  Delete from WordPress
+                  Delete from {siteLabel}
                 </Button>
               ) : (
                 <Button size="sm" variant="ghost" className="text-danger hover:text-danger" disabled={pending} onClick={() => act(async () => {
@@ -449,7 +587,7 @@ export function ArticleEditor({
           )}
         </Panel>
 
-        {status === "published" && (
+        {status === "published" && !isGit && (
           <SeoPasteStep articleId={article!.id} seoTitle={seoTitle} meta={meta} done={Boolean(article!.seoPastedAt)} wpEdit={wpEdit} canWrite={canWrite} />
         )}
 
@@ -457,11 +595,23 @@ export function ArticleEditor({
           <SeoField id="seo-title" label="SEO title" value={seoTitle} max={SEO_TITLE_MAX} hardMax={70} disabled={readOnly} onChange={field(setSeoTitle)} placeholder={title} />
           <SeoField id="meta" label="Meta description" value={meta} max={META_MAX} hardMax={170} disabled={readOnly} onChange={field(setMeta)} multiline />
           <div className="rounded-md border bg-background p-3">
-            <p className="truncate text-xs text-muted-foreground">{(settings.wpSiteUrl ?? "https://example.com").replace(/\/+$/, "")}/{slug || "…"}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {isGit && gitSite?.siteUrl && gitSite.urlPattern
+                ? `${gitSite.siteUrl}${gitSite.urlPattern.replace("{slug}", slug || "…")}`
+                : `${(settings.wpSiteUrl ?? "https://example.com").replace(/\/+$/, "")}/${slug || "…"}`}
+            </p>
             <p className="line-clamp-1 text-[15px] text-[#1a0dab] dark:text-[#8ab4f8]">{seoTitle || title || "Article title"}</p>
             <p className="line-clamp-2 text-xs text-muted-foreground">{meta || excerpt || "The meta description shows here."}</p>
           </div>
-          <p className="text-xs text-muted-foreground">Zernio can&apos;t set SEO plugin fields; after publishing you paste these into WordPress.</p>
+          <p className="text-xs text-muted-foreground">
+            {isGit
+              ? gitSite?.excerptIsMeta
+                ? "Written into the post. This site uses the excerpt as its meta description, so the meta description is sent as the excerpt."
+                : gitSite && !gitSite.hasSeoTitleField
+                  ? "The meta description is written into the post. This site has no SEO title field, so the title is used."
+                  : "Written into the post's front matter."
+              : "Zernio can't set SEO plugin fields; after publishing you paste these into WordPress."}
+          </p>
         </Panel>
 
         <Panel title="Details">
@@ -523,10 +673,19 @@ export function ArticleEditor({
               <Label htmlFor="topic">Topic</Label>
               <Input id="topic" value={topic} maxLength={120} disabled={readOnly} onChange={(e) => field(setTopic)(e.target.value)} />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="author">Author no.</Label>
-              <Input id="author" inputMode="numeric" value={author} disabled={readOnly} placeholder={settings.wpDefaultAuthor ?? "Default"} onChange={(e) => field(setAuthor)(e.target.value.replace(/\D/g, "").slice(0, 12))} />
-            </div>
+            {isGit ? (
+              gitSite?.hasAuthorField && (
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="author">Author</Label>
+                  <Input id="author" value={authorName} maxLength={100} disabled={readOnly} placeholder={settings.gitDefaultAuthor ?? "Default"} onChange={(e) => field(setAuthorName)(e.target.value)} />
+                </div>
+              )
+            ) : (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="author">Author no.</Label>
+                <Input id="author" inputMode="numeric" value={author} disabled={readOnly} placeholder={settings.wpDefaultAuthor ?? "Default"} onChange={(e) => field(setAuthor)(e.target.value.replace(/\D/g, "").slice(0, 12))} />
+              </div>
+            )}
           </div>
         </Panel>
 
@@ -535,7 +694,7 @@ export function ArticleEditor({
             <div className="flex flex-col gap-2">
               <MediaThumb m={featuredRow} className="aspect-video" />
               {!featuredRow.altText && <p className="text-xs text-warning">No alt text. Add it in the Media tab.</p>}
-              {featuredRow.bytes > 10 * 1024 * 1024 && <p className="text-xs text-danger">Over 10 MB: WordPress won&apos;t take it as a featured image.</p>}
+              {featuredRow.bytes > 10 * 1024 * 1024 && <p className="text-xs text-danger">Over 10 MB: {isGit ? "too large to commit to the site" : "WordPress won't take it as a featured image"}.</p>}
               {!readOnly && (
                 <Button size="sm" variant="ghost" className="w-fit" onClick={() => field(setFeatured)(null)}>
                   <X />
@@ -544,7 +703,11 @@ export function ArticleEditor({
               )}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">WordPress copies it into its media library when the article is published.</p>
+            <p className="text-sm text-muted-foreground">
+              {isGit
+                ? "Committed to the site's image folder together with the article."
+                : "WordPress copies it into its media library when the article is published."}
+            </p>
           )}
           {!readOnly && (
             <div className="flex flex-wrap gap-2">

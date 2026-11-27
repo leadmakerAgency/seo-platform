@@ -579,6 +579,7 @@ function Website({ overview }: { overview: OnboardingOverview }) {
     invited_us: "Says they invited us",
     login_in_vault: "Shared a login instead",
     later: "Later / needs help",
+    connected: "Connected their site through GitHub",
   }[w?.access_status ?? "todo"]
 
   return (
@@ -610,6 +611,20 @@ function Website({ overview }: { overview: OnboardingOverview }) {
               : ""}
           </Item>
           <Item label="Access">{access}</Item>
+          {overview.gitSites.length > 0 && (
+            <Item label="Git site" className="sm:col-span-2">
+              {overview.gitSites.map((g) => (
+                <span key={g.id} className="block">
+                  {g.repo} ·{" "}
+                  {g.ready
+                    ? "ready to publish"
+                    : g.status === "needs_attention"
+                      ? `needs attention${g.lastError ? ` (${g.lastError})` : ""}`
+                      : "connected; finish Set up site in Connections"}
+                </span>
+              ))}
+            </Item>
+          )}
           {w.notes && (
             <Item label="Notes" className="sm:col-span-2">
               {w.notes}

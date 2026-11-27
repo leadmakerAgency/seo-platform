@@ -119,6 +119,7 @@ export const websitePatchSchema = z
         "wix",
         "squarespace",
         "godaddy",
+        "git_cms",
         "other",
         "none",
         "unknown",

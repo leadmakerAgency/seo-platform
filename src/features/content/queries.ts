@@ -3,6 +3,7 @@ import "server-only"
 import { isSocialPlatform, type SocialAccountStatus, type SocialPlatform } from "@/features/connections/constants"
 import { agencyMonth } from "@/lib/dates"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { excerptIsMeta, readFieldMap } from "@/features/git-sites/field-map"
 import type { ContentStatus, MediaKind, PostPlatform, TargetSettings, TargetStatus } from "./constants"
 
 /** Everything the Content page reads (RLS: the team on clients they can see). */
@@ -19,6 +20,28 @@ export type ContentSettings = {
   wpSiteUrl: string | null
   wpDefaultAuthor: string | null
   wpDefaultTags: string[]
+  /** Where new articles go by default. */
+  siteKind: "wordpress" | "git"
+  gitConnectionId: string | null
+  gitDefaultAuthor: string | null
+  gitDefaultTags: string[]
+}
+
+/** A connected Git site (Sveltia / Decap), as the Content page needs it. */
+export type GitSiteLite = {
+  id: string
+  repo: string
+  /** "southafricasdr.com", or the repo when there's no site address yet. */
+  label: string
+  siteUrl: string | null
+  urlPattern: string | null
+  status: "connected" | "needs_attention"
+  /** Setup is complete and the connection works. */
+  ready: boolean
+  hasAuthorField: boolean
+  hasSeoTitleField: boolean
+  /** The site uses the excerpt as its meta description. */
+  excerptIsMeta: boolean
 }
 
 export type ContentAccount = {
@@ -37,6 +60,7 @@ export type ContentBase = {
   settings: ContentSettings
   accounts: ContentAccount[]
   wordpress: ContentAccount[]
+  gitSites: GitSiteLite[]
   progress: {
     month: string
     articles: number
@@ -52,7 +76,7 @@ export type ContentBase = {
 export async function getContentBase(clientId: string): Promise<ContentBase> {
   const db = await createSupabaseServerClient()
   const month = agencyMonth()
-  const [settings, accounts, client, work, scheduledPosts, scheduledArticles, failedPosts, failedArticles] =
+  const [settings, accounts, client, work, scheduledPosts, scheduledArticles, failedPosts, failedArticles, git] =
     await Promise.all([
       db.from("content_settings").select("*").eq("client_id", clientId).maybeSingle(),
       db
@@ -67,6 +91,12 @@ export async function getContentBase(clientId: string): Promise<ContentBase> {
       db.from("content_articles").select("id", { count: "exact", head: true }).eq("client_id", clientId).eq("status", "scheduled"),
       db.from("content_posts").select("id", { count: "exact", head: true }).eq("client_id", clientId).in("status", ["failed", "partial"]),
       db.from("content_articles").select("id", { count: "exact", head: true }).eq("client_id", clientId).eq("status", "failed"),
+      db
+        .from("git_connections")
+        .select("id, owner, repo, status, folder, url_pattern, site_url, field_map")
+        .eq("client_id", clientId)
+        .neq("status", "removed")
+        .order("created_at", { ascending: true }),
     ])
   if (accounts.error) throw new Error(`Could not load the client's accounts: ${accounts.error.message}`)
 
@@ -94,9 +124,28 @@ export async function getContentBase(clientId: string): Promise<ContentBase> {
       wpSiteUrl: s?.wp_site_url ?? null,
       wpDefaultAuthor: s?.wp_default_author ?? null,
       wpDefaultTags: s?.wp_default_tags ?? [],
+      siteKind: s?.site_kind ?? "wordpress",
+      gitConnectionId: s?.git_connection_id ?? null,
+      gitDefaultAuthor: s?.git_default_author ?? null,
+      gitDefaultTags: s?.git_default_tags ?? [],
     },
     accounts: all.filter((a) => isSocialPlatform(a.platform)),
     wordpress: all.filter((a) => a.platform === "wordpress"),
+    gitSites: (git.data ?? []).map((g) => {
+      const map = readFieldMap(g.field_map)
+      return {
+        id: g.id,
+        repo: `${g.owner}/${g.repo}`,
+        label: g.site_url ? g.site_url.replace(/^https?:\/\//, "") : `${g.owner}/${g.repo}`,
+        siteUrl: g.site_url,
+        urlPattern: g.url_pattern,
+        status: g.status === "connected" ? "connected" : "needs_attention",
+        ready: g.status === "connected" && Boolean(g.folder && g.url_pattern && g.site_url),
+        hasAuthorField: Boolean(map.author),
+        hasSeoTitleField: Boolean(map.seoTitle),
+        excerptIsMeta: excerptIsMeta(map),
+      }
+    }),
     progress: {
       month,
       articles: sum("articles"),
@@ -292,6 +341,17 @@ export type ArticleRow = {
   wpArticleId: string | null
   wpUrl: string | null
   wpStatus: string | null
+  siteKind: "wordpress" | "git"
+  gitConnectionId: string | null
+  /** owner/repo of the Git site (links to commits). */
+  gitRepo: string | null
+  gitPath: string | null
+  gitCommitSha: string | null
+  gitDeployState: "none" | "waiting" | "building" | "live" | "failed"
+  gitDeployError: string | null
+  gitDeployUrl: string | null
+  liveUrl: string | null
+  authorName: string | null
   version: number
   sentVersion: number | null
   sending: boolean
@@ -307,6 +367,8 @@ export type ArticleFull = ArticleRow & { bodyHtml: string }
 
 const ARTICLE_SELECT = `id, title, slug, excerpt, tags, featured_media_id, seo_title, meta_description, focus_keyword,
   keyword_id, topic, author, word_count, status, publish_at, wp_article_id, wp_url, wp_status, version, sent_version,
+  site_kind, git_connection_id, git_path, git_commit_sha, git_deploy_state, git_deploy_error, git_deploy_url, live_url, author_name,
+  git:git_connections!content_articles_git_connection_id_fkey(owner, repo),
   sending_at, seo_pasted_at, last_error, published_at, created_at, updated_at,
   creator:team_members!content_articles_created_by_fkey(full_name, email)`
 
@@ -329,6 +391,16 @@ type ArticleDb = {
   wp_article_id: string | null
   wp_url: string | null
   wp_status: string | null
+  site_kind: "wordpress" | "git"
+  git_connection_id: string | null
+  git_path: string | null
+  git_commit_sha: string | null
+  git_deploy_state: "none" | "waiting" | "building" | "live" | "failed"
+  git_deploy_error: string | null
+  git_deploy_url: string | null
+  live_url: string | null
+  author_name: string | null
+  git: { owner: string; repo: string } | null
   version: number
   sent_version: number | null
   sending_at: string | null
@@ -361,6 +433,16 @@ function articleOf(a: ArticleDb): ArticleRow {
     wpArticleId: a.wp_article_id,
     wpUrl: a.wp_url,
     wpStatus: a.wp_status,
+    siteKind: a.site_kind,
+    gitConnectionId: a.git_connection_id,
+    gitRepo: a.git ? `${a.git.owner}/${a.git.repo}` : null,
+    gitPath: a.git_path,
+    gitCommitSha: a.git_commit_sha,
+    gitDeployState: a.git_deploy_state,
+    gitDeployError: a.git_deploy_error,
+    gitDeployUrl: a.git_deploy_url,
+    liveUrl: a.live_url,
+    authorName: a.author_name,
     version: a.version,
     sentVersion: a.sent_version,
     sending: Boolean(a.sending_at && Date.now() - Date.parse(a.sending_at) < 3 * 60 * 1000),

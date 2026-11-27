@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button"
 import { formatNumber } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { POST_FILTER_LABEL, POST_FILTERS, STATUS_META, TARGET_META, type PostFilter } from "../constants"
-import type { ArticleRow, ContentBase, PostRow } from "../queries"
+import type { ArticleRow, ContentBase, GitSiteLite, PostRow } from "../queries"
 import { formatInZone, utcToZoned } from "../time"
+import { DeployStatus } from "./deploy-status"
 
 /** Builds Content page links that keep the current tab and filters. */
 export type Href = (patch: Record<string, string | null>) => string
@@ -376,6 +377,7 @@ export function ArticlesList({
   editorHref,
   canWrite,
   hasWordPress,
+  gitSites = [],
   connectionsHref,
 }: {
   articles: ArticleRow[]
@@ -383,17 +385,22 @@ export function ArticlesList({
   editorHref: (id: string) => string
   canWrite: boolean
   hasWordPress: boolean
+  gitSites?: GitSiteLite[]
   connectionsHref: string
 }) {
+  const sites = [...(hasWordPress ? ["WordPress"] : []), ...gitSites.map((g) => g.label)]
+  const several = sites.length > 1
+  const labelOf = (a: ArticleRow) =>
+    a.siteKind === "git" ? (gitSites.find((g) => g.id === a.gitConnectionId)?.label ?? a.gitRepo ?? "Git site") : "WordPress"
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
-          {hasWordPress ? (
-            "Articles go to the client's WordPress site."
+          {sites.length ? (
+            `Articles go to ${sites.length === 1 ? (hasWordPress ? "the client's WordPress site" : sites[0]) : sites.join(" or ")}.`
           ) : (
             <>
-              No WordPress site yet. Articles can be written now and published once the site is{" "}
+              No website connected yet. Articles can be written now and published once the site is{" "}
               <Link className="underline" href={connectionsHref}>
                 connected
               </Link>
@@ -413,7 +420,7 @@ export function ArticlesList({
       {articles.length === 0 ? (
         <div className="rounded-lg border border-dashed bg-card px-6 py-12 text-center">
           <p className="text-sm font-medium">No articles yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">Write blog articles for the client&apos;s keywords and publish or schedule them on WordPress.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Write blog articles for the client&apos;s keywords and publish or schedule them on their website.</p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border bg-card">
@@ -441,16 +448,22 @@ export function ArticlesList({
                       <Link href={editorHref(a.id)} className="block truncate font-medium hover:underline">
                         {a.title || "Untitled article"}
                       </Link>
+                      {several && <span className="block truncate text-xs text-muted-foreground">{labelOf(a)}</span>}
                       {a.lastError && <span className="block truncate text-xs text-danger">{a.lastError}</span>}
                     </td>
                     <td className="max-w-[180px] truncate px-3 py-2.5 text-muted-foreground">{a.focusKeyword ?? "–"}</td>
                     <td className="px-3 py-2.5 text-right tabular-nums">{formatNumber(a.wordCount)}</td>
                     <td className="px-3 py-2.5">
-                      <StatusTag tone={meta.tone}>{meta.label}</StatusTag>
+                      <span className="flex flex-wrap items-center gap-1.5">
+                        <StatusTag tone={meta.tone}>{meta.label}</StatusTag>
+                        {a.siteKind === "git" && a.gitDeployState !== "live" && <DeployStatus article={a} compact />}
+                      </span>
                     </td>
                     <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground tabular-nums">{when ? formatInZone(when, tz) : "–"}</td>
                     <td className="px-3 py-2.5">
-                      {a.status === "published" ? (
+                      {a.status === "published" && a.siteKind === "git" ? (
+                        <StatusTag tone="success">In the post</StatusTag>
+                      ) : a.status === "published" ? (
                         a.seoPastedAt ? (
                           <StatusTag tone="success">Pasted</StatusTag>
                         ) : (
@@ -461,8 +474,8 @@ export function ArticlesList({
                       )}
                     </td>
                     <td className="px-3 py-2.5">
-                      {a.wpUrl && (
-                        <a href={a.wpUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground" aria-label="Open on the site">
+                      {(a.siteKind === "git" ? a.status === "published" && a.liveUrl : a.wpUrl) && (
+                        <a href={(a.siteKind === "git" ? a.liveUrl : a.wpUrl) ?? undefined} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground" aria-label="Open on the site">
                           <ExternalLink className="size-4" />
                         </a>
                       )}

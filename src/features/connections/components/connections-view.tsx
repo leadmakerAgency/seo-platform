@@ -14,7 +14,7 @@ import {
 } from "@/components/icons"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useEffect, useRef, useState, useTransition } from "react"
+import { useEffect, useRef, useState, useTransition, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { PlatformMark } from "@/components/brand/platform-icons"
@@ -66,6 +66,8 @@ type Props = {
   result: { result?: string; platform?: string; code?: string; message?: string }
   /** The agency Google account clients add to Search Console. */
   agencyEmail?: string | null
+  /** Extra rows in the Website list (the Git-based site card). */
+  websiteExtra?: ReactNode
 }
 
 /** The client's connected accounts, one row per platform. */
@@ -78,6 +80,7 @@ export function ConnectionsView({
   zernioReady,
   result,
   agencyEmail = null,
+  websiteExtra = null,
 }: Props) {
   const now = new Date(nowIso)
   const [checking, startCheck] = useTransition()
@@ -149,7 +152,7 @@ export function ConnectionsView({
         <div className="flex flex-col gap-0.5">
           <h2 className="text-[15px] font-semibold tracking-tight">Website</h2>
           <p className="text-sm text-muted-foreground">
-            The client&apos;s WordPress site, for publishing blog articles from the Content page.
+            The client&apos;s WordPress site or Git-based site, for publishing blog articles from the Content page.
           </p>
         </div>
         <ul aria-label="Website" className="flex flex-col divide-y rounded-lg border bg-card">
@@ -164,6 +167,7 @@ export function ConnectionsView({
               zernioReady={zernioReady}
             />
           ))}
+          {websiteExtra}
         </ul>
       </section>
 

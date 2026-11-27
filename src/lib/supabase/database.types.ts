@@ -3208,6 +3208,7 @@ export type Database = {
       content_articles: {
         Row: {
           author: string | null
+          author_name: string | null
           body_html: string
           client_id: string
           created_at: string
@@ -3215,10 +3216,21 @@ export type Database = {
           excerpt: string | null
           featured_media_id: string | null
           focus_keyword: string | null
+          git_blob_sha: string | null
+          git_commit_sha: string | null
+          git_committed_at: string | null
+          git_connection_id: string | null
+          git_deploy_checked_at: string | null
+          git_deploy_error: string | null
+          git_deploy_state: Database["public"]["Enums"]["git_deploy_state"]
+          git_deploy_url: string | null
+          git_media: string[]
+          git_path: string | null
           id: string
           keyword_id: string | null
           last_error: string | null
           last_synced_at: string | null
+          live_url: string | null
           meta_description: string | null
           publish_at: string | null
           published_at: string | null
@@ -3226,6 +3238,7 @@ export type Database = {
           sent_version: number | null
           seo_pasted_at: string | null
           seo_title: string | null
+          site_kind: Database["public"]["Enums"]["content_site_kind"]
           slug: string | null
           status: Database["public"]["Enums"]["content_status"]
           tags: string[]
@@ -3243,6 +3256,7 @@ export type Database = {
         }
         Insert: {
           author?: string | null
+          author_name?: string | null
           body_html?: string
           client_id: string
           created_at?: string
@@ -3250,10 +3264,21 @@ export type Database = {
           excerpt?: string | null
           featured_media_id?: string | null
           focus_keyword?: string | null
+          git_blob_sha?: string | null
+          git_commit_sha?: string | null
+          git_committed_at?: string | null
+          git_connection_id?: string | null
+          git_deploy_checked_at?: string | null
+          git_deploy_error?: string | null
+          git_deploy_state?: Database["public"]["Enums"]["git_deploy_state"]
+          git_deploy_url?: string | null
+          git_media?: string[]
+          git_path?: string | null
           id?: string
           keyword_id?: string | null
           last_error?: string | null
           last_synced_at?: string | null
+          live_url?: string | null
           meta_description?: string | null
           publish_at?: string | null
           published_at?: string | null
@@ -3261,6 +3286,7 @@ export type Database = {
           sent_version?: number | null
           seo_pasted_at?: string | null
           seo_title?: string | null
+          site_kind?: Database["public"]["Enums"]["content_site_kind"]
           slug?: string | null
           status?: Database["public"]["Enums"]["content_status"]
           tags?: string[]
@@ -3278,6 +3304,7 @@ export type Database = {
         }
         Update: {
           author?: string | null
+          author_name?: string | null
           body_html?: string
           client_id?: string
           created_at?: string
@@ -3285,10 +3312,21 @@ export type Database = {
           excerpt?: string | null
           featured_media_id?: string | null
           focus_keyword?: string | null
+          git_blob_sha?: string | null
+          git_commit_sha?: string | null
+          git_committed_at?: string | null
+          git_connection_id?: string | null
+          git_deploy_checked_at?: string | null
+          git_deploy_error?: string | null
+          git_deploy_state?: Database["public"]["Enums"]["git_deploy_state"]
+          git_deploy_url?: string | null
+          git_media?: string[]
+          git_path?: string | null
           id?: string
           keyword_id?: string | null
           last_error?: string | null
           last_synced_at?: string | null
+          live_url?: string | null
           meta_description?: string | null
           publish_at?: string | null
           published_at?: string | null
@@ -3296,6 +3334,7 @@ export type Database = {
           sent_version?: number | null
           seo_pasted_at?: string | null
           seo_title?: string | null
+          site_kind?: Database["public"]["Enums"]["content_site_kind"]
           slug?: string | null
           status?: Database["public"]["Enums"]["content_status"]
           tags?: string[]
@@ -3331,6 +3370,13 @@ export type Database = {
             columns: ["featured_media_id"]
             isOneToOne: false
             referencedRelation: "content_media"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_articles_git_connection_id_fkey"
+            columns: ["git_connection_id"]
+            isOneToOne: false
+            referencedRelation: "git_connections"
             referencedColumns: ["id"]
           },
           {
@@ -3673,7 +3719,11 @@ export type Database = {
         Row: {
           client_id: string
           default_cta_url: string | null
+          git_connection_id: string | null
+          git_default_author: string | null
+          git_default_tags: string[]
           signature: string | null
+          site_kind: Database["public"]["Enums"]["content_site_kind"]
           timezone: string
           updated_at: string
           updated_by: string | null
@@ -3687,7 +3737,11 @@ export type Database = {
         Insert: {
           client_id: string
           default_cta_url?: string | null
+          git_connection_id?: string | null
+          git_default_author?: string | null
+          git_default_tags?: string[]
           signature?: string | null
+          site_kind?: Database["public"]["Enums"]["content_site_kind"]
           timezone?: string
           updated_at?: string
           updated_by?: string | null
@@ -3701,7 +3755,11 @@ export type Database = {
         Update: {
           client_id?: string
           default_cta_url?: string | null
+          git_connection_id?: string | null
+          git_default_author?: string | null
+          git_default_tags?: string[]
           signature?: string | null
+          site_kind?: Database["public"]["Enums"]["content_site_kind"]
           timezone?: string
           updated_at?: string
           updated_by?: string | null
@@ -3718,6 +3776,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: true
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_settings_git_connection_id_fkey"
+            columns: ["git_connection_id"]
+            isOneToOne: false
+            referencedRelation: "git_connections"
             referencedColumns: ["id"]
           },
           {
@@ -4067,6 +4132,220 @@ export type Database = {
           {
             foreignKeyName: "directories_updated_by_fkey"
             columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      git_connect_attempts: {
+        Row: {
+          client_id: string
+          connection_id: string | null
+          created_at: string
+          created_by: string | null
+          expires_at: string
+          id: string
+          installation_id: number | null
+          key_hash: string
+          onboarding_link_id: string | null
+          origin: string
+          used_at: string | null
+        }
+        Insert: {
+          client_id: string
+          connection_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          installation_id?: number | null
+          key_hash: string
+          onboarding_link_id?: string | null
+          origin: string
+          used_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          connection_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string
+          id?: string
+          installation_id?: number | null
+          key_hash?: string
+          onboarding_link_id?: string | null
+          origin?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "git_connect_attempts_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "git_connect_attempts_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "git_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "git_connect_attempts_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "git_connect_attempts_onboarding_link_id_fkey"
+            columns: ["onboarding_link_id"]
+            isOneToOne: false
+            referencedRelation: "onboarding_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      git_connection_secrets: {
+        Row: {
+          connection_id: string
+          deploy_hook_secret_id: string | null
+          token_secret_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          connection_id: string
+          deploy_hook_secret_id?: string | null
+          token_secret_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          connection_id?: string
+          deploy_hook_secret_id?: string | null
+          token_secret_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "git_connection_secrets_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: true
+            referencedRelation: "git_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      git_connections: {
+        Row: {
+          auth_method: Database["public"]["Enums"]["git_auth_method"]
+          branch: string
+          client_id: string
+          collection: string | null
+          commit_email: string | null
+          commit_name: string | null
+          config_path: string | null
+          created_at: string
+          created_by: string | null
+          date_format: string | null
+          detected: Json
+          extension: string
+          field_map: Json
+          folder: string | null
+          format: string
+          id: string
+          installation_id: number | null
+          last_checked_at: string | null
+          last_error: string | null
+          media_folder: string | null
+          owner: string
+          public_folder: string | null
+          repo: string
+          repo_id: number | null
+          site_url: string | null
+          slug_template: string
+          status: Database["public"]["Enums"]["git_connection_status"]
+          token_expires_at: string | null
+          updated_at: string
+          url_pattern: string | null
+        }
+        Insert: {
+          auth_method: Database["public"]["Enums"]["git_auth_method"]
+          branch?: string
+          client_id: string
+          collection?: string | null
+          commit_email?: string | null
+          commit_name?: string | null
+          config_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_format?: string | null
+          detected?: Json
+          extension?: string
+          field_map?: Json
+          folder?: string | null
+          format?: string
+          id?: string
+          installation_id?: number | null
+          last_checked_at?: string | null
+          last_error?: string | null
+          media_folder?: string | null
+          owner: string
+          public_folder?: string | null
+          repo: string
+          repo_id?: number | null
+          site_url?: string | null
+          slug_template?: string
+          status?: Database["public"]["Enums"]["git_connection_status"]
+          token_expires_at?: string | null
+          updated_at?: string
+          url_pattern?: string | null
+        }
+        Update: {
+          auth_method?: Database["public"]["Enums"]["git_auth_method"]
+          branch?: string
+          client_id?: string
+          collection?: string | null
+          commit_email?: string | null
+          commit_name?: string | null
+          config_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_format?: string | null
+          detected?: Json
+          extension?: string
+          field_map?: Json
+          folder?: string | null
+          format?: string
+          id?: string
+          installation_id?: number | null
+          last_checked_at?: string | null
+          last_error?: string | null
+          media_folder?: string | null
+          owner?: string
+          public_folder?: string | null
+          repo?: string
+          repo_id?: number | null
+          site_url?: string | null
+          slug_template?: string
+          status?: Database["public"]["Enums"]["git_connection_status"]
+          token_expires_at?: string | null
+          updated_at?: string
+          url_pattern?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "git_connections_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "git_connections_created_by_fkey"
+            columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "team_members"
             referencedColumns: ["id"]
@@ -6494,6 +6773,35 @@ export type Database = {
         Args: { p: Json; p_scan_id: string }
         Returns: undefined
       }
+      git_attempt_set_installation: {
+        Args: { p_attempt_id: string; p_installation_id: number; p_key: string }
+        Returns: boolean
+      }
+      git_check_connect_attempt: {
+        Args: { p_attempt_id: string; p_key: string }
+        Returns: Json
+      }
+      git_connection_secret: {
+        Args: { p_id: string; p_kind: string }
+        Returns: string
+      }
+      git_finish_connect: {
+        Args: { p: Json; p_attempt_id: string; p_key: string }
+        Returns: Json
+      }
+      git_set_connection_status: {
+        Args: {
+          p?: Json
+          p_error: string
+          p_id: string
+          p_status: Database["public"]["Enums"]["git_connection_status"]
+        }
+        Returns: undefined
+      }
+      git_store_article_result: {
+        Args: { p: Json; p_article_id: string }
+        Returns: Json
+      }
       keyword_first_ranks: {
         Args: { p_client_id: string }
         Returns: {
@@ -6526,6 +6834,7 @@ export type Database = {
         Returns: Json
       }
       onboarding_get: { Args: { p_token: string }; Returns: Json }
+      onboarding_git_status: { Args: { p_token: string }; Returns: Json }
       onboarding_mark_reviewed: {
         Args: { p_activate: boolean; p_client_id: string }
         Returns: undefined
@@ -6541,6 +6850,15 @@ export type Database = {
       onboarding_reopen: { Args: { p_client_id: string }; Returns: undefined }
       onboarding_save_business: {
         Args: { p_data: Json; p_token: string }
+        Returns: Json
+      }
+      onboarding_save_git_token: {
+        Args: {
+          p_owner: string
+          p_repo: string
+          p_token: string
+          p_value: string
+        }
         Returns: Json
       }
       onboarding_save_google_access: {
@@ -6563,6 +6881,7 @@ export type Database = {
         Args: { p_skip: boolean; p_token: string }
         Returns: Json
       }
+      onboarding_start_git_connect: { Args: { p_token: string }; Returns: Json }
       onboarding_submit: { Args: { p_token: string }; Returns: Json }
       pick_catalog_sites: {
         Args: { p_catalog_ids: string[]; p_client_id: string }
@@ -6618,6 +6937,7 @@ export type Database = {
       rankings_cron_status: { Args: never; Returns: Json }
       remove_backlink_target: { Args: { p_id: string }; Returns: undefined }
       remove_client_login: { Args: { p_login_id: string }; Returns: undefined }
+      remove_git_connection: { Args: { p_id: string }; Returns: undefined }
       replace_keyword: {
         Args: { p_keyword_id: string; p_new_phrase: string }
         Returns: Json
@@ -6754,6 +7074,24 @@ export type Database = {
         Args: { p: Json; p_client_id: string }
         Returns: undefined
       }
+      save_git_connection: {
+        Args: { p: Json; p_id: string }
+        Returns: undefined
+      }
+      save_git_deploy_hook: {
+        Args: { p_id: string; p_url: string }
+        Returns: undefined
+      }
+      save_git_token: {
+        Args: {
+          p_client_id: string
+          p_connection_id: string
+          p_owner: string
+          p_repo: string
+          p_token: string
+        }
+        Returns: string
+      }
       save_rank_scan_settings: {
         Args: { p: Json; p_client_id: string }
         Returns: undefined
@@ -6788,6 +7126,7 @@ export type Database = {
         Returns: undefined
       }
       setup_required: { Args: never; Returns: boolean }
+      start_git_connect: { Args: { p_client_id: string }; Returns: Json }
       store_rank_scan_rows: {
         Args: { p_rows: Json; p_scan_id: string }
         Returns: number
@@ -6828,6 +7167,7 @@ export type Database = {
       verify_aiv_token: { Args: { p_token: string }; Returns: boolean }
       verify_backlinks_token: { Args: { p_token: string }; Returns: boolean }
       verify_catalog_site: { Args: { p_id: string }; Returns: undefined }
+      verify_content_cron_token: { Args: { p_token: string }; Returns: boolean }
       verify_rankings_token: {
         Args: { p_kind: string; p_token: string }
         Returns: boolean
@@ -6911,6 +7251,7 @@ export type Database = {
       connect_method: "oauth" | "invite"
       connect_source: "team" | "onboarding"
       content_media_kind: "image" | "video" | "document"
+      content_site_kind: "wordpress" | "git"
       content_status:
         | "draft"
         | "scheduled"
@@ -6962,6 +7303,9 @@ export type Database = {
         | "resource_page"
       discovery_query_status: "queued" | "done" | "cached" | "failed"
       footprint_scope: "geo" | "service" | "industry" | "topic" | "buyer"
+      git_auth_method: "github_app" | "token"
+      git_connection_status: "connected" | "needs_attention" | "removed"
+      git_deploy_state: "none" | "waiting" | "building" | "live" | "failed"
       google_access_status:
         | "todo"
         | "added"
@@ -6990,6 +7334,7 @@ export type Database = {
         | "content_failed"
         | "content_published"
         | "rank_scan_finished"
+        | "site_connection_problem"
       onboarding_link_status: "active" | "revoked" | "expired"
       onboarding_status:
         | "not_started"
@@ -7058,7 +7403,12 @@ export type Database = {
         | "reports"
         | "client_follow_up"
         | "other"
-      website_access_status: "todo" | "invited_us" | "login_in_vault" | "later"
+      website_access_status:
+        | "todo"
+        | "invited_us"
+        | "login_in_vault"
+        | "later"
+        | "connected"
       website_manager: "self" | "developer" | "agency" | "unknown"
       website_platform:
         | "wordpress"
@@ -7070,6 +7420,7 @@ export type Database = {
         | "other"
         | "none"
         | "unknown"
+        | "git_cms"
       work_source:
         | "task"
         | "manual"
@@ -7278,6 +7629,7 @@ export const Constants = {
       connect_method: ["oauth", "invite"],
       connect_source: ["team", "onboarding"],
       content_media_kind: ["image", "video", "document"],
+      content_site_kind: ["wordpress", "git"],
       content_status: [
         "draft",
         "scheduled",
@@ -7334,6 +7686,9 @@ export const Constants = {
       ],
       discovery_query_status: ["queued", "done", "cached", "failed"],
       footprint_scope: ["geo", "service", "industry", "topic", "buyer"],
+      git_auth_method: ["github_app", "token"],
+      git_connection_status: ["connected", "needs_attention", "removed"],
+      git_deploy_state: ["none", "waiting", "building", "live", "failed"],
       google_access_status: ["todo", "added", "no_access", "not_using", "help"],
       keyword_source: ["manual", "research", "onboarding", "ranked"],
       link_kind: ["follow", "nofollow", "mixed", "varies", "none", "unknown"],
@@ -7357,6 +7712,7 @@ export const Constants = {
         "content_failed",
         "content_published",
         "rank_scan_finished",
+        "site_connection_problem",
       ],
       onboarding_link_status: ["active", "revoked", "expired"],
       onboarding_status: [
@@ -7432,7 +7788,13 @@ export const Constants = {
         "client_follow_up",
         "other",
       ],
-      website_access_status: ["todo", "invited_us", "login_in_vault", "later"],
+      website_access_status: [
+        "todo",
+        "invited_us",
+        "login_in_vault",
+        "later",
+        "connected",
+      ],
       website_manager: ["self", "developer", "agency", "unknown"],
       website_platform: [
         "wordpress",
@@ -7444,6 +7806,7 @@ export const Constants = {
         "other",
         "none",
         "unknown",
+        "git_cms",
       ],
       work_source: [
         "task",

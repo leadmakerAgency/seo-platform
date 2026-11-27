@@ -16,6 +16,7 @@ import type { OnboardingData } from "../../public"
 import { saveWebsite } from "../../public-actions"
 import type { WebsitePatchInput } from "../../schemas"
 import { ChoiceButtons, Field, inputClass, SaveIndicator, selectClass } from "./fields"
+import { GitAccess } from "./git-access"
 import { useAutosave } from "./use-autosave"
 
 const INSTRUCTIONS: Partial<Record<WebsitePlatform, (email: string) => string[]>> = {
@@ -66,6 +67,8 @@ type Values = {
 export function WebsiteStep({
   token,
   website,
+  git = null,
+  gitReady = false,
   agencyEmail,
   readOnly,
   onSteps,
@@ -73,6 +76,8 @@ export function WebsiteStep({
 }: {
   token: string
   website: OnboardingData["website"]
+  git?: OnboardingData["git"]
+  gitReady?: boolean
   agencyEmail: string
   readOnly: boolean
   onSteps: (s: StepStatuses) => void
@@ -96,6 +101,7 @@ export function WebsiteStep({
   }
   const steps = v.platform ? INSTRUCTIONS[v.platform]?.(agencyEmail) : undefined
   const noSite = v.platform === "none"
+  const gitCms = v.platform === "git_cms"
 
   return (
     <div className="flex flex-col gap-8">
@@ -183,41 +189,52 @@ export function WebsiteStep({
             </div>
           )}
 
-          <section className="flex flex-col gap-4 rounded-lg border bg-card p-4">
-            <h3 className="text-lg font-semibold tracking-tight">Give us access</h3>
-            {steps ? (
-              <ol className="flex flex-col gap-2">
-                {steps.map((s, i) => (
-                  <li key={i} className="flex gap-3 text-[15px] leading-relaxed">
-                    <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted text-xs font-medium">
-                      {i + 1}
-                    </span>
-                    <span className="pt-0.5">{s}</span>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <p className="text-[15px] text-muted-foreground">
-                Invite <strong className="font-medium text-foreground">{agencyEmail}</strong> as an
-                administrator or editor, or share a login on the next step. If someone else built
-                your site, you can also forward this to them.
-              </p>
-            )}
-            <ChoiceButtons
-              label="Website access"
-              value={v.access_status === "todo" ? null : v.access_status}
-              options={[
-                { value: "invited_us", label: "I've invited you" },
-                { value: "login_in_vault", label: "I'll share a login instead" },
-                { value: "later", label: "Later / I need help" },
-              ]}
-              onChange={(s) => {
-                if (readOnly) return
-                set("access_status", s)
-                if (s === "login_in_vault") onGoToLogins()
-              }}
+          {gitCms ? (
+            <GitAccess
+              token={token}
+              git={git}
+              gitReady={gitReady}
+              readOnly={readOnly}
+              onSteps={onSteps}
+              onLater={() => set("access_status", "later")}
             />
-          </section>
+          ) : (
+            <section className="flex flex-col gap-4 rounded-lg border bg-card p-4">
+              <h3 className="text-lg font-semibold tracking-tight">Give us access</h3>
+              {steps ? (
+                <ol className="flex flex-col gap-2">
+                  {steps.map((s, i) => (
+                    <li key={i} className="flex gap-3 text-[15px] leading-relaxed">
+                      <span className="grid size-6 shrink-0 place-items-center rounded-full bg-muted text-xs font-medium">
+                        {i + 1}
+                      </span>
+                      <span className="pt-0.5">{s}</span>
+                    </li>
+                  ))}
+                </ol>
+              ) : (
+                <p className="text-[15px] text-muted-foreground">
+                  Invite <strong className="font-medium text-foreground">{agencyEmail}</strong> as
+                  an administrator or editor, or share a login on the next step. If someone else
+                  built your site, you can also forward this to them.
+                </p>
+              )}
+              <ChoiceButtons
+                label="Website access"
+                value={v.access_status === "todo" ? null : v.access_status}
+                options={[
+                  { value: "invited_us", label: "I've invited you" },
+                  { value: "login_in_vault", label: "I'll share a login instead" },
+                  { value: "later", label: "Later / I need help" },
+                ]}
+                onChange={(s) => {
+                  if (readOnly) return
+                  set("access_status", s)
+                  if (s === "login_in_vault") onGoToLogins()
+                }}
+              />
+            </section>
+          )}
         </>
       )}
 

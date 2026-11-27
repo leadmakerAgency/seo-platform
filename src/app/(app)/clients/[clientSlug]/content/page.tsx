@@ -151,7 +151,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
         ]
       : []
 
-  const nothingConnected = data.accounts.length === 0 && data.wordpress.length === 0
+  const nothingConnected = data.accounts.length === 0 && data.wordpress.length === 0 && data.gitSites.length === 0
 
   return (
     <ConfirmProvider>
@@ -179,10 +179,14 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
         }
       />
 
-      {!zernioReady && <Notice>Zernio isn&apos;t set up yet, so nothing can be published. An admin needs to add ZERNIO_API_KEY.</Notice>}
+      {!zernioReady && (
+        <Notice>
+          Zernio isn&apos;t set up yet, so social posts and WordPress articles can&apos;t be published{data.gitSites.length ? " (articles for Git-based sites still can)" : ""}. An admin needs to add ZERNIO_API_KEY.
+        </Notice>
+      )}
       {zernioReady && nothingConnected && (
         <Notice>
-          Nothing is connected for {client.name} yet. Connect their social accounts and WordPress site in{" "}
+          Nothing is connected for {client.name} yet. Connect their social accounts and website (WordPress or a Git-based site) in{" "}
           <Link className="underline" href={clientHref(client.slug, "connections")}>
             Connections
           </Link>{" "}
@@ -227,6 +231,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
           editorHref={editorHref}
           canWrite={canWrite}
           hasWordPress={data.wordpress.length > 0}
+          gitSites={data.gitSites}
           connectionsHref={clientHref(client.slug, "connections")}
         />
       )}
@@ -236,6 +241,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
           clientId={client.id}
           settings={data.settings}
           wordpress={data.wordpress}
+          gitSites={data.gitSites}
           canEdit={canSettings}
           connectionsHref={clientHref(client.slug, "connections")}
         />

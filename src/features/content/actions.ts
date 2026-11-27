@@ -33,6 +33,7 @@ import { buildPostBody, sendKey, type BodyTarget } from "./body"
 import { checkTarget, slugify, type Issue, type MediaLite, type PostPlatform, type TargetSettings } from "./constants"
 import { cleanArticleHtml, htmlToText } from "./sanitize"
 import { articleStatusOf, pushMediaToZernio, setupWordPress, storeArticle, storePost, zernioProblem } from "./server"
+import { gitDelete, gitPublishNow, gitSchedule, gitUnpublish, gitUpdate } from "@/features/git-sites/article"
 
 // ---------------------------------------------------------------------------
 // Guards
@@ -539,6 +540,11 @@ export type ArticleInput = {
   topic: string | null
   author: string | null
   publishAt: string | null
+  /** Where it goes: WordPress, or a Git site (fixed once sent; the database keeps the first one). */
+  siteKind?: "wordpress" | "git"
+  gitConnectionId?: string | null
+  /** Free-text author for Git sites. */
+  authorName?: string | null
 }
 
 export async function saveArticle(
@@ -564,8 +570,11 @@ export async function saveArticle(
       focus_keyword: input.focusKeyword,
       keyword_id: input.keywordId,
       topic: input.topic,
-      author: input.author,
+      author: input.siteKind === "git" ? null : input.author,
+      author_name: input.authorName ?? null,
       publish_at: input.publishAt,
+      ...(input.siteKind ? { site_kind: input.siteKind } : {}),
+      ...(input.siteKind === "git" ? { git_connection_id: input.gitConnectionId ?? null } : {}),
     } as unknown as Json,
   })
   if (error) return { ok: false, error: dbMessage(error, "Couldn't save the article. Try again.") }
@@ -588,6 +597,13 @@ type LoadedArticle = {
   wp_blog_id: string | null
   wp_article_id: string | null
   featured: { storage_path: string; bytes: number } | null
+}
+
+/** "git" when the article goes to a Git site (Sveltia / Decap), else "wordpress". */
+async function siteKindOf(db: Db, id: string): Promise<"git" | "wordpress" | null> {
+  if (!isUuid(id)) return null
+  const { data } = await db.from("content_articles").select("site_kind, git_path").eq("id", id).maybeSingle()
+  return data ? (data.site_kind as "git" | "wordpress") : null
 }
 
 async function loadArticle(db: Db, id: string): Promise<LoadedArticle | null> {
@@ -638,9 +654,18 @@ async function articleBody(a: LoadedArticle, author: string | null): Promise<Art
 }
 
 /** Sends the article to WordPress: published now, or scheduled for its time (WordPress publishes it). */
-export async function publishArticle(articleId: string, mode: "now" | "schedule"): Promise<ActionResult<{ status: string; url: string | null }>> {
+export async function publishArticle(
+  articleId: string,
+  mode: "now" | "schedule",
+  opts: { force?: boolean } = {},
+): Promise<ActionResult<{ status: string; url: string | null }>> {
   const g = await guard("content.write")
   if ("error" in g) return { ok: false, error: g.error }
+  if ((await siteKindOf(g.db, articleId)) === "git") {
+    const r = mode === "schedule" ? await gitSchedule(g.db, g.member.id, articleId) : await gitPublishNow(g.db, g.member.id, articleId, opts.force)
+    refresh()
+    return r
+  }
   const problem = ready()
   if (problem) return { ok: false, error: problem }
   const a = isUuid(articleId) ? await loadArticle(g.db, articleId) : null
@@ -701,9 +726,14 @@ export async function publishArticle(articleId: string, mode: "now" | "schedule"
 }
 
 /** Sends the article's current text and fields to WordPress (published or scheduled). */
-export async function updateArticleOnWordPress(articleId: string): Promise<ActionResult> {
+export async function updateArticleOnWordPress(articleId: string, opts: { force?: boolean } = {}): Promise<ActionResult> {
   const g = await guard("content.write")
   if ("error" in g) return { ok: false, error: g.error }
+  if ((await siteKindOf(g.db, articleId)) === "git") {
+    const r = await gitUpdate(g.db, g.member.id, articleId, opts.force)
+    refresh()
+    return r.ok ? { ok: true } : r
+  }
   const problem = ready()
   if (problem) return { ok: false, error: problem }
   const a = isUuid(articleId) ? await loadArticle(g.db, articleId) : null
@@ -727,9 +757,14 @@ export async function updateArticleOnWordPress(articleId: string): Promise<Actio
 }
 
 /** Moves a published or scheduled article back to a WordPress draft. */
-export async function unpublishArticle(articleId: string): Promise<ActionResult> {
+export async function unpublishArticle(articleId: string, opts: { force?: boolean } = {}): Promise<ActionResult> {
   const g = await guard("content.write")
   if ("error" in g) return { ok: false, error: g.error }
+  if ((await siteKindOf(g.db, articleId)) === "git") {
+    const r = await gitUnpublish(g.db, g.member.id, articleId, opts.force)
+    refresh()
+    return r.ok ? { ok: true } : r
+  }
   const problem = ready()
   if (problem) return { ok: false, error: problem }
   const a = isUuid(articleId) ? await loadArticle(g.db, articleId) : null
@@ -750,6 +785,11 @@ export async function unpublishArticle(articleId: string): Promise<ActionResult>
 export async function deleteArticleFromWordPress(articleId: string): Promise<ActionResult> {
   const g = await guard("content.write")
   if ("error" in g) return { ok: false, error: g.error }
+  if ((await siteKindOf(g.db, articleId)) === "git") {
+    const r = await gitDelete(g.db, g.member.id, articleId)
+    refresh()
+    return r.ok ? { ok: true } : r
+  }
   const problem = ready()
   if (problem) return { ok: false, error: problem }
   const a = isUuid(articleId) ? await loadArticle(g.db, articleId) : null
@@ -774,6 +814,8 @@ export async function deleteArticleDraft(articleId: string): Promise<ActionResul
   const a = isUuid(articleId) ? await loadArticle(g.db, articleId) : null
   if (!a) return { ok: false, error: "Unknown article." }
   if (a.wp_article_id) return { ok: false, error: "Delete the WordPress copy first." }
+  const { data: onSite } = await g.db.from("content_articles").select("git_path").eq("id", articleId).maybeSingle()
+  if (onSite?.git_path) return { ok: false, error: "Delete it from the site first." }
   const { error } = await g.db.rpc("delete_content_article", { p_id: articleId })
   if (error) return { ok: false, error: dbMessage(error, "Couldn't delete the article.") }
   refresh()
@@ -802,6 +844,10 @@ export type SettingsInput = {
   wpBlogName?: string | null
   wpDefaultAuthor?: string | null
   wpDefaultTags?: string[]
+  siteKind?: "wordpress" | "git"
+  gitConnectionId?: string | null
+  gitDefaultAuthor?: string | null
+  gitDefaultTags?: string[]
 }
 
 export async function saveContentSettings(clientId: string, input: SettingsInput): Promise<ActionResult> {
@@ -816,6 +862,10 @@ export async function saveContentSettings(clientId: string, input: SettingsInput
   if (input.wpBlogName !== undefined) p.wp_blog_name = input.wpBlogName
   if (input.wpDefaultAuthor !== undefined) p.wp_default_author = input.wpDefaultAuthor
   if (input.wpDefaultTags !== undefined) p.wp_default_tags = input.wpDefaultTags
+  if (input.siteKind !== undefined) p.site_kind = input.siteKind
+  if (input.gitConnectionId !== undefined) p.git_connection_id = input.gitConnectionId
+  if (input.gitDefaultAuthor !== undefined) p.git_default_author = input.gitDefaultAuthor
+  if (input.gitDefaultTags !== undefined) p.git_default_tags = input.gitDefaultTags
   const { error } = await g.db.rpc("save_content_settings", { p_client_id: clientId, p: p as Json })
   if (error) return { ok: false, error: dbMessage(error, "Couldn't save the settings.") }
   refresh()

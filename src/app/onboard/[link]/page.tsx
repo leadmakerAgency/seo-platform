@@ -3,7 +3,7 @@ import { Suspense } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { OnboardingWizard } from "@/features/onboarding/components/wizard/wizard"
 import { getOnboarding } from "@/features/onboarding/public"
-import { getAgencyAccessEmail, getGoogleReportingEmail, hasZernioApiKey } from "@/lib/env.server"
+import { getAgencyAccessEmail, getGoogleReportingEmail, hasGitHubApp, hasZernioApiKey } from "@/lib/env.server"
 import { hasSupabaseSecretKey } from "@/lib/supabase/admin"
 import { InactiveLink } from "@/features/onboarding/components/wizard/inactive-link"
 
@@ -31,11 +31,14 @@ async function Wizard({ params, searchParams }: Props) {
       reportingEmail={getGoogleReportingEmail()}
       agencyEmail={getAgencyAccessEmail()}
       connectReady={hasZernioApiKey() && hasSupabaseSecretKey()}
+      gitReady={hasGitHubApp() && hasSupabaseSecretKey()}
       search={{
         step: one(search.step),
         result: one(search.result),
         platform: one(search.platform),
         code: one(search.code)?.slice(0, 100),
+        git: one(search.git)?.slice(0, 20),
+        message: one(search.message)?.slice(0, 300),
       }}
     />
   )

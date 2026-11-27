@@ -44,6 +44,7 @@ export const WEBSITE_PLATFORMS: { value: WebsitePlatform; label: string }[] = [
   { value: "shopify", label: "Shopify" },
   { value: "webflow", label: "Webflow" },
   { value: "godaddy", label: "GoDaddy Website Builder" },
+  { value: "git_cms", label: "Sveltia, Decap or Netlify CMS (blog posts stored on GitHub)" },
   { value: "other", label: "Something else" },
   { value: "unknown", label: "I'm not sure" },
   { value: "none", label: "We don't have a website" },

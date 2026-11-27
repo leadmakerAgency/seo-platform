@@ -68,6 +68,7 @@ async function Body({ params }: Pick<Props, "params">) {
         keywords={keywords}
         settings={base.settings}
         hasWordPress={base.wordpress.length > 0}
+        gitSites={base.gitSites}
         canWrite={canWrite}
         events={events}
       />

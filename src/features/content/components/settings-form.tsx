@@ -12,19 +12,21 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { loadBlogs, saveContentSettings } from "../actions"
-import type { ContentAccount, ContentSettings } from "../queries"
+import type { ContentAccount, ContentSettings, GitSiteLite } from "../queries"
 import { COMMON_ZONES, isValidZone, zoneLabel } from "../time"
 
 export function SettingsForm({
   clientId,
   settings,
   wordpress,
+  gitSites = [],
   canEdit,
   connectionsHref,
 }: {
   clientId: string
   settings: ContentSettings
   wordpress: ContentAccount[]
+  gitSites?: GitSiteLite[]
   canEdit: boolean
   connectionsHref: string
 }) {
@@ -36,6 +38,16 @@ export function SettingsForm({
   const [wpId, setWpId] = useState(settings.wpAccountId ?? wordpress[0]?.id ?? "")
   const [blogs, setBlogs] = useState<{ id: string; name: string; url: string | null }[] | null>(null)
   const [blogId, setBlogId] = useState(settings.wpBlogId ?? "")
+  // Default destination: "wordpress" or "git:<id>".
+  const [dest, setDest] = useState(
+    settings.siteKind === "git" && settings.gitConnectionId
+      ? `git:${settings.gitConnectionId}`
+      : wordpress.length || !gitSites[0]
+        ? "wordpress"
+        : `git:${gitSites[0].id}`,
+  )
+  const [gitAuthor, setGitAuthor] = useState(settings.gitDefaultAuthor ?? "")
+  const [gitTags, setGitTags] = useState(settings.gitDefaultTags)
   const [pending, start] = useTransition()
   const zones = COMMON_ZONES.includes(tz) ? COMMON_ZONES : [tz, ...COMMON_ZONES]
   const site = wordpress.find((w) => w.id === wpId) ?? null
@@ -55,6 +67,14 @@ export function SettingsForm({
         wpDefaultTags: tags,
         ...(wordpress.length ? { wpAccountId: wpId || null } : {}),
         ...(blogs ? { wpBlogId: blogId || null, wpBlogName: blog?.name ?? null } : {}),
+        ...(gitSites.length
+          ? {
+              siteKind: dest.startsWith("git:") ? ("git" as const) : ("wordpress" as const),
+              gitConnectionId: dest.startsWith("git:") ? dest.slice(4) : null,
+              gitDefaultAuthor: gitAuthor.trim() || null,
+              gitDefaultTags: gitTags,
+            }
+          : {}),
       })
       if (r.ok) toast.success("Settings saved")
       else toast.error(r.error)
@@ -188,6 +208,59 @@ export function SettingsForm({
           </>
         )}
       </section>
+
+      {gitSites.length > 0 && (
+        <section className="flex flex-col gap-4">
+          <h2 className="text-[15px] font-semibold tracking-tight">Git-based site</h2>
+          {(wordpress.length ? 1 : 0) + gitSites.length > 1 && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="dest">New articles go to</Label>
+              <Select value={dest} onValueChange={setDest} disabled={!canEdit}>
+                <SelectTrigger id="dest" className="w-full sm:w-[340px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {wordpress.length > 0 && <SelectItem value="wordpress">WordPress{settings.wpBlogName ? ` · ${settings.wpBlogName}` : ""}</SelectItem>}
+                  {gitSites.map((g) => (
+                    <SelectItem key={g.id} value={`git:${g.id}`}>
+                      {g.label} ({g.repo})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Each article can still pick another site before it&apos;s first sent.</p>
+            </div>
+          )}
+          <ul className="flex flex-col gap-1.5 text-sm">
+            {gitSites.map((g) => (
+              <li key={g.id} className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">{g.label}</span>
+                <span className="text-muted-foreground">{g.repo}</span>
+                {g.ready ? (
+                  <StatusTag tone="success">Ready</StatusTag>
+                ) : (
+                  <StatusTag tone="warning">
+                    <Link href={connectionsHref} className="hover:underline">
+                      {g.status === "needs_attention" ? "Needs attention" : "Finish setting up"}
+                    </Link>
+                  </StatusTag>
+                )}
+              </li>
+            ))}
+          </ul>
+          {gitSites.some((g) => g.hasAuthorField) && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="git-author">Default author</Label>
+              <Input id="git-author" className="w-full sm:w-[340px]" maxLength={100} value={gitAuthor} onChange={(e) => setGitAuthor(e.target.value)} disabled={!canEdit} placeholder="Name shown on the post" />
+            </div>
+          )}
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="git-tags">Default tags</Label>
+            <ChipsInput id="git-tags" values={gitTags} onChange={setGitTags} max={20} maxLength={50} placeholder="Type a tag and press Enter" />
+            <p className="text-xs text-muted-foreground">Used when an article for a Git site has no tags of its own.</p>
+          </div>
+        </section>
+      )}
 
       {canEdit ? (
         <div>
