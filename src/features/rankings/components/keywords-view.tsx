@@ -8,7 +8,7 @@ import { StatStrip, type StatItem } from "@/components/common/stat-strip"
 import { StatusTag } from "@/components/common/status"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { displayUrl, formatDate, formatNumber } from "@/lib/format"
+import { countryShort, displayUrl, formatDate, formatNumber } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { ENGINE_META, type Engine } from "../constants"
 import type { TrackedKeyword } from "../queries"
@@ -62,6 +62,7 @@ export function KeywordsView({
   canManage,
   replaceOptions,
   suggested,
+  country,
 }: {
   keywords: TrackedKeyword[]
   engines: Engine[]
@@ -72,6 +73,8 @@ export function KeywordsView({
   replaceOptions: ReplaceOption[]
   /** Suggested replacement per weak keyword id. */
   suggested: Record<string, ReplaceOption>
+  /** The client's country (ISO alpha-2), for national estimates. */
+  country: string | null
 }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "google", dir: 1 })
   const [query, setQuery] = useState("")
@@ -283,7 +286,7 @@ export function KeywordsView({
                     formatNumber(k.localVolume)
                   ) : k.nationalVolume !== null ? (
                     <span className="text-muted-foreground" title="National estimate (no figure for the city yet)">
-                      {formatNumber(k.nationalVolume)} US
+                      {formatNumber(k.nationalVolume)} {country ? countryShort(country) : "nat."}
                     </span>
                   ) : (
                     <span className="text-muted-foreground">—</span>

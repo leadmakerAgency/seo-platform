@@ -19,7 +19,7 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { formatNumber, formatRelative } from "@/lib/format"
+import { countryShort, formatNumber, formatRelative } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { replaceKeyword, runResearch, setCandidateDismissed, trackCandidate } from "../actions"
 import {
@@ -42,6 +42,7 @@ const PAGE = 50
 export function ResearchView({
   clientId,
   city,
+  country,
   research,
   tracked,
   limit,
@@ -54,6 +55,8 @@ export function ResearchView({
 }: {
   clientId: string
   city: string | null
+  /** The client's country (ISO alpha-2), for the national searches column. */
+  country: string | null
   research: ResearchData
   tracked: TrackedLite[]
   limit: number
@@ -173,6 +176,7 @@ export function ResearchView({
           dismissedCount={research.dismissed}
           baseHref={baseHref}
           hasRun={Boolean(run)}
+          country={country}
         />
       )}
     </div>
@@ -265,6 +269,7 @@ function Candidates({
   dismissedCount,
   baseHref,
   hasRun,
+  country,
 }: {
   clientId: string
   candidates: Candidate[]
@@ -274,6 +279,7 @@ function Candidates({
   dismissedCount: number
   baseHref: string
   hasRun: boolean
+  country: string | null
 }) {
   const [f, setF] = useState<Filters>({ q: "", min: "0", intent: "any", topic: "any", source: "any" })
   const [shown, setShown] = useState(PAGE)
@@ -400,7 +406,7 @@ function Candidates({
               <th className="px-3 py-2 text-right font-medium">Score</th>
               <th className="px-3 py-2 text-left font-medium">Keyword</th>
               <th className="px-3 py-2 text-right font-medium">{"City searches"}</th>
-              <th className="px-3 py-2 text-right font-medium">US searches</th>
+              <th className="px-3 py-2 text-right font-medium">{country ? `${countryShort(country)} searches` : "National searches"}</th>
               <th className="px-3 py-2 text-right font-medium">Difficulty</th>
               <th className="px-3 py-2 text-left font-medium">Intent</th>
               <th className="px-3 py-2 text-right font-medium">CPC</th>

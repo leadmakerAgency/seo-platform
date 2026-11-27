@@ -335,6 +335,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
             canManage={canManage}
             replaceOptions={replaceOptions}
             suggested={suggested}
+            country={client.country_code}
           />
         ))}
 
@@ -359,6 +360,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
         <ResearchView
           clientId={client.id}
           city={client.city}
+          country={client.country_code}
           research={research}
           tracked={tracked}
           limit={data.limit}
