@@ -10,7 +10,7 @@
 >   - updates of a published article keep `status = published` (the work item stays) and only track the build;
 >   - images from other websites stay as links;
 >   - our own inline images (`content-inline`) and the featured image are committed.
-> - **Migration `0068_content_publish_cron.sql`** (the 5-minute pg_cron job) is written but **not applied yet**: it gets applied with the deploy that ships the route.
+> - **Migration `0068_content_publish_cron.sql`** (the 5-minute pg_cron job) was applied right after the push that shipped the route (`81ff543`, 2026-11-27).
 > - **Checks:** `scripts/git-cms-check.ts` runs the whole pipeline against a fake GitHub repo and a fake database (publish → no-change update → conflict → overwrite → unpublish → address taken → delete), 29 groups.
 
 `publishArticle(id, mode)` and the other article actions in `src/features/content/actions.ts` branch on `article.site_kind`. WordPress code is unchanged.

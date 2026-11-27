@@ -385,8 +385,8 @@ Plan: `docs/plans/content/` (00 research to 09 checks). Migrations `0058`–`006
 
 ## Git-based sites (Sveltia / Decap CMS on GitHub)
 
-Plan: `docs/plans/git-cms/` (00 research to 09 checks). Migrations `0064`–`0068` (`0068`, the
-`content-publish` pg_cron job, is applied together with the deploy that ships its route).
+Plan: `docs/plans/git-cms/` (00 research to 09 checks). Migrations `0064`–`0068` (`0068` schedules
+the `content-publish` pg_cron job, every 5 minutes).
 
 - **Connecting** (Connections → Website → Git-based site; or the client's onboarding link):
   - the GitHub App install → `/integrations/github/callback`, which checks the one-time state and the person's GitHub access to the installation, with a repo picker at `/integrations/github/pick`;
