@@ -8,8 +8,11 @@ import { StatStrip, type StatItem } from "@/components/common/stat-strip"
 import { StatusTag } from "@/components/common/status"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { csvFileName } from "@/lib/csv"
 import { countryShort, displayUrl, formatDate, formatNumber } from "@/lib/format"
 import { cn } from "@/lib/utils"
+import { trackedKeywordsCsv } from "../csv"
+import { DownloadCsv } from "./download-csv"
 import { ENGINE_META, type Engine } from "../constants"
 import type { TrackedKeyword } from "../queries"
 import { Difficulty, formatUsd, formatVolume, IntentTag, Position } from "./bits"
@@ -63,6 +66,7 @@ export function KeywordsView({
   replaceOptions,
   suggested,
   country,
+  clientSlug,
 }: {
   keywords: TrackedKeyword[]
   engines: Engine[]
@@ -75,6 +79,7 @@ export function KeywordsView({
   suggested: Record<string, ReplaceOption>
   /** The client's country (ISO alpha-2), for national estimates. */
   country: string | null
+  clientSlug: string
 }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: "google", dir: 1 })
   const [query, setQuery] = useState("")
@@ -219,16 +224,31 @@ export function KeywordsView({
             className="h-8 w-full rounded-lg border border-input bg-card pr-3 pl-8 text-sm outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35"
           />
         </div>
-        <p className="text-[13px] text-muted-foreground">
-          {filter !== "all" && (
-            <>
-              Showing {formatNumber(rows.length)} of {formatNumber(keywords.length)} ·{" "}
-              <Link href={`${baseHref}?tab=keywords`} scroll={false} className="text-brand hover:underline">
-                Show all
-              </Link>
-            </>
-          )}
-        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-[13px] text-muted-foreground">
+            {filter !== "all" && (
+              <>
+                Showing {formatNumber(rows.length)} of {formatNumber(keywords.length)} ·{" "}
+                <Link href={`${baseHref}?tab=keywords`} scroll={false} className="text-brand hover:underline">
+                  Show all
+                </Link>
+              </>
+            )}
+          </p>
+          <DownloadCsv
+            filtered={filter !== "all" || query.trim() !== ""}
+            shown={{
+              count: rows.length,
+              fileName: csvFileName(clientSlug, `tracked-keywords-${filter === "all" ? "filtered" : filter}`),
+              get: () => trackedKeywordsCsv(rows, engines, country),
+            }}
+            all={{
+              count: keywords.length,
+              fileName: csvFileName(clientSlug, "tracked-keywords"),
+              get: () => trackedKeywordsCsv(keywords, engines, country),
+            }}
+          />
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-lg border bg-card">

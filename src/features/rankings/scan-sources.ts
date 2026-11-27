@@ -266,37 +266,4 @@ const SOURCE_LABEL: Record<ScanSource, string> = {
 }
 export const sourceLabel = (s: ScanSource) => SOURCE_LABEL[s]
 
-const cell = (v: unknown) => {
-  const s = v === null || v === undefined ? "" : String(v)
-  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
-}
-
-export function scanCsv(rows: ScanRow[]): string {
-  const head = [
-    "Keyword", "Sources", "Verdict", "Position", "DataForSEO position", "Search Console position", "Clicks (3 mo)",
-    "Impressions (3 mo)", "CTR", "Maps reach / month", "Searches / month (city)", "Searches / month (national)",
-    "Intent", "Page", "Reasons",
-  ]
-  const lines = rows.map((r) =>
-    [
-      r.phrase,
-      r.sources.map(sourceLabel).join(" + "),
-      r.verdict ?? "",
-      r.position ?? "",
-      r.dfs_position ?? "",
-      r.gsc_position ?? "",
-      r.gsc_clicks ?? "",
-      r.gsc_impressions ?? "",
-      r.gsc_ctr !== null && r.gsc_ctr !== undefined ? `${Math.round(r.gsc_ctr * 1000) / 10}%` : "",
-      r.gbp_below_threshold ? "<15" : (r.gbp_reach ?? ""),
-      r.city_volume ?? "",
-      r.national_volume ?? "",
-      r.intent ?? "",
-      r.gsc_page ?? r.dfs_url ?? "",
-      (r.reasons ?? []).join("; "),
-    ]
-      .map(cell)
-      .join(","),
-  )
-  return "﻿" + [head.map(cell).join(","), ...lines].join("\r\n")
-}
+// The scan CSV is scanCsv in ./csv.ts, with the other Rankings downloads.

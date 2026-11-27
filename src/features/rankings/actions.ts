@@ -13,8 +13,11 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { ENGINES } from "./constants"
 import { processResearchRuns } from "./research"
 import { processRankScans } from "./scan"
-import { getScanHistory } from "./scan-queries"
-import { scanCsv, type ScanRow } from "./scan-sources"
+import { candidatesCsv, scanCsv } from "./csv"
+import type { Candidate } from "./queries"
+import { getScanHistory, type ScanFilter, type ScanPageRow } from "./scan-queries"
+import type { ScanRow } from "./scan-sources"
+import { VERDICT_META, type Verdict } from "./scan-verdicts"
 import { startQueuedRuns } from "./tracker"
 
 /**
@@ -363,25 +366,103 @@ export async function saveScanSettings(
   return { ok: true }
 }
 
-/** Every keyword of a scan as CSV (Excel-friendly). */
-export async function exportScanCsv(clientId: string, scanId: string): Promise<ActionResult<{ csv: string }>> {
+// ---------------------------------------------------------------------------
+// CSV downloads (read-only, through RLS: anyone who can see the client's Rankings)
+// ---------------------------------------------------------------------------
+
+const MAX_EXPORT = 20_000
+const cleanText = (v: unknown, max = 100) => (typeof v === "string" ? v.slice(0, max) : "")
+
+async function clientCountry(supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>, clientId: string) {
+  const { data } = await supabase.from("clients").select("country_code").eq("id", clientId).maybeSingle()
+  return data?.country_code ?? null
+}
+
+/** A scan's keywords as CSV: all of them, or only those matching the Ranking now filters. */
+export async function exportScanCsv(
+  clientId: string,
+  scanId: string,
+  filter?: Partial<ScanFilter> | null,
+): Promise<ActionResult<{ csv: string; count: number }>> {
   if (!isUuid(clientId) || !isUuid(scanId)) return { ok: false, error: "Unknown scan." }
   const supabase = await createSupabaseServerClient()
-  const rows: ScanRow[] = []
-  for (let from = 0; from < 20_000; from += 1000) {
-    const { data, error } = await supabase
-      .from("rank_scan_keywords")
-      .select("*")
-      .eq("client_id", clientId)
-      .eq("scan_id", scanId)
-      .order("score", { ascending: false, nullsFirst: false })
+  const country = await clientCountry(supabase, clientId)
+  const verdict = (Object.keys(VERDICT_META) as Verdict[]).find((v) => v === filter?.verdict) ?? null
+  const source = (["dataforseo", "search_console", "google_business", "several"] as const).find((v) => v === filter?.source) ?? null
+  const q = cleanText(filter?.q).trim() || null
+  const untracked = filter?.untracked === true
+
+  const rows: (ScanRow | ScanPageRow)[] = []
+  if (verdict || source || q || untracked) {
+    for (let offset = 0; offset < MAX_EXPORT; offset += 1000) {
+      const { data, error } = await supabase.rpc("rank_scan_page", {
+        p_client_id: clientId,
+        p_scan_id: scanId,
+        p_verdict: verdict ?? undefined,
+        p_source: source ?? undefined,
+        p_q: q ?? undefined,
+        p_untracked: untracked,
+        p_limit: 1000,
+        p_offset: offset,
+      })
+      if (error) return { ok: false, error: "Couldn't read the scan." }
+      const page = ((data ?? {}) as { rows?: ScanPageRow[] }).rows ?? []
+      rows.push(...page)
+      if (page.length < 1000) break
+    }
+  } else {
+    for (let from = 0; from < MAX_EXPORT; from += 1000) {
+      const { data, error } = await supabase
+        .from("rank_scan_keywords")
+        .select("*")
+        .eq("client_id", clientId)
+        .eq("scan_id", scanId)
+        .order("score", { ascending: false, nullsFirst: false })
+        .order("keyword_norm")
+        .range(from, from + 999)
+      if (error) return { ok: false, error: "Couldn't read the scan." }
+      rows.push(...((data ?? []) as unknown as ScanRow[]))
+      if (!data || data.length < 1000) break
+    }
+  }
+  const num = (v: unknown) => (v === null || v === undefined ? null : Number(v))
+  const clean = rows.map((r) => ({
+    ...r,
+    position: num(r.position),
+    gsc_position: num(r.gsc_position),
+    gsc_ctr: num(r.gsc_ctr),
+    cpc: num(r.cpc),
+    ...("prev_position" in r ? { prev_position: num(r.prev_position) } : {}),
+  }))
+  return { ok: true, data: { csv: scanCsv(clean, country), count: clean.length } }
+}
+
+/** Find better keywords as CSV: every idea (not only the 400 on screen), or the dismissed list. */
+export async function exportCandidatesCsv(
+  clientId: string,
+  opts: { dismissed?: boolean } = {},
+): Promise<ActionResult<{ csv: string; count: number }>> {
+  if (!isUuid(clientId)) return { ok: false, error: "Unknown client." }
+  const dismissed = opts.dismissed === true
+  const supabase = await createSupabaseServerClient()
+  const [country, tracked] = await Promise.all([
+    clientCountry(supabase, clientId),
+    supabase.from("keywords").select("phrase").eq("client_id", clientId).eq("tracked", true).is("archived_at", null),
+  ])
+  const rows: Candidate[] = []
+  for (let from = 0; from < MAX_EXPORT; from += 1000) {
+    let query = supabase.from("keyword_candidates").select("*").eq("client_id", clientId)
+    query = dismissed ? query.eq("status", "dismissed") : query.neq("status", "dismissed")
+    const { data, error } = await query
+      .order(dismissed ? "decided_at" : "score", { ascending: false, nullsFirst: false })
       .order("keyword_norm")
       .range(from, from + 999)
-    if (error) return { ok: false, error: "Couldn't read the scan." }
-    rows.push(...((data ?? []) as unknown as ScanRow[]))
+    if (error) return { ok: false, error: "Couldn't read the keyword ideas." }
+    rows.push(...(data ?? []))
     if (!data || data.length < 1000) break
   }
-  return { ok: true, data: { csv: scanCsv(rows) } }
+  const norms = new Set((tracked.data ?? []).map((t) => t.phrase))
+  return { ok: true, data: { csv: candidatesCsv(rows, country, norms, dismissed), count: rows.length } }
 }
 
 /** One keyword's positions across the client's recent scans. */

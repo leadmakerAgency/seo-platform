@@ -19,9 +19,12 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { csvFileName } from "@/lib/csv"
 import { countryShort, formatNumber, formatRelative } from "@/lib/format"
 import { cn } from "@/lib/utils"
-import { replaceKeyword, runResearch, setCandidateDismissed, trackCandidate } from "../actions"
+import { exportCandidatesCsv, replaceKeyword, runResearch, setCandidateDismissed, trackCandidate } from "../actions"
+import { DEFAULT_CANDIDATE_FILTERS, isFiltered, matchesCandidate, type CandidateFilters } from "../candidate-filter"
+import { candidatesCsv } from "../csv"
 import {
   INTENT_META,
   intentOf,
@@ -31,6 +34,7 @@ import {
 } from "../constants"
 import type { Candidate, ResearchData } from "../queries"
 import { Difficulty, formatUsd, formatVolume, IntentTag, SourceTags } from "./bits"
+import { DownloadCsv } from "./download-csv"
 
 export type TrackedLite = { id: string; phrase: string; topic: string | null; score: number; weak: string[]; localVolume: number | null; nationalVolume: number | null; intent: Intent | null }
 export type Swap = { keyword: TrackedLite; candidate: Candidate }
@@ -41,6 +45,7 @@ const PAGE = 50
 /** The "Find better keywords" tab: run research, suggested swaps, every candidate. */
 export function ResearchView({
   clientId,
+  clientSlug,
   city,
   country,
   research,
@@ -54,6 +59,7 @@ export function ResearchView({
   dismissedList,
 }: {
   clientId: string
+  clientSlug: string
   city: string | null
   /** The client's country (ISO alpha-2), for the national searches column. */
   country: string | null
@@ -165,7 +171,7 @@ export function ResearchView({
       {swaps.length > 0 && <Swaps swaps={swaps} canManage={canManage} />}
 
       {dismissedList ? (
-        <Dismissed clientId={clientId} list={dismissedList} baseHref={baseHref} canManage={canManage} />
+        <Dismissed clientId={clientId} clientSlug={clientSlug} list={dismissedList} total={research.dismissed} baseHref={baseHref} canManage={canManage} />
       ) : (
         <Candidates
           clientId={clientId}
@@ -177,6 +183,8 @@ export function ResearchView({
           baseHref={baseHref}
           hasRun={Boolean(run)}
           country={country}
+          clientSlug={clientSlug}
+          total={research.total}
         />
       )}
     </div>
@@ -258,7 +266,7 @@ function Swaps({ swaps, canManage }: { swaps: Swap[]; canManage: boolean }) {
   )
 }
 
-type Filters = { q: string; min: string; intent: string; topic: string; source: string }
+type Filters = CandidateFilters
 
 function Candidates({
   clientId,
@@ -270,6 +278,8 @@ function Candidates({
   baseHref,
   hasRun,
   country,
+  clientSlug,
+  total,
 }: {
   clientId: string
   candidates: Candidate[]
@@ -280,8 +290,10 @@ function Candidates({
   baseHref: string
   hasRun: boolean
   country: string | null
+  clientSlug: string
+  total: number
 }) {
-  const [f, setF] = useState<Filters>({ q: "", min: "0", intent: "any", topic: "any", source: "any" })
+  const [f, setF] = useState<Filters>(DEFAULT_CANDIDATE_FILTERS)
   const [shown, setShown] = useState(PAGE)
   const [pending, startTransition] = useTransition()
   const trackedNorms = new Set(tracked.map((t) => t.phrase))
@@ -293,19 +305,7 @@ function Candidates({
   )
 
   const rows = useMemo(() => {
-    const q = f.q.trim().toLowerCase()
-    const min = Number(f.min)
-    return candidates.filter((c) => {
-      if (q && !c.phrase.includes(q)) return false
-      if (min > 0 && (c.local_volume ?? c.national_volume ?? 0) < min) return false
-      if (f.intent !== "any" && c.intent !== f.intent) return false
-      if (f.topic !== "any" && c.topic !== f.topic) return false
-      if (f.source !== "any") {
-        const s = f.source === "ideas" ? ["ideas", "suggestions", "related"] : [f.source]
-        if (!c.sources.some((x) => s.includes(x))) return false
-      }
-      return true
-    })
+    return candidates.filter((c) => matchesCandidate(c, f))
   }, [candidates, f])
 
   function track(c: Candidate) {
@@ -397,6 +397,21 @@ function Candidates({
           onChange={(source) => set({ source })}
           options={[["any", "Any source"], ["ranked", "Already ranking"], ["search_console", "Search Console"], ["google_business", "Business Profile"], ["ideas", "Ideas"], ["competitor", "Competitors"]]}
         />
+        <div className="ml-auto">
+          <DownloadCsv
+            filtered={isFiltered(f)}
+            shown={{
+              count: rows.length,
+              fileName: csvFileName(clientSlug, "keyword-ideas-filtered"),
+              get: () => candidatesCsv(rows, country, trackedNorms),
+            }}
+            all={{
+              count: total,
+              fileName: csvFileName(clientSlug, "keyword-ideas"),
+              get: () => exportCandidatesCsv(clientId),
+            }}
+          />
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-lg border bg-card">
@@ -574,12 +589,16 @@ function ReplaceTrackedDialog({ candidate, tracked }: { candidate: Candidate; tr
 
 function Dismissed({
   clientId,
+  clientSlug,
   list,
+  total,
   baseHref,
   canManage,
 }: {
   clientId: string
+  clientSlug: string
   list: Candidate[]
+  total: number
   baseHref: string
   canManage: boolean
 }) {
@@ -588,9 +607,19 @@ function Dismissed({
     <section className="flex flex-col gap-3">
       <div className="flex flex-wrap items-end justify-between gap-2">
         <h2 className="text-[15px] font-semibold">Dismissed keywords</h2>
-        <Link href={`${baseHref}?tab=research`} className="text-[13px] text-brand hover:underline">
-          Back to all ideas
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href={`${baseHref}?tab=research`} className="text-[13px] text-brand hover:underline">
+            Back to all ideas
+          </Link>
+          <DownloadCsv
+            filtered={false}
+            all={{
+              count: total,
+              fileName: csvFileName(clientSlug, "dismissed-keywords"),
+              get: () => exportCandidatesCsv(clientId, { dismissed: true }),
+            }}
+          />
+        </div>
       </div>
       {list.length === 0 ? (
         <p className="text-sm text-muted-foreground">Nothing dismissed.</p>

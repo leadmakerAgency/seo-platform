@@ -5,7 +5,6 @@ import {
   ArrowUp,
   CircleAlert,
   Database,
-  Download,
   ExternalLink,
   Loader2,
   Plus,
@@ -27,12 +26,15 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { csvFileName } from "@/lib/csv"
 import { displayUrl, formatNumber, formatRelative } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import { exportScanCsv, requestRankScan, scanKeywordHistory, trackScanKeywords } from "../actions"
+import { lostCsv } from "../csv"
 import type { LostRow, ScanFilter, ScanOverview, ScanPageRow, ScanSummary } from "../scan-queries"
 import type { ScanSource } from "../scan-sources"
 import { VERDICT_META, type Verdict } from "../scan-verdicts"
+import { DownloadCsv } from "./download-csv"
 
 const VERDICTS: Verdict[] = ["keep", "quick_win", "brand", "watch", "skip"]
 const SOURCES: ScanSource[] = ["dataforseo", "search_console", "google_business"]
@@ -85,6 +87,7 @@ function Change({ now, before, isNew }: { now: number | null; before: number | n
 
 export function ScanView({
   clientId,
+  clientSlug,
   baseHref,
   connectionsHref,
   overview,
@@ -98,6 +101,7 @@ export function ScanView({
   nowIso,
 }: {
   clientId: string
+  clientSlug: string
   baseHref: string
   connectionsHref: string
   overview: ScanOverview
@@ -150,21 +154,12 @@ export function ScanView({
       }
     })
 
-  const exportCsv = () =>
-    start(async () => {
-      if (!latest) return
-      const r = await exportScanCsv(clientId, latest.id)
-      if (!r.ok) {
-        toast.error(r.error)
-        return
-      }
-      const url = URL.createObjectURL(new Blob([r.data.csv], { type: "text/csv;charset=utf-8" }))
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `ranking-scan-${latest.created_at.slice(0, 10)}.csv`
-      a.click()
-      URL.revokeObjectURL(url)
-    })
+  const filtered = showLost || Boolean(filter.verdict || filter.source || filter.q || filter.untracked)
+  const shownList = showLost
+    ? "ranking-now-lost"
+    : filter.verdict
+      ? `ranking-now-${VERDICT_META[filter.verdict].label}`
+      : "ranking-now-filtered"
 
   const strip: StatItem[] = [
     { key: "all", label: "Everything", count: counts.total ?? 0, href: href({ v: null }), selected: !filter.verdict && !showLost },
@@ -207,10 +202,19 @@ export function ScanView({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {latest && (
-              <Button variant="outline" size="sm" disabled={pending} onClick={exportCsv}>
-                <Download />
-                Export CSV
-              </Button>
+              <DownloadCsv
+                filtered={filtered}
+                shown={{
+                  count: showLost ? lost.length : (page?.total ?? 0),
+                  fileName: csvFileName(clientSlug, shownList, latest.created_at),
+                  get: () => (showLost ? lostCsv(lost) : exportScanCsv(clientId, latest.id, filter)),
+                }}
+                all={{
+                  count: counts.total ?? 0,
+                  fileName: csvFileName(clientSlug, "ranking-now", latest.created_at),
+                  get: () => exportScanCsv(clientId, latest.id),
+                }}
+              />
             )}
             {canManage && (
               <Button

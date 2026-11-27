@@ -12,9 +12,9 @@ import {
   isBrandSearch,
   mergeRows,
   normKeyword,
-  scanCsv,
   type ScanRow,
 } from "../src/features/rankings/scan-sources"
+import { scanCsv } from "../src/features/rankings/csv"
 import { bestPosition, expectedCtr, judge, type VerdictContext } from "../src/features/rankings/scan-verdicts"
 import { iso3 } from "../src/lib/iso3"
 

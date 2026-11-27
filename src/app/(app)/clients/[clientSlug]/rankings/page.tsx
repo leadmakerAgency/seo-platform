@@ -336,12 +336,14 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
             replaceOptions={replaceOptions}
             suggested={suggested}
             country={client.country_code}
+            clientSlug={client.slug}
           />
         ))}
 
       {tab === "now" && scanOverview && (
         <ScanView
           clientId={client.id}
+          clientSlug={client.slug}
           baseHref={base}
           connectionsHref={connectionsHref}
           overview={scanOverview}
@@ -359,6 +361,7 @@ async function Content({ params, searchParams }: Pick<Props, "params" | "searchP
       {tab === "research" && (
         <ResearchView
           clientId={client.id}
+          clientSlug={client.slug}
           city={client.city}
           country={client.country_code}
           research={research}

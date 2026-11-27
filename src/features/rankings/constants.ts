@@ -75,6 +75,9 @@ export const RESEARCH_ESTIMATE_USD = 0.5
 export const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
 /** Not-found positions are stored as null and shown as "—" with this tooltip. */
+/** Difficulty 0-100 as a word (the same thresholds everywhere). */
+export const difficultyWord = (n: number) => (n < 30 ? "Easy" : n < 60 ? "Medium" : "Hard")
+
 export const NOT_FOUND = { google: "Not in the top 100", google_maps: "Not in the top 20", bing: "Not in the top 100" }
 
 /** US state abbreviations (the shared list lives in src/lib/regions.ts). */

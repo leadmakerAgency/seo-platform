@@ -298,6 +298,8 @@ export type Candidate = Tables<"keyword_candidates">
 export type ResearchData = {
   lastRun: Tables<"keyword_research_runs"> | null
   candidates: Candidate[]
+  /** Every idea that isn't dismissed (the screen loads the best 400). */
+  total: number
   dismissed: number
   runsThisMonth: number
   runLimit: number
@@ -315,7 +317,7 @@ export async function getResearchData(clientId: string): Promise<ResearchData> {
       .limit(1),
     supabase
       .from("keyword_candidates")
-      .select("*")
+      .select("*", { count: "exact" })
       .eq("client_id", clientId)
       .neq("status", "dismissed")
       .order("score", { ascending: false })
@@ -331,6 +333,7 @@ export async function getResearchData(clientId: string): Promise<ResearchData> {
   return {
     lastRun: runs.data?.[0] ?? null,
     candidates: candidates.data ?? [],
+    total: candidates.count ?? candidates.data?.length ?? 0,
     dismissed: dismissed.count ?? 0,
     runsThisMonth: q.used ?? 0,
     runLimit: q.limit ?? 4,

@@ -4,7 +4,7 @@ import { StatusTag } from "@/components/common/status"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { formatNumber } from "@/lib/format"
 import { cn } from "@/lib/utils"
-import { INTENT_META, NOT_FOUND, type Engine, type Intent } from "../constants"
+import { difficultyWord, INTENT_META, NOT_FOUND, type Engine, type Intent } from "../constants"
 
 /** Small display pieces shared by the Rankings tabs. */
 
@@ -105,7 +105,7 @@ export function Change({ position, previous }: { position: number | null; previo
 /** Difficulty 0–100 as a word plus the number. */
 export function Difficulty({ value }: { value: number | null }) {
   if (value === null) return <span className="text-muted-foreground">—</span>
-  const word = value < 30 ? "Easy" : value < 60 ? "Medium" : "Hard"
+  const word = difficultyWord(value)
   return (
     <span className="tabular-nums">
       {value} <span className="text-muted-foreground">{word}</span>
